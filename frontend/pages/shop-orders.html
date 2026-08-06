@@ -1,0 +1,20 @@
+<section id="shop-orders-page" class="page">
+  <div class="page-header" style="margin-bottom: 20px;">
+    <h3>Customer Orders</h3>
+    <p>Manage and process incoming customer orders</p>
+  </div>
+
+  <div class="order-filters" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+    <button class="btn btn-sm btn-secondary active" onclick="shopping.loadShopOrders('')">All Orders</button>
+    <button class="btn btn-sm btn-warning" onclick="shopping.loadShopOrders('Pending')">Pending</button>
+    <button class="btn btn-sm btn-info" onclick="shopping.loadShopOrders('Confirmed')">Confirmed</button>
+    <button class="btn btn-sm btn-primary" onclick="shopping.loadShopOrders('Processing')">Processing</button>
+    <button class="btn btn-sm btn-primary" onclick="shopping.loadShopOrders('Shipped')">Shipped</button>
+    <button class="btn btn-sm btn-success" onclick="shopping.loadShopOrders('Delivered')">Delivered</button>
+    <button class="btn btn-sm btn-danger" onclick="shopping.loadShopOrders('Cancelled')">Cancelled</button>
+  </div>
+
+  <div class="orders-list" id="shop-orders-list">
+    <!-- Orders will be loaded dynamically -->
+  </div>
+</section>

@@ -1,0 +1,49 @@
+/* Page-specific classes moved from inline styles (phase 1)
+   Add more rules here as more inline styles are removed from HTML. */
+
+/* Billing page */
+.search-bar { margin-bottom: 15px; }
+.search-bar .search-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+
+/* Developer box (auth) */
+.developer-box { width: 100%; max-width: 520px; padding: 0; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+.developer-hero { background: linear-gradient(135deg, #1e5f5b 0%, #2d8a84 100%); padding: 24px 20px; text-align: center; color: white; }
+.developer-profile { padding: 24px; text-align: center; }
+.developer-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); box-shadow: 0 6px 16px rgba(0,0,0,0.12); display: inline-block; }
+.developer-badge { font-size: 11px; padding: 4px 12px; margin-bottom: 16px; display: inline-block; }
+
+/* About page */
+.about-hero { margin-bottom: 2rem; text-align: center; }
+.about-hero h2 { color: var(--primary); font-size: 2rem; font-weight: 700; }
+.about-hero p { color: var(--gray); font-size: 1.1rem; margin-top: 0.5rem; }
+.about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+.about-card { padding: 1.5rem; margin-bottom: 0; }
+.about-feature-icon { font-size: 2.2rem; margin-bottom: 0.75rem; }
+
+/* Utility */
+.text-center { text-align: center; }
+
+.clickable { cursor: pointer; }
+
+/* Page container */
+#page-container { width: 100%; }
+
+/* Developer link wrapper for login page */
+.developer-link-wrapper { margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 12px; text-align: center; }
+.dev-icon { color: #fde047; margin-right: 8px; background: rgba(253,224,71,0.12); padding: 6px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
+
+/* Developer link styling */
+.developer-link { color: var(--primary-dark); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.developer-link:hover { text-decoration: underline; }
+
+
+/* About feature colors */
+.feature-blue { color: #2563eb; }
+.feature-green { color: #059669; }
+.feature-yellow { color: #d97706; }
+.feature-orange { color: #0284c7; }
+.feature-red { color: #dc2626; }
+.feature-purple { color: #7c3aed; }
+
+/* Card header flex helper */
+.card-header-flex { display: flex; justify-content: space-between; align-items: center; }

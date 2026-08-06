@@ -1,0 +1,36 @@
+<section id="payments-page" class="page">
+  <div class="payments-container">
+    <div class="card">
+      <div class="card-header">
+        <h3>Payment Summary</h3>
+      </div>
+      <div class="card-body">
+        <div class="payment-modes-grid" id="payment-modes-summary">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Pending Dues</h3>
+        <span class="badge badge-warning" id="pending-count">0</span>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Bill #</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>Paid</th>
+              <th>Due</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="pending-dues-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

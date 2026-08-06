@@ -1,0 +1,30 @@
+<section id="reports-page" class="page">
+  <div class="reports-container">
+    <div class="report-filters">
+      <div class="form-row">
+        <div class="form-group">
+          <label>From Date</label>
+          <input type="date" id="report-start-date">
+        </div>
+        <div class="form-group">
+          <label>To Date</label>
+          <input type="date" id="report-end-date">
+        </div>
+        <div class="form-group">
+          <button id="generate-report-btn" class="btn btn-primary"><i class="fas fa-sync"></i> Generate</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="card-header"><h3>Sales Trend</h3></div>
+        <div class="card-body"><canvas id="sales-trend-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Payment Mode Distribution</h3></div>
+        <div class="card-body"><canvas id="payment-mode-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Masters - Login & Register</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Login / Auth Page -->
+  <div id="auth-container" class="auth-container">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <img src="assets/logo.jpg" alt="The Market Masters Logo" class="logo-img">
+        <p class="tagline">You Manage Your Shop, We'll Manage Your Bills</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form">
+        <h2>Login</h2>
+        <div class="form-group">
+          <label><i class="fas fa-phone"></i> Phone Number</label>
+          <input type="tel" id="login-phone" placeholder="Enter phone number" required>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Password</label>
+          <div class="password-input-container">
+            <input type="password" id="login-password" placeholder="Enter password" required>
+            <i class="fas fa-eye password-toggle" onclick="togglePasswordVisibility('login-password', this)"></i>
+          </div>
+          <div class="forgot-password-link">
+            <a href="#" id="show-forgot-password">Forgot Password?</a>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        <p class="auth-switch">Don't have an account? <a href="#" id="show-register">Register</a></p>
+        <div class="developer-link-wrapper">
+          <a href="#" id="show-developer" class="developer-link"><i class="fas fa-laptop-code dev-icon"></i> Meet Our Developer</a>
+        </div>
+      </form>
+
+      <!-- Registration Form -->
+      <form id="register-form" class="auth-form hidden">
+        <h2>Create Account</h2>
+        <div class="form-group">
+          <label><i class="fas fa-user"></i> Full Name</label>
+          <input type="text" id="reg-name" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-phone"></i> Phone Number</label>
+          <input type="tel" id="reg-phone" placeholder="Enter phone number" required>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-envelope"></i> Email Address</label>
+          <input type="email" id="reg-email" placeholder="Enter email address (optional)">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Password</label>
+          <div class="password-input-container">
+            <input type="password" id="reg-password" placeholder="Create password (min. 6 chars)" required minlength="6">
+            <i class="fas fa-eye password-toggle" onclick="togglePasswordVisibility('reg-password', this)"></i>
+          </div>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-user-tag"></i> I am a...</label>
+          <select id="reg-role" required>
+            <option value="shopkeeper">Shopkeeper (Sell & Manage Bills)</option>
+            <option value="customer">Customer (Browse & Buy)</option>
+          </select>
+        </div>
+        <div class="form-group shopkeeper-only">
+          <label><i class="fas fa-store"></i> Shop Name</label>
+          <input type="text" id="reg-shop-name" placeholder="Enter shop name">
+        </div>
+        <div class="form-group shopkeeper-only">
+          <label><i class="fas fa-map-marker-alt"></i> Shop Address</label>
+          <textarea id="reg-shop-address" placeholder="Enter shop address" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-user-plus"></i> Register
+        </button>
+        <p class="auth-switch">Already have an account? <a href="#" id="show-login">Login</a></p>
+      </form>
+
+      <!-- Forgot Password Form -->
+      <form id="forgot-password-form" class="auth-form hidden">
+        <h2>Reset Password</h2>
+        <div id="forgot-password-step-1">
+          <div class="form-group">
+            <label><i class="fas fa-phone"></i> Registered Phone Number</label>
+            <input type="tel" id="forgot-phone" placeholder="Enter registered phone number">
+          </div>
+          <button type="button" id="send-otp-btn" class="btn btn-primary btn-block">
+            <i class="fas fa-paper-plane"></i> Send OTP
+          </button>
+        </div>
+
+        <div id="forgot-password-step-2" class="hidden">
+          <div class="form-group">
+            <label><i class="fas fa-key"></i> Enter 6-digit OTP</label>
+            <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-lock"></i> New Password</label>
+            <div class="password-input-container">
+              <input type="password" id="new-password" placeholder="Enter new password" minlength="6">
+              <i class="fas fa-eye password-toggle" onclick="togglePasswordVisibility('new-password', this)"></i>
+            </div>
+          </div>
+          <button type="button" id="verify-otp-btn" class="btn btn-success btn-block">
+            <i class="fas fa-check-circle"></i> Reset Password
+          </button>
+        </div>
+        
+        <p class="auth-switch" style="margin-top: 15px;"><a href="#" id="show-login-from-forgot"><i class="fas fa-arrow-left"></i> Back to Login</a></p>
+      </form>
+
+      <!-- Developer Info Box (hidden by default) -->
+      <div id="developer-box" class="auth-form hidden developer-box">
+        <div class="developer-hero">
+          <h2 class="dev-title"><i class="fas fa-laptop-code" style="color: #fde047;"></i> Meet Our Developer</h2>
+          <p class="dev-sub">Crafted with passion for shopkeepers & businesses</p>
+        </div>
+
+        <div class="developer-profile">
+          <img src="assets/developer.jpg" alt="Srujan Hannikeri" class="developer-avatar">
+
+          <h3 class="dev-name">Srujan Hannikeri</h3>
+          <span class="badge badge-info developer-badge">Full-Stack Software Developer</span>
+
+          <div class="dev-contact-box">
+            <div class="contact-row">
+              <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+              <div>
+                <small class="muted">Email Address</small>
+                <a href="mailto:srujanhannikeri@gmail.com" class="dev-link">srujanhannikeri@gmail.com</a>
+              </div>
+            </div>
+
+            <div class="contact-row">
+              <div class="contact-icon"><i class="fas fa-phone-alt"></i></div>
+              <div>
+                <small class="muted">Phone Number</small>
+                <a href="tel:9886217143" class="dev-link">+91 9886217143</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="social-grid">
+            <a href="https://www.linkedin.com/in/srujan-hannikeri-095936336/" target="_blank" class="social-btn linkedin"><i class="fab fa-linkedin"></i> LinkedIn</a>
+            <a href="https://github.com/Srujan-Hannikeri" target="_blank" class="social-btn github"><i class="fab fa-github"></i> GitHub</a>
+            <a href="https://instagram.com/srujan_hannikeri" target="_blank" class="social-btn instagram"><i class="fab fa-instagram"></i> Instagram</a>
+          </div>
+
+          <button type="button" id="show-login-from-dev" class="btn btn-secondary btn-block dev-back"> <i class="fas fa-arrow-left"></i> Back to Login</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="js/api.js?v=2"></script>
+  <script src="js/api.safe.js?v=2"></script>
+  <script src="js/components.js?v=2"></script>
+  <script src="js/auth.js?v=2"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof auth !== 'undefined' && auth && typeof auth.init === 'function') {
+        auth.init();
+      }
+    });
+  </script>
+</body>
+</html>

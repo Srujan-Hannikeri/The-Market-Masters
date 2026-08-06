@@ -1,0 +1,86 @@
+<section id="dashboard-page" class="page active">
+  <!-- Low Stock Alert Banner for Dashboard -->
+  <div id="low-stock-alert" class="low-stock-alert hidden">
+    <div class="alert-header">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3>Low Stock Alert!</h3>
+      <button onclick="closeLowStockAlert(event)" class="alert-close">&times;</button>
+    </div>
+    <div id="low-stock-products" class="low-stock-products">
+      <!-- Low stock products will be inserted here -->
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card sales">
+      <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+      <div class="stat-info">
+        <h3>Today's Sales</h3>
+        <p class="stat-value" id="today-sales">₹0</p>
+      </div>
+    </div>
+    <div class="stat-card expenses">
+      <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+      <div class="stat-info">
+        <h3>Today's Expenses</h3>
+        <p class="stat-value" id="today-expenses">₹0</p>
+      </div>
+    </div>
+    <div class="stat-card profit">
+      <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="stat-info">
+        <h3>Today's Profit</h3>
+        <p class="stat-value" id="today-profit">₹0</p>
+      </div>
+    </div>
+    <div class="stat-card pending">
+      <div class="stat-icon"><i class="fas fa-clock"></i></div>
+      <div class="stat-info">
+        <h3>Pending Dues</h3>
+        <p class="stat-value" id="pending-dues">₹0</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="card">
+      <div class="card-header">
+        <h3>Sales vs Expenses (Last 30 Days)</h3>
+      </div>
+      <div class="card-body">
+        <canvas id="trend-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Payment Status</h3>
+      </div>
+      <div class="card-body">
+        <canvas id="payment-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="recent-bills-card">
+    <div class="card-header">
+      <h3>Recent Bills</h3>
+      <a href="#billing" class="btn btn-sm btn-primary shopkeeper-only">View All</a>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Bill #</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="recent-bills-table">
+          <!-- Dynamic content -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
