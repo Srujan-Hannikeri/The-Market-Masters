@@ -31,7 +31,11 @@ app.use(express.urlencoded({ extended: true }));
 // Ensure DB connection middleware for serverless environment
 app.use(async (req, res, next) => {
   if (req.path.startsWith('/api')) {
-    await connectDB();
+    try {
+      await connectDB();
+    } catch (error) {
+      return res.status(503).json({ message: 'Service Unavailable', error: error.message });
+    }
   }
   next();
 });
