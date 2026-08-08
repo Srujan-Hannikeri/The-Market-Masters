@@ -289,17 +289,19 @@ const inventory = {
     try {
       const response = await inventoryAPI.getProduct(id);
       const product = response.product;
-      
-      document.getElementById('edit-product-id').value = product.id;
-      document.getElementById('edit-product-name').value = product.name;
-      document.getElementById('edit-product-description').value = product.description || '';
-      document.getElementById('edit-product-mrp').value = product.mrp || product.price || '';
-      document.getElementById('edit-product-cost-price').value = product.costPrice || '';
-      document.getElementById('edit-product-stock').value = product.stock;
-      document.getElementById('edit-product-low-stock').value = product.lowStockThreshold;
-      document.getElementById('edit-product-category').value = product.category || '';
-      document.getElementById('edit-product-barcode').value = product.barcode || '';
-      
+
+      const setVal = (elId, val) => { const el = document.getElementById(elId); if (el) el.value = val; };
+
+      setVal('edit-product-id',         product.id);
+      setVal('edit-product-name',        product.name);
+      setVal('edit-product-description', product.description || '');
+      setVal('edit-product-mrp',         product.mrp || product.price || '');
+      setVal('edit-product-cost-price',  product.costPrice || '');
+      setVal('edit-product-stock',       product.stock);
+      setVal('edit-product-low-stock',   product.lowStockThreshold);
+      setVal('edit-product-category',    product.category || '');
+      setVal('edit-product-barcode',     product.barcode || '');
+
       modal.open('edit-product-modal');
     } catch (error) {
       toast.error('Failed to load product details');

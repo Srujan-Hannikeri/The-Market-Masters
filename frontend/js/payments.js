@@ -212,11 +212,18 @@ const payments = {
     const bill = this.pendingDues.find(b => b.id === billId);
     if (!bill) return;
 
-    document.getElementById('payment-bill-id').value = bill.id;
-    document.getElementById('payment-bill-number').value = bill.billNumber;
-    document.getElementById('payment-due-amount').value = formatCurrency(bill.balanceAmount);
-    document.getElementById('payment-amount').max = bill.balanceAmount;
-    document.getElementById('payment-amount').value = bill.balanceAmount;
+    const billIdEl     = document.getElementById('payment-bill-id');
+    const billNumEl    = document.getElementById('payment-bill-number');
+    const dueAmountEl  = document.getElementById('payment-due-amount');
+    const amountEl     = document.getElementById('payment-amount');
+
+    if (billIdEl)    billIdEl.value    = bill.id;
+    if (billNumEl)   billNumEl.value   = bill.billNumber;
+    if (dueAmountEl) dueAmountEl.value = formatCurrency(bill.balanceAmount);
+    if (amountEl) {
+      amountEl.max   = bill.balanceAmount;
+      amountEl.value = bill.balanceAmount;
+    }
 
     modal.open('add-payment-modal');
   },

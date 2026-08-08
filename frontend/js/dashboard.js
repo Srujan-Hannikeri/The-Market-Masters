@@ -5,9 +5,11 @@ const dashboard = {
 
   async load() {
     try {
-      // Wait for auth user to be available
+      // Wait for auth user to be available, but only if still on dashboard
       if (!auth.user) {
-        setTimeout(() => this.load(), 100);
+        setTimeout(() => {
+          if (app.currentPage === 'dashboard') this.load();
+        }, 100);
         return;
       }
 
@@ -137,18 +139,15 @@ const dashboard = {
   },
 
   renderStats(stats) {
-    document.getElementById("today-sales").textContent = formatCurrency(
-      stats.todaySales,
-    );
-    document.getElementById("today-expenses").textContent = formatCurrency(
-      stats.todayExpenses,
-    );
-    document.getElementById("today-profit").textContent = formatCurrency(
-      stats.todayProfit,
-    );
-    document.getElementById("pending-dues").textContent = formatCurrency(
-      stats.pendingAmount,
-    );
+    const todaySales     = document.getElementById("today-sales");
+    const todayExpenses  = document.getElementById("today-expenses");
+    const todayProfit    = document.getElementById("today-profit");
+    const pendingDues    = document.getElementById("pending-dues");
+
+    if (todaySales)    todaySales.textContent    = formatCurrency(stats.todaySales);
+    if (todayExpenses) todayExpenses.textContent = formatCurrency(stats.todayExpenses);
+    if (todayProfit)   todayProfit.textContent   = formatCurrency(stats.todayProfit);
+    if (pendingDues)   pendingDues.textContent   = formatCurrency(stats.pendingAmount);
   },
 
   renderBillsByStatus(data) {

@@ -75,7 +75,8 @@ const expenses = {
   setupEventListeners() {
     // Add expense button
     document.getElementById('add-expense-btn')?.addEventListener('click', () => {
-      document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById('expense-date');
+      if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
       const typeSelect = document.getElementById('expense-type');
       if (typeSelect) {
         typeSelect.value = 'Inventory';
@@ -428,11 +429,16 @@ const expenses = {
   },
 
   async createExpense() {
-    const type = document.getElementById('expense-type').value;
-    const amount = parseFloat(document.getElementById('expense-amount').value);
-    const agencyName = document.getElementById('expense-agency-name')?.value.trim();
-    let description = document.getElementById('expense-description').value.trim();
-    const expenseDate = document.getElementById('expense-date').value;
+    const type = document.getElementById('expense-type')?.value;
+    const amount = parseFloat(document.getElementById('expense-amount')?.value);
+    const agencyName = document.getElementById('expense-agency-name')?.value?.trim();
+    let description = document.getElementById('expense-description')?.value?.trim() || '';
+    const expenseDate = document.getElementById('expense-date')?.value;
+
+    if (!type || !amount || !expenseDate) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
     // Handle Inventory Purchase items auto-addition
     if (type === 'Inventory') {

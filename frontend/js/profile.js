@@ -33,62 +33,64 @@ const profile = {
 
     const isShopkeeper = this.userData.role === 'shopkeeper';
 
-    // Update page title
+    // Helper to safely set element content
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const setVal  = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+    // Update card title
     const pageTitle = document.querySelector('#profile-page .card-header h3');
-    if (pageTitle) {
-      pageTitle.textContent = isShopkeeper ? 'Shopkeeper Profile' : 'My Profile';
+    if (pageTitle) pageTitle.textContent = isShopkeeper ? 'Shopkeeper Profile' : 'My Profile';
+
+    // ── View mode ─────────────────────────────────────────────
+    setText('profile-name',  this.userData.name  || '-');
+    setText('profile-email', this.userData.email || '-');
+    setText('profile-role',  this.userData.role  || '-');
+
+    const phoneEl = document.getElementById('profile-phone');
+    if (phoneEl) {
+      const ph = this.userData.phone;
+      phoneEl.innerHTML = ph && ph !== '-'
+        ? `<i class="fas fa-phone" onclick="copyPhoneNumber('${ph}', event)" title="Click to copy" style="cursor:pointer;color:var(--primary);"></i> ${ph}`
+        : '-';
     }
 
-    // View mode
-    document.getElementById('profile-name').textContent = this.userData.name || '-';
-    const phoneElement = document.getElementById('profile-phone');
-    phoneElement.innerHTML = `${this.userData.phone && this.userData.phone !== '-' ? '<i class="fas fa-phone" onclick="copyPhoneNumber(\'' + this.userData.phone + '\', event)" title="Click to copy phone number" style="cursor: pointer; color: var(--primary);"></i> ' : ''}${this.userData.phone || '-'}`;
-    document.getElementById('profile-email').textContent = this.userData.email || '-';
-    document.getElementById('profile-role').textContent = this.userData.role || '-';
-    
-    // Show/hide shop information based on role
+    // Shop info section visibility
     const shopInfoSection = document.querySelector('#profile-view .profile-section:nth-child(2)');
-    if (shopInfoSection) {
-      shopInfoSection.style.display = isShopkeeper ? 'block' : 'none';
-    }
-    
+    if (shopInfoSection) shopInfoSection.style.display = isShopkeeper ? 'block' : 'none';
+
     if (isShopkeeper) {
-      document.getElementById('profile-shop-name').textContent = this.userData.shopName || '-';
-      document.getElementById('profile-shop-address').textContent = this.userData.shopAddress || '-';
-      document.getElementById('profile-upi-id').textContent = this.userData.upiId || 'Not set';
-      
-      // Display UPI QR code if available
+      setText('profile-shop-name',    this.userData.shopName    || '-');
+      setText('profile-shop-address', this.userData.shopAddress || '-');
+      setText('profile-upi-id',       this.userData.upiId       || 'Not set');
+
       const qrImage = document.getElementById('profile-upi-qr-image');
-      const qrText = document.getElementById('profile-upi-qr-text');
-      if (this.userData.upiQrCode) {
-        qrImage.src = this.userData.upiQrCode;
-        qrImage.style.display = 'block';
-        qrText.style.display = 'none';
-      } else {
-        qrImage.style.display = 'none';
-        qrText.style.display = 'inline';
+      const qrText  = document.getElementById('profile-upi-qr-text');
+      if (qrImage && qrText) {
+        if (this.userData.upiQrCode) {
+          qrImage.src = this.userData.upiQrCode;
+          qrImage.style.display = 'block';
+          qrText.style.display  = 'none';
+        } else {
+          qrImage.style.display = 'none';
+          qrText.style.display  = 'inline';
+        }
       }
     }
 
-    // Edit mode
-    document.getElementById('edit-profile-name').value = this.userData.name || '';
-    document.getElementById('edit-profile-phone').value = this.userData.phone || '';
-    document.getElementById('edit-profile-email').value = this.userData.email || '';
-    document.getElementById('edit-profile-shop-name').value = this.userData.shopName || '';
-    document.getElementById('edit-profile-shop-address').value = this.userData.shopAddress || '';
-    document.getElementById('edit-profile-upi-id').value = this.userData.upiId || '';
-    
-    // Show/hide shop info in edit mode
-    const editShopSection = document.querySelector('#profile-edit .profile-section:nth-child(2)');
-    if (editShopSection) {
-      editShopSection.style.display = isShopkeeper ? 'block' : 'none';
-    }
-    
-    // Make shop fields not required for customers
+    // ── Edit mode ─────────────────────────────────────────────
+    setVal('edit-profile-name',         this.userData.name         || '');
+    setVal('edit-profile-phone',        this.userData.phone        || '');
+    setVal('edit-profile-email',        this.userData.email        || '');
+    setVal('edit-profile-shop-name',    this.userData.shopName     || '');
+    setVal('edit-profile-shop-address', this.userData.shopAddress  || '');
+    setVal('edit-profile-upi-id',       this.userData.upiId        || '');
+
+    // Shop section in edit mode
+    const editShopSection = document.getElementById('edit-shop-section');
+    if (editShopSection) editShopSection.style.display = isShopkeeper ? 'block' : 'none';
+
     const shopNameInput = document.getElementById('edit-profile-shop-name');
-    if (shopNameInput) {
-      shopNameInput.required = isShopkeeper;
-    }
+    if (shopNameInput) shopNameInput.required = isShopkeeper;
   },
 
   setupEventListeners() {

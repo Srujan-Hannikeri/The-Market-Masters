@@ -21,10 +21,11 @@ const reports = {
 
   setDefaultDates() {
     const today = new Date();
-
-    // Set both start and end date to today
-    document.getElementById('report-start-date').value = today.toISOString().split('T')[0];
-    document.getElementById('report-end-date').value = today.toISOString().split('T')[0];
+    const todayStr = today.toISOString().split('T')[0];
+    const startEl = document.getElementById('report-start-date');
+    const endEl   = document.getElementById('report-end-date');
+    if (startEl) startEl.value = todayStr;
+    if (endEl)   endEl.value   = todayStr;
   },
 
   async loadReportData() {

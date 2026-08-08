@@ -133,6 +133,7 @@ const billing = {
 
   addBillItem() {
     const container = document.getElementById('bill-items-container');
+    if (!container) return;   // page not loaded yet — bail silently
     const itemId = Date.now();
 
     const itemRow = document.createElement('div');
@@ -193,14 +194,20 @@ const billing = {
     // No discount - total equals subtotal
     const total = subtotal;
 
-    document.getElementById('bill-subtotal').textContent = formatCurrency(subtotal);
-    document.getElementById('bill-total').textContent = formatCurrency(total);
+    const subtotalEl = document.getElementById('bill-subtotal');
+    const totalEl    = document.getElementById('bill-total');
+    if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
+    if (totalEl)    totalEl.textContent    = formatCurrency(total);
 
     this.updatePaymentStatus();
   },
 
   updatePaymentStatus() {
-    const total = parseFloat(document.getElementById('bill-total').textContent.replace('₹', '').replace(',', '')) || 0;
+    const totalEl = document.getElementById('bill-total');
+    const statusEl = document.getElementById('payment-status');
+    if (!totalEl || !statusEl) return;
+
+    const total = parseFloat(totalEl.textContent.replace('₹', '').replace(',', '')) || 0;
     const paid = parseFloat(document.getElementById('paid-amount')?.value) || 0;
 
     let status = 'Pending';
@@ -210,7 +217,6 @@ const billing = {
       status = 'Partially Paid';
     }
 
-    const statusEl = document.getElementById('payment-status');
     statusEl.textContent = status;
     statusEl.className = status.replace(' ', '.');
   },
@@ -593,10 +599,14 @@ const billing = {
 
   resetForm() {
     document.getElementById('create-bill-form')?.reset();
-    document.getElementById('bill-items-container').innerHTML = '';
-    document.getElementById('bill-subtotal').textContent = '₹0';
-    document.getElementById('bill-total').textContent = '₹0';
-    document.getElementById('payment-status').textContent = 'Pending';
+    const itemsContainer = document.getElementById('bill-items-container');
+    if (itemsContainer) itemsContainer.innerHTML = '';
+    const subtotalEl = document.getElementById('bill-subtotal');
+    const totalEl    = document.getElementById('bill-total');
+    const statusEl   = document.getElementById('payment-status');
+    if (subtotalEl) subtotalEl.textContent = '₹0';
+    if (totalEl)    totalEl.textContent    = '₹0';
+    if (statusEl)   statusEl.textContent   = 'Pending';
   },
 
   // Check order refund status and show refund modal
