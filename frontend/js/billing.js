@@ -370,7 +370,7 @@ const billing = {
     let paymentMessage = '';
     if (bill.paymentStatus === 'Partially Paid') {
       paymentMessage = `<div class="alert alert-warning" style="margin: 1rem 0; padding: 1rem; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-        <i class="fas fa-exclamation-triangle"></i> <strong>Partial Payment:</strong> Amount due of ${formatCurrency(bill.dueAmount)} is pending. Please complete the payment.
+        <i class="fas fa-exclamation-triangle"></i> <strong>Partial Payment:</strong> Amount due of ${formatCurrency(bill.balanceAmount)} is pending. Please complete the payment.
       </div>`;
     } else if (bill.paymentStatus === 'Pending') {
       paymentMessage = `<div class="alert alert-danger" style="margin: 1rem 0; padding: 1rem; background: #f8d7da; border-left: 4px solid #dc3545; border-radius: 4px;">
@@ -443,7 +443,7 @@ const billing = {
             </div>
             <div class="bill-summary-row due">
               <span>Due:</span>
-              <span>${formatCurrency(bill.dueAmount)}</span>
+              <span>${formatCurrency(bill.balanceAmount)}</span>
             </div>
           </div>
           ${bill.Payments && bill.Payments.length > 0 ? `
@@ -478,7 +478,7 @@ const billing = {
         </div>
         <div class="bill-view-actions">
           ${isShopkeeper && bill.paymentStatus !== 'Paid' ? `
-          <button class="btn btn-success" onclick="billing.recordShopkeeperPayment(${bill.id}, ${bill.dueAmount})">
+          <button class="btn btn-success" onclick="billing.recordShopkeeperPayment(${bill.id}, ${bill.balanceAmount})">
             <i class="fas fa-money-bill-wave"></i> Record Payment
           </button>
           ` : ''}
@@ -545,26 +545,29 @@ const billing = {
     payments.openPaymentModal(billId);
   },
 
-  async printBill(billId, format = 'standard') {
+  async printBill(billId) {
+    // Read the format selector — falls back to 'a4' if element not on page
+    const format = document.getElementById('print-format-select')?.value || 'a4';
     try {
       const response = await billsAPI.generatePDF(billId, format);
       if (response.pdfUrl) {
-        // Open PDF in new window for printing
         const printWindow = window.open(response.pdfUrl, '_blank');
         if (printWindow) {
-          printWindow.onload = function() {
-            setTimeout(() => {
-              printWindow.print();
-            }, 500);
+          printWindow.onload = function () {
+            setTimeout(() => printWindow.print(), 600);
           };
         }
-        toast.success(`Bill PDF (${format === 'roll' ? 'Thermal Roll' : 'Standard A4'}) generated!`);
+        const label = {
+          a4: 'A4', a3: 'A3', a5: 'A5', letter: 'Letter',
+          '80mm': '80 mm Thermal', '58mm': '58 mm Thermal'
+        }[format] || format.toUpperCase();
+        toast.success(`PDF (${label}) generated!`);
       } else {
         toast.error('Failed to generate PDF bill');
       }
     } catch (error) {
       console.error('Print error:', error);
-      toast.error('Failed to generate PDF bill: ' + error.message);
+      toast.error('Failed to generate PDF: ' + error.message);
     }
   },
 

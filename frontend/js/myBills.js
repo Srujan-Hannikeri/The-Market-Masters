@@ -62,17 +62,17 @@ class MyBills {
     container.innerHTML = this.bills.map(function(bill) {
       // Only show pay button if bill is NOT fully paid
       var payButton = '';
-      var isFullyPaid = bill.paymentStatus === 'Paid' || parseFloat(bill.dueAmount) <= 0;
+      var isFullyPaid = bill.paymentStatus === 'Paid' || parseFloat(bill.balanceAmount) <= 0;
       
       if (!isFullyPaid) {
-        payButton = '<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); myBills.makePayment(' + bill.id + ', ' + bill.totalAmount + ', ' + bill.dueAmount + ')" title="Make Payment"><i class="fas fa-credit-card"></i> Pay Now</button>';
+        payButton = '<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); myBills.makePayment(' + bill.id + ', ' + bill.totalAmount + ', ' + bill.balanceAmount + ')" title="Make Payment"><i class="fas fa-credit-card"></i> Pay Now</button>';
       } else {
         payButton = '<span style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Paid</span>';
       }
       
       var dueLine = '';
-      if (bill.dueAmount > 0) {
-        dueLine = '<p style="color: var(--danger);"><strong>Due:</strong> ' + formatCurrency(bill.dueAmount) + '</p>';
+      if (bill.balanceAmount > 0) {
+        dueLine = '<p style="color: var(--danger);"><strong>Due:</strong> ' + formatCurrency(bill.balanceAmount) + '</p>';
       } else {
         dueLine = '<p style="color: #28a745;"><strong>Fully Paid</strong></p>';
       }

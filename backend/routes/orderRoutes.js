@@ -12,8 +12,9 @@ const authenticate = (req, res, next) => getAuth().authMiddleware(req, res, next
 router.get('/cart', authenticate, (req, res) => getController().getCart(req, res));
 router.post('/cart/add', authenticate, (req, res) => getController().addToCart(req, res));
 router.put('/cart/:cartItemId', authenticate, (req, res) => getController().updateCartItem(req, res));
-router.delete('/cart/:cartItemId', authenticate, (req, res) => getController().removeFromCart(req, res));
+// clearCart must be before /:cartItemId so Express doesn't swallow "clear" as an ID
 router.delete('/cart/clear', authenticate, (req, res) => getController().clearCart(req, res));
+router.delete('/cart/:cartItemId', authenticate, (req, res) => getController().removeFromCart(req, res));
 
 // Order routes
 router.post('/place', authenticate, (req, res) => getController().placeOrder(req, res));

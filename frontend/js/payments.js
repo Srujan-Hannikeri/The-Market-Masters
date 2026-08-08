@@ -107,7 +107,7 @@ const payments = {
         <td>${bill.customerName || 'Walk-in'}</td>
         <td>${formatCurrency(bill.totalAmount)}</td>
         <td>${formatCurrency(bill.paidAmount)}</td>
-        <td><strong>${formatCurrency(bill.dueAmount)}</strong></td>
+        <td><strong>${formatCurrency(bill.balanceAmount)}</strong></td>
         <td>
           <button class="btn btn-sm btn-success" onclick="payments.openPaymentModal(${bill.id})">
             <i class="fas fa-plus"></i> Pay
@@ -171,7 +171,7 @@ const payments = {
         <td>${bill.customerName || 'Walk-in'}</td>
         <td>${formatCurrency(bill.totalAmount)}</td>
         <td>${formatCurrency(bill.paidAmount)}</td>
-        <td>${formatCurrency(bill.dueAmount)}</td>
+        <td>${formatCurrency(bill.balanceAmount)}</td>
         <td>${getStatusBadge(bill.paymentStatus)}</td>
       </tr>
     `).join('');
@@ -220,9 +220,9 @@ const payments = {
 
     document.getElementById('payment-bill-id').value = bill.id;
     document.getElementById('payment-bill-number').value = bill.billNumber;
-    document.getElementById('payment-due-amount').value = formatCurrency(bill.dueAmount);
-    document.getElementById('payment-amount').max = bill.dueAmount;
-    document.getElementById('payment-amount').value = bill.dueAmount;
+    document.getElementById('payment-due-amount').value = formatCurrency(bill.balanceAmount);
+    document.getElementById('payment-amount').max = bill.balanceAmount;
+    document.getElementById('payment-amount').value = bill.balanceAmount;
 
     modal.open('add-payment-modal');
   },

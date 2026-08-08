@@ -132,19 +132,7 @@ const auth = {
       
       // Show specific message for database errors
       if (error.message.includes('Database connection') || error.message.includes('Service Unavailable')) {
-        toast.error('⚠ Database not configured. Please run MySQL-Setup.bat first!');
-        setTimeout(() => {
-          alert(
-            'Database Connection Required\n\n' +
-            'To login, you need to configure MySQL database first.\n\n' +
-            'Please follow these steps:\n' +
-            '1. Close this window\n' +
-            '2. Run "MySQL-Setup.bat"\n' +
-            '3. Enter your MySQL password\n' +
-            '4. Restart the application with "Start.bat"\n\n' +
-            'See QUICK-START.md for detailed instructions.'
-          );
-        }, 500);
+        toast.error('⚠ Unable to connect to the database. Please try again in a moment.');
       } else {
         toast.error(error.message || 'Login failed');
       }
@@ -184,19 +172,7 @@ const auth = {
       
       // Show specific message for database errors
       if (error.message.includes('Database connection') || error.message.includes('Service Unavailable')) {
-        toast.error('⚠ Database not configured. Please run MySQL-Setup.bat first!');
-        setTimeout(() => {
-          alert(
-            'Database Connection Required\n\n' +
-            'To register, you need to configure MySQL database first.\n\n' +
-            'Please follow these steps:\n' +
-            '1. Close this window\n' +
-            '2. Run "MySQL-Setup.bat"\n' +
-            '3. Enter your MySQL password\n' +
-            '4. Restart the application with "Start.bat"\n\n' +
-            'See QUICK-START.md for detailed instructions.'
-          );
-        }, 500);
+        toast.error('⚠ Unable to connect to the database. Please try again in a moment.');
       } else {
         toast.error(error.message || 'Registration failed');
       }

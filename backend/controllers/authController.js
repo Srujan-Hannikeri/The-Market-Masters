@@ -214,8 +214,7 @@ exports.sendOTP = async (req, res) => {
     }
 
     res.json({ 
-      message: 'OTP sent successfully to your phone number.',
-      debug: { otp }
+      message: 'OTP sent successfully to your phone number.'
     });
   } catch (error) {
     console.error('Send OTP error:', error);

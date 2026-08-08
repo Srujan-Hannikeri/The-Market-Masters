@@ -1,51 +1,38 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+/**
+ * OrderItem is stored as an embedded sub-document inside Order.items (see Order.js).
+ * This file exports the sub-document schema so it can be reused if needed.
+ */
+const mongoose = require('mongoose');
 
-const OrderItem = sequelize.define('OrderItem', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  orderId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'orders',
-      key: 'id'
+const orderItemSchema = new mongoose.Schema(
+  {
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true
+    },
+    productName: {
+      type: String,
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1
+    },
+    unitPrice: {
+      type: Number,
+      required: true,
+      default: 0
+    },
+    total: {
+      type: Number,
+      required: true,
+      default: 0
     }
   },
-  productId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'products',
-      key: 'id'
-    }
-  },
-  productName: {
-    type: DataTypes.STRING(200),
-    allowNull: false
-  },
-  quantity: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 1
-  },
-  unitPrice: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    defaultValue: 0
-  },
-  total: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    defaultValue: 0
-  }
-}, {
-  tableName: 'order_items',
-  timestamps: true,
-  underscored: true
-});
+  { _id: true }
+);
 
-module.exports = OrderItem;
+module.exports = orderItemSchema;

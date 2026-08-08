@@ -220,7 +220,7 @@ const reports = {
       customerMap[phone].totalBills += 1;
       customerMap[phone].totalAmount += parseFloat(bill.totalAmount) || 0;
       customerMap[phone].paidAmount += parseFloat(bill.paidAmount) || 0;
-      customerMap[phone].dueAmount += parseFloat(bill.dueAmount) || 0;
+      customerMap[phone].dueAmount += parseFloat(bill.balanceAmount) || 0;
       customerMap[phone].bills.push(bill);
     });
 
@@ -334,7 +334,7 @@ const reports = {
     
     const totalAmount = customerBills.reduce((sum, bill) => sum + parseFloat(bill.totalAmount), 0);
     const totalPaid = customerBills.reduce((sum, bill) => sum + parseFloat(bill.paidAmount), 0);
-    const totalDue = customerBills.reduce((sum, bill) => sum + parseFloat(bill.dueAmount), 0);
+    const totalDue = customerBills.reduce((sum, bill) => sum + parseFloat(bill.balanceAmount), 0);
     
     const modalContent = `
       <div class="modal-header">
@@ -378,7 +378,7 @@ const reports = {
                   <td>${formatDate(bill.created_at)}</td>
                   <td>${formatCurrency(bill.totalAmount)}</td>
                   <td>${formatCurrency(bill.paidAmount)}</td>
-                  <td style="color: ${parseFloat(bill.dueAmount) > 0 ? '#e74c3c' : '#27ae60'}; font-weight: bold;">${formatCurrency(bill.dueAmount)}</td>
+                  <td style="color: ${parseFloat(bill.balanceAmount) > 0 ? '#e74c3c' : '#27ae60'}; font-weight: bold;">${formatCurrency(bill.balanceAmount)}</td>
                   <td>${getStatusBadge(bill.paymentStatus)}</td>
                   <td>
                     <button class="btn btn-sm btn-info" onclick="billing.viewBill(${bill.id})" title="View Bill">
@@ -420,7 +420,7 @@ const reports = {
     bills.forEach(bill => {
       const total = parseFloat(bill.totalAmount) || 0;
       const paid = parseFloat(bill.paidAmount) || 0;
-      const due = parseFloat(bill.dueAmount) || 0;
+      const due = parseFloat(bill.balanceAmount) || 0;
 
       totalAmount += total;
       totalPaid += paid;
@@ -508,7 +508,7 @@ const reports = {
 
   viewCustomerDues(phone) {
     const customerBills = this.currentBills?.filter(bill => 
-      bill.customerPhone === phone && parseFloat(bill.dueAmount) > 0
+      bill.customerPhone === phone && parseFloat(bill.balanceAmount) > 0
     ) || [];
 
     if (customerBills.length === 0) {
@@ -523,7 +523,7 @@ const reports = {
     }
 
     const customerName = customerBills[0]?.customerName || 'Customer';
-    const totalDue = customerBills.reduce((sum, bill) => sum + parseFloat(bill.dueAmount), 0);
+    const totalDue = customerBills.reduce((sum, bill) => sum + parseFloat(bill.balanceAmount), 0);
 
     const modalContent = `
       <div class="modal-header">
@@ -555,7 +555,7 @@ const reports = {
                   <td>${formatDate(bill.created_at)}</td>
                   <td>₹${parseFloat(bill.totalAmount).toFixed(2)}</td>
                   <td>₹${parseFloat(bill.paidAmount).toFixed(2)}</td>
-                  <td style="color: #e74c3c; font-weight: bold;">₹${parseFloat(bill.dueAmount).toFixed(2)}</td>
+                  <td style="color: #e74c3c; font-weight: bold;">₹${parseFloat(bill.balanceAmount).toFixed(2)}</td>
                   <td>
                     <button class="btn btn-sm btn-primary" onclick="billing.viewBill(${bill.id})">
                       <i class="fas fa-eye"></i>

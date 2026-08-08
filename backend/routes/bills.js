@@ -12,7 +12,8 @@ router.get('/:id', authMiddleware, billController.getBill);
 router.post('/', authMiddleware, shopkeeperOnly, billController.createBill);
 router.put('/:id', authMiddleware, shopkeeperOnly, billController.updateBill);
 router.delete('/:id', authMiddleware, shopkeeperOnly, billController.deleteBill);
-router.post('/:id/pdf', authMiddleware, billController.generatePDF); // Both shopkeeper and customer can download
+router.post('/:id/pdf', authMiddleware, billController.generatePDF); // POST generates & returns URL
+router.get('/:id/pdf', authMiddleware, billController.generatePDF);  // GET also works (for direct browser links)
 router.post('/:id/whatsapp', authMiddleware, shopkeeperOnly, billController.sendBillWhatsApp);
 
 module.exports = router;

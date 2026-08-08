@@ -1,57 +1,45 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+/**
+ * BillItem is stored as an embedded sub-document inside Bill.items (see Bill.js).
+ * This file exports the sub-document schema so it can be reused if needed,
+ * and keeps a named export for backward compatibility.
+ */
+const mongoose = require('mongoose');
 
-const BillItem = sequelize.define('BillItem', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  billId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'bills',
-      key: 'id'
+const billItemSchema = new mongoose.Schema(
+  {
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      default: null
+    },
+    productName: {
+      type: String,
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1
+    },
+    unitPrice: {
+      type: Number,
+      required: true,
+      default: 0
+    },
+    mrp: {
+      type: Number,
+      default: 0
+    },
+    total: {
+      type: Number,
+      required: true,
+      default: 0
     }
   },
-  productId: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-      model: 'products',
-      key: 'id'
-    }
-  },
-  productName: {
-    type: DataTypes.STRING(200),
-    allowNull: false
-  },
-  quantity: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 1
-  },
-  unitPrice: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    defaultValue: 0.00
-  },
-  mrp: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: true,
-    defaultValue: 0.00
-  },
-  total: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    defaultValue: 0.00
+  {
+    _id: true,
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
   }
-}, {
-  tableName: 'bill_items',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
-});
+);
 
-module.exports = BillItem;
+module.exports = billItemSchema;

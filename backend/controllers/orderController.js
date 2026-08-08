@@ -284,8 +284,8 @@ exports.getShopOrders = async (req, res) => {
     if (status) query.orderStatus = status;
 
     const orders = await Order.find(query)
-      .populate('Customer', 'name email phone')
-      .sort({ created_at: -1 });
+      .populate('customerId', 'name email phone')
+      .sort({ createdAt: -1 });
 
     const newOrdersCount = await Order.countDocuments({
       shopkeeperId: req.user.id,
@@ -300,9 +300,9 @@ exports.getShopOrders = async (req, res) => {
 
 exports.getOrderDetails = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
-      .populate('Customer', 'name email phone')
-      .populate('Shopkeeper', 'name shopName shopAddress upiId upiQrCode');
+    const order = await Order.findById(req.params.orderId || req.params.id)
+      .populate('customerId', 'name email phone')
+      .populate('shopkeeperId', 'name shopName shopAddress upiId upiQrCode');
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
@@ -317,7 +317,7 @@ exports.getOrderDetails = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { orderStatus, paymentStatus } = req.body;
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.orderId || req.params.id);
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
@@ -336,7 +336,7 @@ exports.updateOrderStatus = async (req, res) => {
 
 exports.cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.orderId || req.params.id);
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
     }
@@ -368,7 +368,7 @@ exports.cancelOrder = async (req, res) => {
 exports.processRefund = async (req, res) => {
   try {
     const { refundAmount } = req.body;
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.orderId || req.params.id);
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
@@ -387,7 +387,7 @@ exports.processRefund = async (req, res) => {
 exports.updateOrderPayment = async (req, res) => {
   try {
     const { paymentStatus, paymentMode } = req.body;
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.orderId || req.params.id);
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
@@ -401,5 +401,33 @@ exports.updateOrderPayment = async (req, res) => {
     res.json({ message: 'Payment updated.', order });
   } catch (error) {
     res.status(500).json({ message: 'Error updating order payment.', error: error.message });
+  }
+};
+
+// Aliases so route names match controller exports
+exports.getCustomerOrders = exports.getMyOrders;
+exports.getShopkeeperOrders = exports.getShopOrders;
+exports.customerUpdatePayment = exports.updateOrderPayment;
+
+exports.getOrderByNumber = async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found.' });
+    }
+
+    // Only the customer or the shopkeeper of this order can view it
+    const userId = req.user.id || req.user._id;
+    if (
+      order.customerId.toString() !== userId.toString() &&
+      order.shopkeeperId.toString() !== userId.toString()
+    ) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
+    res.json({ order });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching order.', error: error.message });
   }
 };

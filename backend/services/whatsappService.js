@@ -53,7 +53,7 @@ ${bill.BillItems.map(item => `- ${item.productName}: ${item.quantity} x ₹${ite
 
 *Total: ₹${bill.totalAmount}*
 *Paid: ₹${bill.paidAmount}*
-*Due: ₹${bill.dueAmount}*
+*Due: ₹${bill.balanceAmount}*
 *Status: ${bill.paymentStatus}*
 
 Thank you for your business!
@@ -73,7 +73,7 @@ This is a friendly reminder for your pending payment.
 Bill #: ${bill.billNumber}
 Total Amount: ₹${bill.totalAmount}
 Paid: ₹${bill.paidAmount}
-*Due Amount: ₹${bill.dueAmount}*
+*Due Amount: ₹${bill.balanceAmount}*
 
 Please clear your dues at the earliest.
 

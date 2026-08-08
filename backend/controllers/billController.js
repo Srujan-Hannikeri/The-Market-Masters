@@ -207,7 +207,12 @@ exports.deleteBill = async (req, res) => {
 
 exports.generatePDF = async (req, res) => {
   try {
-    const { format = 'standard' } = req.query;
+    // Accept format from query (?format=a4 | a3 | a5 | letter | 80mm | 58mm)
+    // Default to 'a4'. Legacy values 'standard' and 'roll' are mapped for backward compat.
+    let format = (req.query.format || req.body?.format || 'a4').toLowerCase();
+    if (format === 'standard') format = 'a4';
+    if (format === 'roll' || format === 'thermal') format = '80mm';
+
     const bill = await Bill.findById(req.params.id)
       .populate('shopkeeperId', 'name shopName shopAddress phone');
 
@@ -219,8 +224,9 @@ exports.generatePDF = async (req, res) => {
     bill.pdfPath = pdfPath;
     await bill.save();
 
-    res.json({ message: 'PDF generated successfully.', pdfUrl: pdfPath });
+    res.json({ message: 'PDF generated successfully.', pdfUrl: pdfPath, format });
   } catch (error) {
+    console.error('PDF generation error:', error);
     res.status(500).json({ message: 'Error generating PDF.', error: error.message });
   }
 };
