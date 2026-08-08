@@ -1,17 +1,25 @@
 <section id="cart-page" class="page">
-  <div class="cart-container" style="display: flex; gap: 20px; flex-wrap: wrap;">
-    <div class="card" style="flex: 2; min-width: 300px;">
+  <div class="cart-container" style="display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start;">
+    <div class="card">
       <div class="card-header">
-        <h3>Shopping Cart</h3>
+        <h3><i class="fas fa-shopping-cart"></i> Your Cart</h3>
+        <button class="btn btn-sm btn-danger" onclick="shopping.clearCart()">
+          <i class="fas fa-trash"></i> Clear Cart
+        </button>
       </div>
       <div class="card-body">
-        <div id="cart-items"></div>
+        <div id="cart-items">
+          <div class="empty-state" style="padding:3rem;text-align:center;">
+            <i class="fas fa-shopping-cart" style="font-size:3rem;color:var(--gray-light);"></i>
+            <h3 style="margin-top:1rem;">Your Cart is Empty</h3>
+            <p style="color:var(--gray);">Browse products and add items to your cart</p>
+            <button onclick="app.navigateTo('shop')" class="btn btn-primary" style="margin-top:1rem;">
+              <i class="fas fa-store"></i> Start Shopping
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="card" style="flex: 1; min-width: 280px;">
-      <div class="card-body">
-        <div id="cart-summary"></div>
-      </div>
-    </div>
+    <div id="cart-summary"></div>
   </div>
 </section>

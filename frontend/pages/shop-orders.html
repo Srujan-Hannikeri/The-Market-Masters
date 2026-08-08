@@ -1,20 +1,30 @@
 <section id="shop-orders-page" class="page">
-  <div class="page-header" style="margin-bottom: 20px;">
-    <h3>Customer Orders</h3>
-    <p>Manage and process incoming customer orders</p>
-  </div>
-
-  <div class="order-filters" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-    <button class="btn btn-sm btn-secondary active" onclick="shopping.loadShopOrders('')">All Orders</button>
-    <button class="btn btn-sm btn-warning" onclick="shopping.loadShopOrders('Pending')">Pending</button>
-    <button class="btn btn-sm btn-info" onclick="shopping.loadShopOrders('Confirmed')">Confirmed</button>
-    <button class="btn btn-sm btn-primary" onclick="shopping.loadShopOrders('Processing')">Processing</button>
-    <button class="btn btn-sm btn-primary" onclick="shopping.loadShopOrders('Shipped')">Shipped</button>
-    <button class="btn btn-sm btn-success" onclick="shopping.loadShopOrders('Delivered')">Delivered</button>
-    <button class="btn btn-sm btn-danger" onclick="shopping.loadShopOrders('Cancelled')">Cancelled</button>
-  </div>
-
-  <div class="orders-list" id="shop-orders-list">
-    <!-- Orders will be loaded dynamically -->
+  <div class="shop-orders-container">
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-header">
+        <h3><i class="fas fa-clipboard-list"></i> Manage Orders</h3>
+        <div class="filter-group">
+          <select id="shop-orders-status-filter" onchange="shopping.loadShopOrders(this.value)"
+            style="padding:0.4rem 0.8rem;border:1px solid var(--border);border-radius:8px;">
+            <option value="">All Orders</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Processing">Processing</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <button class="btn btn-sm btn-secondary" onclick="shopping.loadShopOrders()">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="shop-orders-list">
+      <div class="empty-state" style="padding:3rem;text-align:center;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary);"></i>
+        <p style="margin-top:1rem;color:var(--gray);">Loading orders…</p>
+      </div>
+    </div>
   </div>
 </section>

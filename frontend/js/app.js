@@ -146,6 +146,9 @@ const app = {
     const container = document.getElementById('page-container');
     if (container) container.innerHTML = '';
 
+    // Show loader while fetching the page partial
+    if (typeof loader !== 'undefined') loader.show('Loading page…');
+
     // Update page title mapping
     const titles = {
       dashboard: 'Dashboard',
@@ -178,8 +181,11 @@ const app = {
         loaded = true;
       }
     } catch (err) {
-
+      // partial fetch failed — silent fallback
     }
+
+    // Hide loader after partial is in DOM
+    if (typeof loader !== 'undefined') loader.hide();
 
     // Fallback to existing in-index sections if partial not found
     if (!loaded) {
@@ -202,6 +208,10 @@ const app = {
 
   // Load page-specific data
   loadPageData(page) {
+    // Stop background polling from previously active modules
+    const stoppable = [billing, reports];
+    stoppable.forEach(mod => { if (mod && typeof mod.stop === 'function') mod.stop(); });
+
     switch (page) {
       case 'dashboard':
         dashboard.load();

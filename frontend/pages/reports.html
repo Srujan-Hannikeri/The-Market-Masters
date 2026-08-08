@@ -19,12 +19,35 @@
     <div class="dashboard-grid">
       <div class="card">
         <div class="card-header"><h3>Sales Trend</h3></div>
-        <div class="card-body"><canvas id="sales-trend-chart"></canvas></div>
+        <div class="card-body"><canvas id="sales-trend-chart" style="height:260px;"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header"><h3>Payment Mode Distribution</h3></div>
-        <div class="card-body"><canvas id="payment-mode-chart"></canvas></div>
+        <div class="card-body"><canvas id="payment-mode-chart" style="height:260px;"></canvas></div>
       </div>
     </div>
+
+    <!-- Profit / Loss Summary -->
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-chart-pie"></i> Profit / Loss Summary</h3>
+      </div>
+      <div class="card-body">
+        <div id="profit-loss-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+          <!-- Filled by reports.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Breakdown -->
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-users"></i> Customer Breakdown</h3>
+      </div>
+      <div class="card-body" id="customer-breakdown-container">
+        <!-- Filled by reports.js -->
+      </div>
+    </div>
+
   </div>
 </section>

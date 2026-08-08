@@ -1440,3 +1440,129 @@ cursor: default;
     margin: 3px 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   BUSINESS PAGE LOADER
+   ═══════════════════════════════════════════════════════ */
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+}
+
+.page-loader.hidden {
+  display: none !important;
+}
+
+.loader-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.loader-card {
+  position: relative;
+  z-index: 1;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem 2.5rem 1.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-width: 200px;
+  animation: loaderCardIn 0.28s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+@keyframes loaderCardIn {
+  from { opacity: 0; transform: scale(0.7) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* SVG Container */
+.loader-svg {
+  width: 100px;
+  height: 100px;
+  overflow: visible;
+}
+
+/* Orbit dot spinning around the store */
+.orbit-dot {
+  transform-origin: 60px 60px;
+  animation: orbitSpin 1.6s linear infinite;
+}
+.orbit-dot-text {
+  transform-origin: 60px 60px;
+  animation: orbitSpin 1.6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Pulse dot on roof */
+.pulse-dot {
+  animation: pulseDot 1.2s ease-in-out infinite alternate;
+}
+@keyframes pulseDot {
+  from { opacity: 1; r: 5; }
+  to   { opacity: 0.3; r: 7; }
+}
+
+/* Label text typing dots */
+.loader-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 0.3px;
+}
+
+.loader-text::after {
+  content: '';
+  display: inline-block;
+  width: 1.2em;
+  animation: typingDots 1.2s steps(4, end) infinite;
+}
+@keyframes typingDots {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
+
+/* Progress bar */
+.loader-bar-track {
+  width: 140px;
+  height: 4px;
+  background: #e8f5e9;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.loader-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #1e5f5b, #d4a017, #1e5f5b);
+  background-size: 200% 100%;
+  border-radius: 99px;
+  animation: barSlide 1.6s ease-in-out infinite, barShimmer 1.6s linear infinite;
+}
+@keyframes barSlide {
+  0%   { width: 0%;   margin-left: 0%; }
+  50%  { width: 70%;  margin-left: 15%; }
+  100% { width: 0%;   margin-left: 100%; }
+}
+@keyframes barShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

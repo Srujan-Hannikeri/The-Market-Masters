@@ -23,6 +23,14 @@ const billing = {
     await this.loadBills();
   },
 
+  // Called by app.js when navigating away — stops background polling
+  stop() {
+    if (this.liveUpdateInterval) {
+      clearInterval(this.liveUpdateInterval);
+      this.liveUpdateInterval = null;
+    }
+  },
+
   async loadProducts() {
     try {
       const response = await inventoryAPI.getProducts({ limit: 1000 });
@@ -53,6 +61,11 @@ const billing = {
     document.getElementById('bill-status-filter')?.addEventListener('change', () => {
       this.loadBills();
     });
+
+    // Bill search
+    document.getElementById('bill-search')?.addEventListener('input', debounce((e) => {
+      this.searchBills(e.target.value);
+    }, 300));
 
     // Barcode scanner rapid input listener
     let barcodeBuffer = '';
@@ -188,7 +201,7 @@ const billing = {
 
     document.querySelectorAll('.bill-item-row').forEach(row => {
       const totalText = row.querySelector('.item-total').textContent;
-      subtotal += parseFloat(totalText.replace('₹', '').replace(',', '')) || 0;
+      subtotal += parseFloat(totalText.replace(/[₹,]/g, '')) || 0;
     });
 
     // No discount - total equals subtotal
@@ -207,7 +220,7 @@ const billing = {
     const statusEl = document.getElementById('payment-status');
     if (!totalEl || !statusEl) return;
 
-    const total = parseFloat(totalEl.textContent.replace('₹', '').replace(',', '')) || 0;
+    const total = parseFloat(totalEl.textContent.replace(/[₹,]/g, '')) || 0;
     const paid = parseFloat(document.getElementById('paid-amount')?.value) || 0;
 
     let status = 'Pending';
@@ -227,7 +240,7 @@ const billing = {
       const productId = row.querySelector('.product-select').value;
       const quantity = parseInt(row.querySelector('.quantity-input').value);
       if (productId && quantity > 0) {
-        items.push({ productId: parseInt(productId), quantity });
+        items.push({ productId: productId, quantity });
       }
     });
 
@@ -341,10 +354,10 @@ const billing = {
         <div class="bill-card-footer">
           <span class="bill-amount">${formatCurrency(bill.totalAmount)}</span>
           <div class="bill-actions">
-            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); billing.viewBill(${bill.id})" title="View Bill">
+            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); billing.viewBill('${bill.id}')" title="View Bill">
               <i class="fas fa-eye"></i> View
             </button>
-            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill(${bill.id})" title="Print Bill">
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill('${bill.id}')" title="Print Bill">
               <i class="fas fa-print"></i> Print
             </button>
           </div>
@@ -469,9 +482,9 @@ const billing = {
                   <tr>
                     <td>${formatDate(payment.created_at)}</td>
                     <td>${payment.paymentMode}</td>
-                    <td>${formatCurrency(payment.amountPaid)}</td>
+                    <td>${formatCurrency(payment.amount)}</td>
                     ${isShopkeeper ? `<td>
-                      <button class="btn btn-sm btn-secondary" onclick="billing.editPayment(${payment.id}, ${bill.id})">
+                      <button class="btn btn-sm btn-secondary" onclick="billing.editPayment('${payment.id}', '${bill.id}')">
                         <i class="fas fa-edit"></i>
                       </button>
                     </td>` : ''}
@@ -484,14 +497,14 @@ const billing = {
         </div>
         <div class="bill-view-actions">
           ${isShopkeeper && bill.paymentStatus !== 'Paid' ? `
-          <button class="btn btn-success" onclick="billing.recordShopkeeperPayment(${bill.id}, ${bill.balanceAmount})">
+          <button class="btn btn-success" onclick="billing.recordShopkeeperPayment('${bill.id}', ${bill.balanceAmount})">
             <i class="fas fa-money-bill-wave"></i> Record Payment
           </button>
           ` : ''}
-          <button class="btn btn-primary" onclick="billing.printBill(${bill.id})">
+          <button class="btn btn-primary" onclick="billing.printBill('${bill.id}')">
             <i class="fas fa-print"></i> Print
           </button>
-          <button class="btn btn-info" onclick="billing.downloadBillPDF(${bill.id})">
+          <button class="btn btn-info" onclick="billing.downloadBillPDF('${bill.id}')">
             <i class="fas fa-download"></i> Download PDF
           </button>
           <button class="btn btn-secondary" onclick="modal.close('bill-view-modal-content')">
@@ -527,15 +540,14 @@ const billing = {
       const response = await paymentsAPI.getPayment(paymentId);
       const payment = response.payment;
       
-      const newAmount = prompt('Enter new payment amount:', payment.amountPaid);
+      const newAmount = prompt('Enter new payment amount:', payment.amount);
       if (newAmount === null) return;
       
       const newMode = prompt('Enter payment mode (Cash/UPI/Card/Net Banking):', payment.paymentMode);
       if (newMode === null) return;
 
-      // Update payment
       await paymentsAPI.updatePayment(paymentId, {
-        amountPaid: parseFloat(newAmount),
+        amount: parseFloat(newAmount),
         paymentMode: newMode
       });
 

@@ -66,13 +66,19 @@ exports.getCustomerBills = async (req, res) => {
 exports.getBill = async (req, res) => {
   try {
     const bill = await Bill.findById(req.params.id)
-      .populate('shopkeeperId', 'name shopName shopAddress phone upiId upiQrCode');
+      .populate('shopkeeperId', 'name shopName shopAddress phone upiId upiQrCode')
+      .populate('items.productId', 'name costPrice mrp');
 
     if (!bill) {
       return res.status(404).json({ message: 'Bill not found.' });
     }
 
-    res.json({ bill });
+    // Attach payments for history display
+    const payments = await Payment.find({ billId: bill._id }).sort({ created_at: -1 });
+    const billObj = bill.toJSON();
+    billObj.Payments = payments;
+
+    res.json({ bill: billObj });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching bill.', error: error.message });
   }

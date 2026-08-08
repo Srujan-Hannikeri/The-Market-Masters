@@ -303,11 +303,10 @@ const dashboard = {
       // Filter low stock products (stock <= lowStockThreshold)
       const lowStockProducts = products.filter((p) => {
         const stock = parseInt(p.stock) || 0;
-        const threshold = parseInt(p.lowStockThreshold) || 10;
+        const threshold = parseInt(p.minStock || p.lowStockThreshold) || 10;
         return stock <= threshold && stock > 0;
       });
 
-      // Filter out of stock products (stock = 0)
       const outOfStockProducts = products.filter((p) => {
         const stock = parseInt(p.stock) || 0;
         return stock === 0;
@@ -340,7 +339,7 @@ const dashboard = {
 
         // Low stock products
         lowStockProducts.forEach((product) => {
-          const threshold = parseInt(product.lowStockThreshold) || 10;
+          const threshold = parseInt(product.minStock || product.lowStockThreshold) || 10;
           html += `
             <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor: pointer;">
               <i class="fas fa-exclamation-triangle"></i>

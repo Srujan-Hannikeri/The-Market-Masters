@@ -42,6 +42,9 @@ const api = {
       config.body = JSON.stringify(config.body);
     }
 
+    // Show loader (if components.js is loaded)
+    if (typeof loader !== 'undefined') loader.show();
+
     try {
       const response = await fetch(url, config);
       const data = await response.json();
@@ -54,6 +57,8 @@ const api = {
     } catch (error) {
       console.error('API Error:', error);
       throw error;
+    } finally {
+      if (typeof loader !== 'undefined') loader.hide();
     }
   },
 

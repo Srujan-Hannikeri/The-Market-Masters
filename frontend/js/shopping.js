@@ -58,11 +58,11 @@ const shopping = {
           ${product.stock > 0 ? `
             <div class="product-actions">
               <div class="quantity-selector">
-                <button onclick="shopping.updateQuantity(${product.id}, -1)" class="btn-quantity">-</button>
+                <button onclick="shopping.updateQuantity('\', -1)" class="btn-quantity">-</button>
                 <input type="number" id="qty-${product.id}" value="1" min="1" max="${product.stock}">
-                <button onclick="shopping.updateQuantity(${product.id}, 1)" class="btn-quantity">+</button>
+                <button onclick="shopping.updateQuantity('\', 1)" class="btn-quantity">+</button>
               </div>
-              <button onclick="shopping.addToCart(${product.id})" class="btn btn-primary btn-add-cart">
+              <button onclick="shopping.addToCart('\')" class="btn btn-primary btn-add-cart">
                 <i class="fas fa-cart-plus"></i> Add to Cart
               </button>
             </div>
@@ -72,6 +72,23 @@ const shopping = {
         </div>
       </div>
     `).join('');
+  },
+
+  // Filter catalog by search query (used by shop.html search input)
+  filterCatalog(query) {
+    if (!query || !query.trim()) {
+      this.renderProductCatalog();
+      return;
+    }
+    const term = query.toLowerCase();
+    const filtered = this.products.filter(p =>
+      (p.name || '').toLowerCase().includes(term) ||
+      (p.category || '').toLowerCase().includes(term)
+    );
+    const saved = this.products;
+    this.products = filtered;
+    this.renderProductCatalog();
+    this.products = saved;
   },
 
   // Update quantity input
@@ -236,13 +253,13 @@ const shopping = {
           <p class="cart-item-price">₹${item.unitPrice.toFixed(2)} / unit</p>
         </div>
         <div class="cart-item-quantity">
-          <button onclick="shopping.updateCartItem(${item.id}, ${item.quantity - 1})" class="btn-quantity">-</button>
+          <button onclick="shopping.updateCartItem('${item.id}', ${item.quantity - 1})" class="btn-quantity">-</button>
           <span>${item.quantity}</span>
-          <button onclick="shopping.updateCartItem(${item.id}, ${item.quantity + 1})" class="btn-quantity">+</button>
+          <button onclick="shopping.updateCartItem('${item.id}', ${item.quantity + 1})" class="btn-quantity">+</button>
         </div>
         <div class="cart-item-total">
           <p>₹${item.total.toFixed(2)}</p>
-          <button onclick="shopping.removeFromCart(${item.id})" class="btn-remove">
+          <button onclick="shopping.removeFromCart('${item.id}')" class="btn-remove">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -562,14 +579,14 @@ const shopping = {
           ` : ''}
           <div class="order-actions">
             ${order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Delivered' ? `
-              <button onclick="shopping.showPaymentModal(${order.id}, '${order.paymentMode}', ${order.finalAmount})" class="btn btn-sm btn-success">
+              <button onclick="shopping.showPaymentModal('${order.id}', '${order.paymentMode}', ${order.finalAmount})" class="btn btn-sm btn-success">
                 <i class="fas fa-credit-card"></i> Pay Now
               </button>
-              <button onclick="shopping.cancelOrder(${order.id})" class="btn btn-sm btn-danger">
+              <button onclick="shopping.cancelOrder('${order.id}')" class="btn btn-sm btn-danger">
                 <i class="fas fa-times"></i> Cancel
               </button>
             ` : ''}
-            <button onclick="shopping.viewOrderDetails(${order.id})" class="btn btn-sm btn-secondary">
+            <button onclick="shopping.viewOrderDetails('${order.id}')" class="btn btn-sm btn-secondary">
               <i class="fas fa-eye"></i> View Details
             </button>
           </div>
@@ -788,7 +805,7 @@ const shopping = {
         <div class="order-header">
           <div>
             <h4 style="color: ${colors.text};">Order #${order.orderNumber}</h4>
-            <p class="order-customer" style="color: ${colors.text};">${order.Customer?.name || 'Unknown'}</p>
+            <p class="order-customer" style="color: ${colors.text};">${order.customerId?.name || order.Customer?.name || 'Unknown'}</p>
             <p class="order-date" style="color: ${colors.text};">${new Date(order.created_at).toLocaleDateString('en-IN')}</p>
           </div>
           <div class="order-status-actions">
@@ -817,10 +834,10 @@ const shopping = {
             </div>
           ` : ''}
           <div class="order-actions">
-            <button onclick="shopping.viewShopOrderDetails(${order.id})" class="btn btn-sm btn-secondary">View</button>
-            <button onclick="shopping.updateOrderStatusModal(${order.id}, '${order.orderStatus}', '${order.paymentStatus}')" class="btn btn-sm btn-primary">Update</button>
+            <button onclick="shopping.viewShopOrderDetails('${order.id}')" class="btn btn-sm btn-secondary">View</button>
+            <button onclick="shopping.updateOrderStatusModal('${order.id}', '${order.orderStatus}', '${order.paymentStatus}')" class="btn btn-sm btn-primary">Update</button>
             ${order.orderStatus === 'Cancelled' && (order.paymentStatus === 'Paid' || order.paymentStatus === 'Partially Paid') && order.refundStatus !== 'Refunded' ? `
-              <button onclick="shopping.showRefundModal(${order.id}, ${order.finalAmount})" class="btn btn-sm btn-warning">
+              <button onclick="shopping.showRefundModal('${order.id}', ${order.finalAmount})" class="btn btn-sm btn-warning">
                 <i class="fas fa-undo"></i> Process Refund
               </button>
             ` : ''}
@@ -844,9 +861,9 @@ const shopping = {
           
           <div class="order-details-section">
             <h4>Customer Information</h4>
-            <p><strong>Name:</strong> ${order.Customer?.name}</p>
+            <p><strong>Name:</strong> ${order.customerId?.name || order.Customer?.name || 'N/A'}</p>
             <p><strong>Phone:</strong> <i class="fas fa-phone" onclick="copyPhoneNumber('${order.customerPhone}', event)" title="Click to copy phone number" style="cursor: pointer; color: var(--primary);"></i> ${order.customerPhone}</p>
-            <p><strong>Email:</strong> ${order.Customer?.email || 'N/A'}</p>
+            <p><strong>Email:</strong> ${order.customerId?.email || order.Customer?.email || 'N/A'}</p>
           </div>
           
           <div class="order-details-section">

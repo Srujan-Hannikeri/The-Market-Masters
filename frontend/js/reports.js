@@ -13,6 +13,14 @@ const reports = {
     this.loadReportData();
   },
 
+  // Stop background polling when navigating away
+  stop() {
+    if (this.liveUpdateInterval) {
+      clearInterval(this.liveUpdateInterval);
+      this.liveUpdateInterval = null;
+    }
+  },
+
   setupEventListeners() {
     document.getElementById('generate-report-btn')?.addEventListener('click', () => {
       this.loadReportData();
@@ -49,13 +57,15 @@ const reports = {
       this.renderProfitLossSummary(profitLossData.summary);
       this.renderCustomerBreakdown(this.currentBills);
 
-      // Setup live update interval - refresh reports every 10 seconds
+      // Setup live update — only while on reports page, max once
       if (!this.liveUpdateInterval) {
-
         this.liveUpdateInterval = setInterval(() => {
-
-          this.loadReportData();
-        }, 10000);
+          if (typeof app !== 'undefined' && app.currentPage === 'reports') {
+            this.loadReportData();
+          } else {
+            this.stop();
+          }
+        }, 30000); // 30 s — less aggressive than 10 s
       }
     } catch (error) {
       console.error('Failed to load report data:', error);
@@ -380,10 +390,10 @@ const reports = {
                   <td style="color: ${parseFloat(bill.balanceAmount) > 0 ? '#e74c3c' : '#27ae60'}; font-weight: bold;">${formatCurrency(bill.balanceAmount)}</td>
                   <td>${getStatusBadge(bill.paymentStatus)}</td>
                   <td>
-                    <button class="btn btn-sm btn-info" onclick="billing.viewBill(${bill.id})" title="View Bill">
+                    <button class="btn btn-sm btn-info" onclick="billing.viewBill('\')" title="View Bill">
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill(${bill.id})" title="Print Bill">
+                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill('\')" title="Print Bill">
                       <i class="fas fa-print"></i>
                     </button>
                   </td>
@@ -556,10 +566,10 @@ const reports = {
                   <td>₹${parseFloat(bill.paidAmount).toFixed(2)}</td>
                   <td style="color: #e74c3c; font-weight: bold;">₹${parseFloat(bill.balanceAmount).toFixed(2)}</td>
                   <td>
-                    <button class="btn btn-sm btn-primary" onclick="billing.viewBill(${bill.id})">
+                    <button class="btn btn-sm btn-primary" onclick="billing.viewBill('\')">
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill(${bill.id})">
+                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill('\')">
                       <i class="fas fa-print"></i>
                     </button>
                   </td>

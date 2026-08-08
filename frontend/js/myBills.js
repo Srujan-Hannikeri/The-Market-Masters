@@ -121,9 +121,10 @@ class MyBills {
       try {
         const billResponse = await billsAPI.getBill(billId);
         const bill = billResponse.bill;
-        if (bill && bill.userId) {
+        const shopkeeperId = bill?.shopkeeperId?._id || bill?.shopkeeperId;
+        if (shopkeeperId) {
           try {
-            const shopProfile = await api.get('/auth/shopkeeper/' + bill.userId);
+            const shopProfile = await api.get('/auth/shopkeeper/' + shopkeeperId);
             if (shopProfile.user && shopProfile.user.role === 'shopkeeper') {
               shopkeeperUPI = {
                 upiId: shopProfile.user.upiId,

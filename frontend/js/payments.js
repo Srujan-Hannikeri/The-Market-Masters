@@ -66,11 +66,11 @@ const payments = {
     try {
       const response = await paymentsAPI.getPendingDues();
 
-      this.pendingDues = response.bills || [];
+      this.pendingDues = response.pendingDues || [];
       this.renderPendingDues();
       const countEl = document.getElementById('pending-count');
-      if (countEl && response.summary) {
-        countEl.textContent = response.summary.totalBills || 0;
+      if (countEl) {
+        countEl.textContent = this.pendingDues.length;
       }
     } catch (error) {
       console.error('Pending Dues Error:', error);
@@ -107,7 +107,7 @@ const payments = {
         <td>${formatCurrency(bill.paidAmount)}</td>
         <td><strong>${formatCurrency(bill.balanceAmount)}</strong></td>
         <td>
-          <button class="btn btn-sm btn-success" onclick="payments.openPaymentModal(${bill.id})">
+          <button class="btn btn-sm btn-success" onclick="payments.openPaymentModal('${bill.id}')">
             <i class="fas fa-plus"></i> Pay
           </button>
         </td>
@@ -200,10 +200,10 @@ const payments = {
     tbody.innerHTML = paymentsList.map(payment => `
       <tr>
         <td>${formatDate(payment.created_at)}</td>
-        <td>${payment.Bill?.billNumber || '-'}</td>
-        <td>${payment.Bill?.customerName || '-'}</td>
+        <td>${payment.billId?.billNumber || '-'}</td>
+        <td>${payment.billId?.customerName || '-'}</td>
         <td><span style="${badgeStyle(payment.paymentMode)}">${payment.paymentMode}</span></td>
-        <td>${formatCurrency(payment.amountPaid)}</td>
+        <td>${formatCurrency(payment.amount)}</td>
       </tr>
     `).join('');
   },
@@ -212,10 +212,10 @@ const payments = {
     const bill = this.pendingDues.find(b => b.id === billId);
     if (!bill) return;
 
-    const billIdEl     = document.getElementById('payment-bill-id');
-    const billNumEl    = document.getElementById('payment-bill-number');
-    const dueAmountEl  = document.getElementById('payment-due-amount');
-    const amountEl     = document.getElementById('payment-amount');
+    const billIdEl    = document.getElementById('payment-bill-id');
+    const billNumEl   = document.getElementById('payment-bill-number');
+    const dueAmountEl = document.getElementById('payment-due-amount');
+    const amountEl    = document.getElementById('payment-amount');
 
     if (billIdEl)    billIdEl.value    = bill.id;
     if (billNumEl)   billNumEl.value   = bill.billNumber;
@@ -230,7 +230,7 @@ const payments = {
 
   async recordPayment() {
     const paymentData = {
-      billId: parseInt(document.getElementById('payment-bill-id').value),
+      billId: document.getElementById('payment-bill-id').value,
       amountPaid: parseFloat(document.getElementById('payment-amount').value),
       paymentMode: document.getElementById('payment-mode-input').value,
       transactionId: document.getElementById('payment-transaction-id').value

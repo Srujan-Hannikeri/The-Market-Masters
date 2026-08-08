@@ -1,9 +1,19 @@
 <section id="shop-page" class="page">
-  <div class="page-header">
-    <h3>Shop Products</h3>
-    <p>Browse and shop from our catalog</p>
-  </div>
-  <div class="products-catalog" id="products-catalog">
-    <!-- Products will be loaded dynamically -->
+  <div class="shop-container">
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-header">
+        <h3><i class="fas fa-store"></i> Browse Products</h3>
+        <div class="search-box">
+          <input type="text" id="shop-search" placeholder="Search products…" oninput="shopping.filterCatalog(this.value)"
+            style="padding:0.5rem 1rem;border:1px solid var(--border);border-radius:8px;min-width:220px;">
+        </div>
+      </div>
+    </div>
+    <div id="products-catalog" class="products-grid">
+      <div class="empty-state" style="padding:3rem;text-align:center;grid-column:1/-1;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary);"></i>
+        <p style="margin-top:1rem;color:var(--gray);">Loading products…</p>
+      </div>
+    </div>
   </div>
 </section>

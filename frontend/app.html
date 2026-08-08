@@ -352,6 +352,42 @@
     <!-- Dynamic modals appended here by billing.js, shopping.js, etc. -->
   </div>
 
+  <!-- ═══════════════ BUSINESS PAGE LOADER ═══════════════ -->
+  <div id="page-loader" class="page-loader hidden">
+    <div class="loader-backdrop"></div>
+    <div class="loader-card">
+      <!-- Animated SVG: shop/rupee coin spinning around a store -->
+      <svg class="loader-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <!-- Orbit ring -->
+        <circle cx="60" cy="60" r="44" fill="none" stroke="#e8f5e9" stroke-width="3"/>
+        <!-- Animated orbit dot (coin) -->
+        <circle class="orbit-dot" cx="104" cy="60" r="7" fill="#d4a017"/>
+        <text class="orbit-dot-text" x="104" y="64" text-anchor="middle" font-size="8" font-weight="bold" fill="#1e5f5b">₹</text>
+        <!-- Store building -->
+        <rect x="34" y="52" width="52" height="34" rx="3" fill="#1e5f5b"/>
+        <!-- Roof / awning -->
+        <polygon points="28,54 60,34 92,54" fill="#2d8a84"/>
+        <!-- Door -->
+        <rect x="52" y="68" width="16" height="18" rx="2" fill="#d4a017"/>
+        <!-- Windows -->
+        <rect x="37" y="58" width="12" height="10" rx="2" fill="#b2dfdb"/>
+        <rect x="71" y="58" width="12" height="10" rx="2" fill="#b2dfdb"/>
+        <!-- Chimney / flag pulse dot -->
+        <circle cx="60" cy="30" r="5" fill="#d4a017" class="pulse-dot"/>
+      </svg>
+
+      <!-- Animated text bar -->
+      <div class="loader-label">
+        <span class="loader-text" id="loader-text">Loading…</span>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="loader-bar-track">
+        <div class="loader-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notifications -->
   <div id="toast-container" class="toast-container"></div>
 

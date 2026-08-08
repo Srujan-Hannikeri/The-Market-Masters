@@ -37,13 +37,13 @@ const expenses = {
 
           if (this.monthExpenses.length === 0) {
             this.monthExpenses = allList.filter(e => {
-              const d = new Date(e.expenseDate);
+              const d = new Date(e.date || e.expenseDate);
               return d.getFullYear() === curYear && d.getMonth() === curMonth;
             });
           }
           if (this.yearExpenses.length === 0) {
             this.yearExpenses = allList.filter(e => {
-              const d = new Date(e.expenseDate);
+              const d = new Date(e.date || e.expenseDate);
               return d.getFullYear() === curYear;
             });
           }
@@ -224,7 +224,7 @@ const expenses = {
     }
 
     if (this.currentFilter !== 'all') {
-      targetList = targetList.filter(e => e.type === this.currentFilter);
+      targetList = targetList.filter(e => e.category === this.currentFilter);
     }
 
     if (targetList.length === 0) {
@@ -262,11 +262,11 @@ const expenses = {
       }
 
       return `
-        <tr onclick="expenses.viewExpenseDetails(${expense.id})" style="cursor: pointer; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" title="Click to view expense card breakdown">
-          <td><span class="badge badge-info">${expense.type}</span></td>
+        <tr onclick="expenses.viewExpenseDetails('${expense.id}')" style="cursor: pointer; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" title="Click to view expense card breakdown">
+          <td><span class="badge badge-info">${expense.category || expense.type || '-'}</span></td>
           <td style="font-weight: 500; color: #334155; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayDesc}</td>
           <td style="font-weight: 700; color: #0f172a;">${formatCurrency(expense.amount)}</td>
-          <td style="color: #64748b; font-size: 13px; font-weight: 500;">${formatDate(expense.expenseDate)}</td>
+          <td style="color: #64748b; font-size: 13px; font-weight: 500;">${formatDate(expense.date || expense.expenseDate)}</td>
         </tr>
       `;
     }).join('');
@@ -391,7 +391,7 @@ const expenses = {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
           <div>
             <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Expense Category</span>
-            <div style="margin-top: 4px;"><span class="badge badge-info" style="font-size: 13px; padding: 4px 12px;">${expense.type}</span></div>
+            <div style="margin-top: 4px;"><span class="badge badge-info" style="font-size: 13px; padding: 4px 12px;">${expense.category || expense.type || '-'}</span></div>
           </div>
           <div>
             <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Total Expense Amount</span>
@@ -399,7 +399,7 @@ const expenses = {
           </div>
           <div>
             <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Expense Date</span>
-            <div style="font-size: 13px; font-weight: 500; color: #334155; margin-top: 4px;"><i class="far fa-calendar-alt" style="color: var(--primary);"></i> ${formatDate(expense.expenseDate)}</div>
+            <div style="font-size: 13px; font-weight: 500; color: #334155; margin-top: 4px;"><i class="far fa-calendar-alt" style="color: var(--primary);"></i> ${formatDate(expense.date || expense.expenseDate)}</div>
           </div>
           <div>
             <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Agency / Distributor</span>
@@ -480,9 +480,11 @@ const expenses = {
     }
 
     const expenseData = {
+      category: type,
       type,
       amount,
       description,
+      date: expenseDate,
       expenseDate
     };
 

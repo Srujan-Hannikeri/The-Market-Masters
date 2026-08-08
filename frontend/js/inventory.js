@@ -141,7 +141,7 @@ const inventory = {
 
     tbody.innerHTML = this.products.map(product => {
       const stockStatus = product.stock === 0 ? 'out' : 
-                         product.stock <= product.lowStockThreshold ? 'low' : 'good';
+                         product.stock <= (product.minStock || product.lowStockThreshold || 10) ? 'low' : 'good';
 
       const mrpVal = formatCurrency(product.mrp || product.price || 0);
       const costVal = product.costPrice ? formatCurrency(product.costPrice) : '-';
@@ -150,10 +150,10 @@ const inventory = {
         // Shopkeeper view (editable)
         const actions = `
           <td>
-            <button class="btn btn-sm btn-secondary" onclick="inventory.editProduct(${product.id})">
+            <button class="btn btn-sm btn-secondary" onclick="inventory.editProduct('${product.id}')">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-sm btn-danger" onclick="inventory.deleteProduct(${product.id})">
+            <button class="btn btn-sm btn-danger" onclick="inventory.deleteProduct('${product.id}')">
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -182,7 +182,7 @@ const inventory = {
         const shopName = product.User && product.User.shopName ? product.User.shopName : '-';
         const addAction = product.stock > 0 ? `
           <td>
-            <button class="btn btn-sm btn-primary" onclick="shopping.addToCart(${product.id})">
+            <button class="btn btn-sm btn-primary" onclick="shopping.addToCart('${product.id}')">
               <i class="fas fa-cart-plus"></i> Add to Cart
             </button>
           </td>
@@ -298,7 +298,7 @@ const inventory = {
       setVal('edit-product-mrp',         product.mrp || product.price || '');
       setVal('edit-product-cost-price',  product.costPrice || '');
       setVal('edit-product-stock',       product.stock);
-      setVal('edit-product-low-stock',   product.lowStockThreshold);
+      setVal('edit-product-low-stock', product.minStock || product.lowStockThreshold || '');
       setVal('edit-product-category',    product.category || '');
       setVal('edit-product-barcode',     product.barcode || '');
 
@@ -396,22 +396,14 @@ const inventory = {
       // Filter low stock products (stock <= lowStockThreshold)
       const lowStockProducts = products.filter(p => {
         const stock = parseInt(p.stock) || 0;
-        const threshold = parseInt(p.lowStockThreshold) || 10;
+        const threshold = parseInt(p.minStock || p.lowStockThreshold) || 10;
         const isLow = stock <= threshold && stock > 0;
-        if (isLow) {
-
-        }
         return isLow;
       });
 
-      // Filter out of stock products (stock = 0)
       const outOfStockProducts = products.filter(p => {
         const stock = parseInt(p.stock) || 0;
-        const isOut = stock === 0;
-        if (isOut) {
-
-        }
-        return isOut;
+        return stock === 0;
       });
 
 
@@ -442,7 +434,7 @@ const inventory = {
         
         // Low stock products
         lowStockProducts.forEach(product => {
-          const threshold = parseInt(product.lowStockThreshold) || 10;
+          const threshold = parseInt(product.minStock || product.lowStockThreshold) || 10;
           html += `
             <div class="low-stock-product">
               <i class="fas fa-exclamation-triangle"></i>

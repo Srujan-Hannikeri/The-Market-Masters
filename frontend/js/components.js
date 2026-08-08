@@ -1,5 +1,62 @@
 // UI Components
 
+// ─── Business Page Loader ────────────────────────────────────────────────────
+const loader = (() => {
+  let depth = 0; // reference-count so nested calls don't hide prematurely
+
+  const messages = [
+    'Loading your store…',
+    'Fetching data…',
+    'Almost there…',
+    'Crunching numbers…',
+    'Updating records…',
+    'Syncing inventory…',
+  ];
+  let msgIdx = 0;
+  let msgTimer = null;
+
+  function getEl()  { return document.getElementById('page-loader'); }
+  function getMsg() { return document.getElementById('loader-text'); }
+
+  function show(label) {
+    depth++;
+    const el = getEl();
+    if (!el) return;
+    const msgEl = getMsg();
+    if (msgEl) msgEl.textContent = label || messages[0];
+    el.classList.remove('hidden');
+
+    // Cycle through messages every 1.8 s
+    if (!msgTimer) {
+      msgIdx = 0;
+      msgTimer = setInterval(() => {
+        msgIdx = (msgIdx + 1) % messages.length;
+        if (getMsg() && depth > 0) getMsg().textContent = messages[msgIdx];
+      }, 1800);
+    }
+  }
+
+  function hide() {
+    depth = Math.max(0, depth - 1);
+    if (depth > 0) return;
+    clearInterval(msgTimer);
+    msgTimer = null;
+    const el = getEl();
+    if (el) el.classList.add('hidden');
+  }
+
+  function forceHide() {
+    depth = 0;
+    clearInterval(msgTimer);
+    msgTimer = null;
+    const el = getEl();
+    if (el) el.classList.add('hidden');
+  }
+
+  return { show, hide, forceHide };
+})();
+
+// ─── Toast Notifications ─────────────────────────────────────────────────────
 // Toast Notifications
 const toast = {
   container: document.getElementById('toast-container'),
