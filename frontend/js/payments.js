@@ -53,13 +53,19 @@ const payments = {
 
     const byMode = summary.byMode || {};
 
-    container.innerHTML = modes.map(mode => `
-      <div class="payment-mode-card ${mode.class}">
-        <i class="fas ${mode.icon}"></i>
-        <h4>${mode.key}</h4>
-        <p>${formatCurrency(byMode[mode.key] || 0)}</p>
-      </div>
-    `).join('');
+    container.innerHTML = modes.map(mode => {
+      // byMode[key] is { count, amount } — read .amount, fallback to 0
+      const raw = byMode[mode.key];
+      const amount = raw && typeof raw === 'object' ? Number(raw.amount) || 0
+                   : Number(raw) || 0;
+      return `
+        <div class="payment-mode-card ${mode.class}">
+          <i class="fas ${mode.icon}"></i>
+          <h4>${mode.key}</h4>
+          <p>${formatCurrency(amount)}</p>
+        </div>
+      `;
+    }).join('');
   },
 
   async loadPendingDues() {

@@ -556,6 +556,9 @@
   padding: 1.25rem;
   background: var(--light);
   border-radius: var(--radius);
+  min-width: 0;          /* prevent grid blowout */
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .payment-mode-card i {
