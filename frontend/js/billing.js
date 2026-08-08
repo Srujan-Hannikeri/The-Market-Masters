@@ -279,6 +279,7 @@ const billing = {
       this.resetForm();
       await this.loadBills();
     } catch (error) {
+      console.error('Create bill error:', error);
       toast.error(error.message || 'Failed to create bill');
     }
   },
@@ -568,37 +569,76 @@ const billing = {
   },
 
   async printBill(billId) {
-    // Read the format selector — falls back to 'a4' if element not on page
     const format = document.getElementById('print-format-select')?.value || 'a4';
+    const label = {
+      a4: 'A4', a3: 'A3', a5: 'A5', letter: 'Letter',
+      '80mm': '80 mm Thermal', '58mm': '58 mm Thermal'
+    }[format] || format.toUpperCase();
+
     try {
-      // PDF is now streamed directly — open as a new tab; the browser handles print
-      const pdfUrl = `/api/bills/${billId}/pdf?format=${format}`;
-      const printWindow = window.open(pdfUrl, '_blank');
+      toast.info(`Generating ${label} PDF…`);
+
+      // Fetch the PDF as a blob through the authenticated api so the
+      // Authorization header is included — avoids "Access denied" in new tab
+      const token = api.getToken();
+      const response = await fetch(`/api/bills/${billId}/pdf?format=${format}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: 'PDF generation failed' }));
+        throw new Error(err.message || 'PDF generation failed');
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const printWindow = window.open(blobUrl, '_blank');
       if (printWindow) {
         printWindow.addEventListener('load', () => {
-          setTimeout(() => printWindow.print(), 800);
+          setTimeout(() => {
+            printWindow.print();
+            // Revoke blob URL after a delay to free memory
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+          }, 800);
         });
       }
-      const label = {
-        a4: 'A4', a3: 'A3', a5: 'A5', letter: 'Letter',
-        '80mm': '80 mm Thermal', '58mm': '58 mm Thermal'
-      }[format] || format.toUpperCase();
-      toast.success(`Opening PDF (${label})…`);
+      toast.success(`PDF (${label}) ready!`);
     } catch (error) {
       console.error('Print error:', error);
-      toast.error('Failed to open PDF: ' + error.message);
+      toast.error('Failed to generate PDF: ' + error.message);
     }
   },
 
   async downloadBillPDF(billId) {
     const format = document.getElementById('print-format-select')?.value || 'a4';
-    const link = document.createElement('a');
-    link.href = `/api/bills/${billId}/pdf?format=${format}`;
-    link.download = `bill_${billId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Downloading PDF…');
+    try {
+      toast.info('Downloading PDF…');
+      const token = api.getToken();
+      const response = await fetch(`/api/bills/${billId}/pdf?format=${format}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: 'PDF generation failed' }));
+        throw new Error(err.message);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `bill_${billId}_${format}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      toast.success('PDF downloaded!');
+    } catch (error) {
+      toast.error('Failed to download PDF: ' + error.message);
+    }
   },
 
   resetForm() {
@@ -611,6 +651,8 @@ const billing = {
     if (subtotalEl) subtotalEl.textContent = '₹0';
     if (totalEl)    totalEl.textContent    = '₹0';
     if (statusEl)   statusEl.textContent   = 'Pending';
+    // Add one fresh empty item row so the next bill can be created immediately
+    this.addBillItem();
   },
 
   // Check order refund status and show refund modal
