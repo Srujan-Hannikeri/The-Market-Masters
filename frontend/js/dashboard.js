@@ -2,6 +2,15 @@
 const dashboard = {
   trendChart: null,
   paymentChart: null,
+  lowStockInterval: null,
+
+  // Stop all background polls — called by app.js on navigate
+  stop() {
+    if (this.lowStockInterval) {
+      clearInterval(this.lowStockInterval);
+      this.lowStockInterval = null;
+    }
+  },
 
   async load() {
     try {
@@ -12,7 +21,6 @@ const dashboard = {
         }, 100);
         return;
       }
-
       // Check if user is shopkeeper
       const isShopkeeper = auth.user?.role === "shopkeeper";
 
@@ -29,11 +37,15 @@ const dashboard = {
         // Check and display low stock alerts
         this.checkLowStock();
 
-        // Setup live low stock check every 30 seconds
+        // Quiet low-stock poll every 5 minutes (not 30s — less noise)
         if (!this.lowStockInterval) {
           this.lowStockInterval = setInterval(() => {
-            this.checkLowStock();
-          }, 30000);
+            if (typeof app !== 'undefined' && app.currentPage === 'dashboard') {
+              this.checkLowStock();
+            } else {
+              this.stopLowStock();
+            }
+          }, 300000);
         }
       } else {
         // Customer view - show welcome message

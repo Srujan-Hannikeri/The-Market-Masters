@@ -291,11 +291,15 @@ const billing = {
       this.allBills = response.bills || []; // Store all bills
       this.renderBillsList(this.allBills);
       
-      // Setup live update interval - refresh bills every 5 seconds
+      // Quietly refresh the bills list every 60 seconds without wiping the page
       if (!this.liveUpdateInterval) {
         this.liveUpdateInterval = setInterval(() => {
-          this.loadBills();
-        }, 5000);
+          if (typeof app !== 'undefined' && app.currentPage === 'billing') {
+            this.loadBills();
+          } else {
+            this.stop();
+          }
+        }, 60000);
       }
     } catch (error) {
       console.error('Error loading bills:', error);

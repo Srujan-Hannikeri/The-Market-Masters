@@ -11,10 +11,8 @@ const app = {
     // Load initial page
     this.navigateTo('dashboard');
     
-    // Refresh data every 5 minutes
-    setInterval(() => {
-      this.refreshCurrentPage();
-    }, 300000);
+    // No auto-refresh interval — pages only refresh when the user navigates to them.
+    // Individual modules (dashboard, etc.) handle their own light background polls.
   },
 
   // Setup navigation
@@ -209,7 +207,7 @@ const app = {
   // Load page-specific data
   loadPageData(page) {
     // Stop background polling from previously active modules
-    const stoppable = [billing, reports];
+    const stoppable = [billing, reports, dashboard];
     stoppable.forEach(mod => { if (mod && typeof mod.stop === 'function') mod.stop(); });
 
     switch (page) {
