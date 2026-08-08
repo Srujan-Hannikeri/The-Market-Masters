@@ -6,10 +6,21 @@ const path = require('path');
 
 const fmt = (amount) => 'Rs. ' + parseFloat(amount || 0).toFixed(2);
 
-const ensureBillsDir = () => {
-  const dir = path.join(__dirname, '..', 'bills');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  return dir;
+/**
+ * Get a writable directory that works on both local dev and Vercel serverless.
+ * Vercel's filesystem is read-only except for /tmp.
+ */
+const getWritableDir = () => {
+  // On Vercel (and any read-only host) use /tmp
+  const tmpDir = path.join('/tmp', 'bills');
+  try {
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    return tmpDir;
+  } catch (_) {}
+  // Local fallback
+  const localDir = path.join(__dirname, '..', 'bills');
+  if (!fs.existsSync(localDir)) fs.mkdirSync(localDir, { recursive: true });
+  return localDir;
 };
 
 /**
@@ -49,35 +60,44 @@ const resolveFormat = (format = 'a4', itemCount = 0) => {
  * Generate a bill PDF.
  * @param {Object} bill     – Mongoose Bill document (shopkeeperId populated)
  * @param {string} format   – 'a4' | 'a3' | 'a5' | 'letter' | '80mm' | '58mm'
- * @returns {Promise<string>} URL path like /bills/<filename>
+ * @param {Object} [res]    – Express response object. If provided, streams PDF directly (Vercel-safe).
+ * @returns {Promise<string>} File path (local) or resolves after stream ends (when res provided)
  */
-const generateBillPDF = (bill, format = 'a4') => {
+const generateBillPDF = (bill, format = 'a4', res = null) => {
   return new Promise((resolve, reject) => {
     try {
-      const billsDir = ensureBillsDir();
-      const fileName = `bill_${bill.billNumber}_${format}_${Date.now()}.pdf`;
-      const filePath = path.join(billsDir, fileName);
-
       const items = bill.BillItems || bill.items || [];
-      const shop = bill.shopkeeperId || {};
-      const cfg = resolveFormat(format, items.length);
+      const shop  = bill.shopkeeperId || {};
+      const cfg   = resolveFormat(format, items.length);
 
       const doc = cfg.type === 'roll'
         ? new PDFDocument({ size: [cfg.width, cfg.height], margin: cfg.margin, autoFirstPage: true })
         : new PDFDocument({ size: cfg.size, margin: cfg.margin, layout: 'portrait', autoFirstPage: true });
 
-      const stream = fs.createWriteStream(filePath);
-      doc.pipe(stream);
-
-      if (cfg.type === 'roll') {
-        buildRollLayout(doc, bill, items, shop, cfg);
+      if (res) {
+        // ── Vercel-safe: stream directly to HTTP response ──
+        const fileName = `bill_${bill.billNumber}_${format}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+        doc.pipe(res);
+        if (cfg.type === 'roll') buildRollLayout(doc, bill, items, shop, cfg);
+        else                     buildPageLayout(doc, bill, items, shop, cfg);
+        doc.end();
+        res.on('finish', () => resolve(fileName));
+        res.on('error', reject);
       } else {
-        buildPageLayout(doc, bill, items, shop, cfg);
+        // ── Local: write to /tmp (or local bills dir) ──
+        const dir      = getWritableDir();
+        const fileName = `bill_${bill.billNumber}_${format}_${Date.now()}.pdf`;
+        const filePath = path.join(dir, fileName);
+        const stream   = fs.createWriteStream(filePath);
+        doc.pipe(stream);
+        if (cfg.type === 'roll') buildRollLayout(doc, bill, items, shop, cfg);
+        else                     buildPageLayout(doc, bill, items, shop, cfg);
+        doc.end();
+        stream.on('finish', () => resolve(filePath));
+        stream.on('error', reject);
       }
-
-      doc.end();
-      stream.on('finish', () => resolve(`/bills/${fileName}`));
-      stream.on('error', reject);
     } catch (err) {
       reject(err);
     }

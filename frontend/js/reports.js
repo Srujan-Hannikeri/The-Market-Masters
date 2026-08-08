@@ -37,16 +37,24 @@ const reports = {
   },
 
   async loadReportData() {
-    const startDate = document.getElementById('report-start-date')?.value;
-    const endDate = document.getElementById('report-end-date')?.value;
-    const params = { startDate, endDate };
+    // Guard: only send dates if both are valid YYYY-MM-DD strings
+    const startRaw = document.getElementById('report-start-date')?.value;
+    const endRaw   = document.getElementById('report-end-date')?.value;
+    const isValidDate = (s) => s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+    const params = {};
+    if (isValidDate(startRaw) && isValidDate(endRaw)) {
+      params.startDate = startRaw;
+      params.endDate   = endRaw;
+    }
+    const billParams = { ...params, limit: 1000 };
 
     try {
       const [salesData, profitLossData, paymentAnalysis, billsData] = await Promise.all([
         reportsAPI.getSalesReport(params),
         reportsAPI.getProfitLossReport(params),
         reportsAPI.getPaymentAnalysis(params),
-        billsAPI.getBills({ startDate, endDate, limit: 1000 })
+        billsAPI.getBills(billParams)
       ]);
 
       // Store bills for customer breakdown view
@@ -390,10 +398,10 @@ const reports = {
                   <td style="color: ${parseFloat(bill.balanceAmount) > 0 ? '#e74c3c' : '#27ae60'}; font-weight: bold;">${formatCurrency(bill.balanceAmount)}</td>
                   <td>${getStatusBadge(bill.paymentStatus)}</td>
                   <td>
-                    <button class="btn btn-sm btn-info" onclick="billing.viewBill('\')" title="View Bill">
+                    <button class="btn btn-sm btn-info" onclick="billing.viewBill('${bill.id}')" title="View Bill">
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill('\')" title="Print Bill">
+                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill('${bill.id}')" title="Print Bill">
                       <i class="fas fa-print"></i>
                     </button>
                   </td>
@@ -566,10 +574,10 @@ const reports = {
                   <td>₹${parseFloat(bill.paidAmount).toFixed(2)}</td>
                   <td style="color: #e74c3c; font-weight: bold;">₹${parseFloat(bill.balanceAmount).toFixed(2)}</td>
                   <td>
-                    <button class="btn btn-sm btn-primary" onclick="billing.viewBill('\')">
+                    <button class="btn btn-sm btn-primary" onclick="billing.viewBill('${bill.id}')">
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill('\')">
+                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill('${bill.id}')">
                       <i class="fas fa-print"></i>
                     </button>
                   </td>

@@ -39,30 +39,32 @@ const shopping = {
       return;
     }
 
-    container.innerHTML = this.products.map(product => `
+    container.innerHTML = this.products.map(product => {
+      const pid = product.id || product._id;
+      return `
       <div class="product-card">
         <div class="product-image">
-          ${product.image ? 
-            `<img src="${product.image}" alt="${product.name}">` : 
+          ${product.image ?
+            `<img src="${product.image}" alt="${product.name}">` :
             `<i class="fas fa-box"></i>`
           }
         </div>
         <div class="product-info">
           <h4>${product.name}</h4>
           <p class="product-category">${product.category || 'General'}</p>
-          ${product.User && product.User.shopName ? `<p class="product-shop-name" style="font-size: 13px; color: #666; margin-bottom: 8px;"><i class="fas fa-store"></i> ${product.User.shopName}</p>` : ''}
-          <p class="product-price">₹${parseFloat(product.price).toFixed(2)}</p>
+          ${product.User && product.User.shopName ? `<p class="product-shop-name" style="font-size:13px;color:#666;margin-bottom:8px;"><i class="fas fa-store"></i> ${product.User.shopName}</p>` : ''}
+          <p class="product-price">₹${parseFloat(product.mrp || product.price || 0).toFixed(2)}</p>
           <p class="product-stock ${product.stock < 10 ? 'low-stock' : ''}">
-            ${product.stock > 0 ? `In Stock: ${product.stock} ${product.unit || 'units'}` : 'Out of Stock'}
+            ${product.stock > 0 ? `In Stock: ${product.stock} ${product.unit || 'pcs'}` : 'Out of Stock'}
           </p>
           ${product.stock > 0 ? `
             <div class="product-actions">
               <div class="quantity-selector">
-                <button onclick="shopping.updateQuantity('\', -1)" class="btn-quantity">-</button>
-                <input type="number" id="qty-${product.id}" value="1" min="1" max="${product.stock}">
-                <button onclick="shopping.updateQuantity('\', 1)" class="btn-quantity">+</button>
+                <button onclick="shopping.updateQuantity('${pid}', -1)" class="btn-quantity">-</button>
+                <input type="number" id="qty-${pid}" value="1" min="1" max="${product.stock}">
+                <button onclick="shopping.updateQuantity('${pid}', 1)" class="btn-quantity">+</button>
               </div>
-              <button onclick="shopping.addToCart('\')" class="btn btn-primary btn-add-cart">
+              <button onclick="shopping.addToCart('${pid}')" class="btn btn-primary btn-add-cart">
                 <i class="fas fa-cart-plus"></i> Add to Cart
               </button>
             </div>
@@ -71,7 +73,7 @@ const shopping = {
           `}
         </div>
       </div>
-    `).join('');
+    `}).join('');
   },
 
   // Filter catalog by search query (used by shop.html search input)
@@ -555,13 +557,13 @@ const shopping = {
         </div>
         
         <div class="order-items-preview">
-          ${order.OrderItems.slice(0, 2).map(item => `
+          ${(order.items || order.OrderItems || []).slice(0, 2).map(item => `
             <div class="order-item-preview">
               <span class="item-name">${item.productName}</span>
               <span class="item-qty">x${item.quantity}</span>
             </div>
           `).join('')}
-          ${order.OrderItems.length > 2 ? `<p class="more-items">+${order.OrderItems.length - 2} more items</p>` : ''}
+          ${(order.items || order.OrderItems || []).length > 2 ? `<p class="more-items">+${(order.items || order.OrderItems || []).length - 2} more items</p>` : ''}
         </div>
         <div class="order-footer">
           <div class="order-total-section">
@@ -653,7 +655,7 @@ const shopping = {
           <div class="order-details-section">
             <h4>Items</h4>
             <div class="order-items-list">
-              ${order.OrderItems.map(item => `
+              ${(order.items || order.OrderItems || []).map(item => `
                 <div class="order-item-detail">
                   <span class="item-name">${item.productName}</span>
                   <span class="item-qty">x${item.quantity}</span>
@@ -814,13 +816,13 @@ const shopping = {
           </div>
         </div>
         <div class="order-items-preview">
-          ${order.OrderItems.slice(0, 3).map(item => `
+          ${(order.items || order.OrderItems || []).slice(0, 3).map(item => `
             <div class="order-item-preview">
               <span>${item.productName}</span>
               <span>x${item.quantity}</span>
             </div>
           `).join('')}
-          ${order.OrderItems.length > 3 ? `<p class="more-items">+${order.OrderItems.length - 3} more</p>` : ''}
+          ${(order.items || order.OrderItems || []).length > 3 ? `<p class="more-items">+${(order.items || order.OrderItems || []).length - 3} more</p>` : ''}
         </div>
         <div class="order-footer">
           <p class="order-total"><strong style="color: ${colors.text};">Total: ₹${parseFloat(order.finalAmount).toFixed(2)}</strong></p>
@@ -869,7 +871,7 @@ const shopping = {
           <div class="order-details-section">
             <h4>Items</h4>
             <div class="order-items-list">
-              ${order.OrderItems.map(item => `
+              ${(order.items || order.OrderItems || []).map(item => `
                 <div class="order-item-detail">
                   <span class="item-name">${item.productName}</span>
                   <span class="item-qty">x${item.quantity}</span>
@@ -939,7 +941,7 @@ const shopping = {
     const modalContent = `
       <div class="update-status-modal">
         <h3>Update Order Status</h3>
-        <form id="update-status-form" onsubmit="shopping.saveOrderStatus(event, ${orderId})">
+        <form id="update-status-form" onsubmit="shopping.saveOrderStatus(event, '${orderId}')">
           <div class="form-group">
             <label>Order Status</label>
             <select id="update-order-status" required>

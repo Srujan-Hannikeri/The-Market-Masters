@@ -73,8 +73,12 @@ exports.getSalesReport = async (req, res) => {
     const { startDate, endDate } = req.query;
     const query = { shopkeeperId: req.user.id };
 
-    if (startDate && endDate) {
-      query.created_at = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    const start = startDate && startDate !== 'undefined' ? new Date(startDate) : null;
+    const end   = endDate   && endDate   !== 'undefined' ? new Date(endDate)   : null;
+    if (start && end && !isNaN(start) && !isNaN(end)) {
+      // extend end to end of day
+      end.setHours(23, 59, 59, 999);
+      query.created_at = { $gte: start, $lte: end };
     }
 
     const bills = await Bill.find(query).sort({ created_at: 1 });
@@ -100,17 +104,20 @@ exports.getSalesReport = async (req, res) => {
 exports.getProfitLossReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const billQuery = { shopkeeperId: req.user.id };
+    const billQuery    = { shopkeeperId: req.user.id };
     const expenseQuery = { shopkeeperId: req.user.id };
 
-    if (startDate && endDate) {
-      billQuery.created_at = { $gte: new Date(startDate), $lte: new Date(endDate) };
-      expenseQuery.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    const start = startDate && startDate !== 'undefined' ? new Date(startDate) : null;
+    const end   = endDate   && endDate   !== 'undefined' ? new Date(endDate)   : null;
+    if (start && end && !isNaN(start) && !isNaN(end)) {
+      end.setHours(23, 59, 59, 999);
+      billQuery.created_at    = { $gte: start, $lte: end };
+      expenseQuery.date       = { $gte: start, $lte: end };
     }
 
-    const bills = await Bill.find(billQuery);
+    const bills    = await Bill.find(billQuery);
     const expenses = await Expense.find(expenseQuery);
-    const payments = await Payment.find(billQuery);
+    const payments = await Payment.find({ shopkeeperId: req.user.id, ...(start && end ? { created_at: { $gte: start, $lte: end } } : {}) });
 
     const totalSales = bills.reduce((sum, b) => sum + Number(b.totalAmount), 0);
     const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
@@ -145,8 +152,11 @@ exports.getPaymentModeAnalysis = async (req, res) => {
     const { startDate, endDate } = req.query;
     const query = { shopkeeperId: req.user.id };
 
-    if (startDate && endDate) {
-      query.created_at = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    const start = startDate && startDate !== 'undefined' ? new Date(startDate) : null;
+    const end   = endDate   && endDate   !== 'undefined' ? new Date(endDate)   : null;
+    if (start && end && !isNaN(start) && !isNaN(end)) {
+      end.setHours(23, 59, 59, 999);
+      query.created_at = { $gte: start, $lte: end };
     }
 
     const payments = await Payment.find(query);

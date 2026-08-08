@@ -571,26 +571,31 @@ const billing = {
     // Read the format selector — falls back to 'a4' if element not on page
     const format = document.getElementById('print-format-select')?.value || 'a4';
     try {
-      const response = await billsAPI.generatePDF(billId, format);
-      if (response.pdfUrl) {
-        const printWindow = window.open(response.pdfUrl, '_blank');
-        if (printWindow) {
-          printWindow.onload = function () {
-            setTimeout(() => printWindow.print(), 600);
-          };
-        }
-        const label = {
-          a4: 'A4', a3: 'A3', a5: 'A5', letter: 'Letter',
-          '80mm': '80 mm Thermal', '58mm': '58 mm Thermal'
-        }[format] || format.toUpperCase();
-        toast.success(`PDF (${label}) generated!`);
-      } else {
-        toast.error('Failed to generate PDF bill');
+      // PDF is now streamed directly — open as a new tab; the browser handles print
+      const pdfUrl = `/api/bills/${billId}/pdf?format=${format}`;
+      const printWindow = window.open(pdfUrl, '_blank');
+      if (printWindow) {
+        printWindow.addEventListener('load', () => {
+          setTimeout(() => printWindow.print(), 800);
+        });
       }
+      const label = {
+        a4: 'A4', a3: 'A3', a5: 'A5', letter: 'Letter',
+        '80mm': '80 mm Thermal', '58mm': '58 mm Thermal'
+      }[format] || format.toUpperCase();
+      toast.success(`Opening PDF (${label})…`);
     } catch (error) {
       console.error('Print error:', error);
-      toast.error('Failed to generate PDF: ' + error.message);
+      toast.error('Failed to open PDF: ' + error.message);
     }
+  },
+
+  async downloadBillPDF(billId) {
+    const format = document.getElementById('print-format-select')?.value || 'a4';
+    const link = document.createElement('a');
+    link.href = `/api/bills/${billId}/pdf?format=${format}`;
+    link.download = `bill_${billId}.pdf`;
+    link.click();
   },
 
   async downloadBillPDF(billId) {

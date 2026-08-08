@@ -29,8 +29,13 @@ exports.getAllBills = async (req, res) => {
     if (customerPhone && req.user.role === 'shopkeeper') {
       query.customerPhone = customerPhone;
     }
-    if (startDate && endDate) {
-      query.created_at = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    if (startDate && endDate && startDate !== 'undefined' && endDate !== 'undefined') {
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+      if (!isNaN(s) && !isNaN(e)) {
+        e.setHours(23, 59, 59, 999);
+        query.created_at = { $gte: s, $lte: e };
+      }
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -213,8 +218,6 @@ exports.deleteBill = async (req, res) => {
 
 exports.generatePDF = async (req, res) => {
   try {
-    // Accept format from query (?format=a4 | a3 | a5 | letter | 80mm | 58mm)
-    // Default to 'a4'. Legacy values 'standard' and 'roll' are mapped for backward compat.
     let format = (req.query.format || req.body?.format || 'a4').toLowerCase();
     if (format === 'standard') format = 'a4';
     if (format === 'roll' || format === 'thermal') format = '80mm';
@@ -226,14 +229,16 @@ exports.generatePDF = async (req, res) => {
       return res.status(404).json({ message: 'Bill not found.' });
     }
 
-    const pdfPath = await generateBillPDF(bill, format);
-    bill.pdfPath = pdfPath;
-    await bill.save();
-
-    res.json({ message: 'PDF generated successfully.', pdfUrl: pdfPath, format });
+    // Stream PDF directly to response — works on Vercel (no disk write needed)
+    await generateBillPDF(bill, format, res);
+    // Response is already sent by pdfService when streaming; update pdfPath async
+    bill.pdfPath = `/bills/bill_${bill.billNumber}_${format}.pdf`;
+    bill.save().catch(() => {}); // non-blocking, don't fail the request
   } catch (error) {
     console.error('PDF generation error:', error);
-    res.status(500).json({ message: 'Error generating PDF.', error: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Error generating PDF.', error: error.message });
+    }
   }
 };
 
