@@ -6,6 +6,20 @@ const auth = {
   init() {
     this.checkAuth();
     this.setupEventListeners();
+    this.restoreRememberMe();
+  },
+
+  // Restore remembered phone number and checkbox state on page load
+  restoreRememberMe() {
+    const savedPhone = localStorage.getItem('rememberedPhone');
+    const checkbox = document.getElementById('remember-me');
+    const phoneInput = document.getElementById('login-phone');
+    if (savedPhone && checkbox && phoneInput) {
+      phoneInput.value = savedPhone;
+      checkbox.checked = true;
+      // Focus the password field since phone is already filled
+      document.getElementById('login-password')?.focus();
+    }
   },
 
   // Check if user is authenticated
@@ -112,25 +126,31 @@ const auth = {
   async handleLogin() {
     const phone = document.getElementById('login-phone').value;
     const password = document.getElementById('login-password').value;
+    const rememberMe = document.getElementById('remember-me')?.checked || false;
     const submitBtn = document.querySelector('#login-form button[type="submit"]');
 
     setLoading(submitBtn, true);
 
     try {
       const response = await authAPI.login(phone, password);
+
+      // Handle Remember Me — save phone; token stays in localStorage always
+      if (rememberMe) {
+        localStorage.setItem('rememberedPhone', phone);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberedPhone');
+        localStorage.removeItem('rememberMe');
+      }
+
       api.setToken(response.token);
       this.user = response.user;
       toast.success('Login successful!');
       
-      // Clear any previous session data
       this.clearSessionData();
-      
-      // Redirect to the app shell (app.html) where the SPA runs
       window.location.href = 'app.html';
     } catch (error) {
       console.error('Login error:', error);
-      
-      // Show specific message for database errors
       if (error.message.includes('Database connection') || error.message.includes('Service Unavailable')) {
         toast.error('⚠ Unable to connect to the database. Please try again in a moment.');
       } else {
