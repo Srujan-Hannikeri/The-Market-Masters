@@ -88,7 +88,7 @@ const billing = {
   },
 
   handleBarcodeScan(code) {
-    console.log('Barcode scanned:', code);
+
     const product = this.products.find(p => p.barcode && String(p.barcode).trim().toLowerCase() === String(code).trim().toLowerCase());
     
     if (product) {

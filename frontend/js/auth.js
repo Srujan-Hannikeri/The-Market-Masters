@@ -221,7 +221,7 @@ const auth = {
       if (appContainer) appContainer.classList.add('hidden');
     } else {
       // If auth container is not present (we're on app.html), redirect to login (index.html)
-      try { window.location.href = 'index.html'; } catch (e) { console.warn('showAuth redirect failed', e); }
+      try { window.location.href = 'index.html'; } catch (e) { }
     }
   },
 
@@ -289,7 +289,7 @@ const auth = {
     if (authContainer) {
       this.showAuth();
     } else {
-      try { window.location.href = 'index.html'; } catch (e) { console.warn('logout redirect failed', e); }
+      try { window.location.href = 'index.html'; } catch (e) { }
     }
     toast.info('Logged out successfully');
   },

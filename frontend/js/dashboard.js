@@ -301,8 +301,6 @@ const dashboard = {
       const response = await inventoryAPI.getProducts();
       const products = response.products || [];
 
-      console.log("Dashboard - Total products:", products.length);
-
       // Filter low stock products (stock <= lowStockThreshold)
       const lowStockProducts = products.filter((p) => {
         const stock = parseInt(p.stock) || 0;
@@ -316,19 +314,12 @@ const dashboard = {
         return stock === 0;
       });
 
-      console.log(
-        "Dashboard - Low stock:",
-        lowStockProducts.length,
-        "Out of stock:",
-        outOfStockProducts.length,
-      );
-
       // Show alert if there are low stock or out of stock products
       const alertBox = document.getElementById("low-stock-alert");
       const productsContainer = document.getElementById("low-stock-products");
 
       if (!alertBox || !productsContainer) {
-        console.log("Dashboard - Alert box not found");
+
         return;
       }
 
@@ -364,13 +355,10 @@ const dashboard = {
 
         productsContainer.innerHTML = html;
         alertBox.style.display = "block";
-        console.log("Dashboard - Low stock alert SHOWN");
+
       } else {
         alertBox.style.display = "none";
-        console.log(
-          "Dashboard - Low stock alert HIDDEN (no low stock products)",
-        );
-      }
+        }
     } catch (error) {
       console.error("Low stock check error:", error);
     }

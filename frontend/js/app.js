@@ -178,7 +178,7 @@ const app = {
         loaded = true;
       }
     } catch (err) {
-      console.warn('Failed to load partial', partialPath, err);
+
     }
 
     // Fallback to existing in-index sections if partial not found

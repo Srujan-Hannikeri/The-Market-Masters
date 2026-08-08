@@ -43,23 +43,19 @@ const inventory = {
 
   async loadProducts() {
     try {
-      console.log('=== LOAD PRODUCTS START ===');
-      console.log('Current user:', auth.user);
-      
+
+
       const response = await inventoryAPI.getProducts();
       this.products = response.products || [];
-      
-      console.log(`=== LOAD PRODUCTS END ===`);
-      console.log(`Loaded ${this.products.length} products`);
-      console.log('Products data:', JSON.stringify(this.products, null, 2));
-      
+
+
+
       if (this.products.length === 0) {
-        console.warn('WARNING: No products loaded! Check backend logs.');
+
       }
       
       this.renderProducts();
-      console.log('renderProducts() called successfully');
-      
+
       // Check low stock after loading (only for shopkeepers)
       if (auth.user?.role === 'shopkeeper') {
         await this.checkLowStock();
@@ -103,7 +99,6 @@ const inventory = {
     }
 
     const isShopkeeper = auth.user?.role === 'shopkeeper';
-    console.log(`Rendering ${this.products.length} products (Shopkeeper: ${isShopkeeper})`);
 
     if (this.products.length === 0) {
       tbody.innerHTML = `
@@ -213,7 +208,6 @@ const inventory = {
       }
     }).join('');
 
-    console.log('Products rendered successfully');
   },
 
   async searchProducts(query) {
@@ -248,8 +242,6 @@ const inventory = {
       barcode: document.getElementById('product-barcode').value.trim()
     };
 
-    console.log('Creating product with data:', productData);
-
     // Handle image upload
     const imageFile = document.getElementById('product-image').files[0];
     if (imageFile) {
@@ -263,9 +255,7 @@ const inventory = {
 
     try {
       const response = await inventoryAPI.createProduct(productData);
-      
-      console.log('Product API response:', response);
-      
+
       if (response.stockUpdated) {
         toast.success(response.message || 'Product stock updated successfully!');
       } else {
@@ -391,16 +381,14 @@ const inventory = {
     try {
       const response = await inventoryAPI.getProducts();
       const products = response.products || [];
-      
-      console.log('=== LOW STOCK CHECK ===');
-      console.log('Total products:', products.length);
-      
+
+
       // Show all products with their stock status
       products.forEach(p => {
         const stock = parseInt(p.stock) || 0;
         const threshold = parseInt(p.lowStockThreshold) || 10;
         const status = stock === 0 ? 'OUT OF STOCK' : stock <= threshold ? 'LOW STOCK' : 'OK';
-        console.log(`Product: ${p.name} | Stock: ${stock} | Threshold: ${threshold} | Status: ${status}`);
+
       });
       
       // Filter low stock products (stock <= lowStockThreshold)
@@ -409,7 +397,7 @@ const inventory = {
         const threshold = parseInt(p.lowStockThreshold) || 10;
         const isLow = stock <= threshold && stock > 0;
         if (isLow) {
-          console.log(`✓ Low stock: ${p.name} (Stock: ${stock}, Threshold: ${threshold})`);
+
         }
         return isLow;
       });
@@ -419,20 +407,18 @@ const inventory = {
         const stock = parseInt(p.stock) || 0;
         const isOut = stock === 0;
         if (isOut) {
-          console.log(`✗ Out of stock: ${p.name}`);
+
         }
         return isOut;
       });
-      
-      console.log('Low stock count:', lowStockProducts.length);
-      console.log('Out of stock count:', outOfStockProducts.length);
+
 
       // Show alert if there are low stock or out of stock products
       const alertBox = document.getElementById('inventory-low-stock-alert');
       const productsContainer = document.getElementById('inventory-low-stock-products');
       
       if (!alertBox || !productsContainer) {
-        console.log('Alert elements not found');
+
         return;
       }
       
@@ -468,10 +454,10 @@ const inventory = {
         
         productsContainer.innerHTML = html;
         alertBox.style.display = 'block';
-        console.log('✓ Low stock alert displayed');
+
       } else {
         alertBox.style.display = 'none';
-        console.log('ℹ No low stock products - alert hidden');
+
       }
     } catch (error) {
       console.error('Low stock check error:', error);

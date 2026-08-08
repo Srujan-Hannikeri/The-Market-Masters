@@ -8,7 +8,7 @@ class MyBills {
   async load() {
     // Check if user is authenticated
     if (!auth.user) {
-      console.log('User not authenticated, redirecting to login...');
+
       if (typeof toast !== 'undefined') {
         toast.error('Please login to view your bills');
       }
@@ -25,7 +25,7 @@ class MyBills {
     try {
       // Check authentication before making API call
       if (!auth.user) {
-        console.warn('Not authenticated, skipping bill load');
+
         return;
       }
       
@@ -43,7 +43,7 @@ class MyBills {
         auth.showAuth();
       } else {
         // Don't show error toast for new users with no bills
-        console.log('No bills found or failed to load');
+
         this.bills = [];
         this.renderBills();
       }
@@ -132,7 +132,7 @@ class MyBills {
             }
           } catch (upiError) {
             // Silently ignore UPI fetch errors - payment can still proceed without UPI details
-            console.log('UPI details not available, proceeding without them');
+
           }
         }
       } catch (error) {

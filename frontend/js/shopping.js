@@ -91,11 +91,9 @@ const shopping = {
   // Add product to cart
   async addToCart(productId) {
     try {
-      console.log('Adding to cart - Product ID:', productId);
+
       const qtyInput = document.getElementById(`qty-${productId}`);
       const quantity = qtyInput ? parseInt(qtyInput.value) || 1 : 1;
-      
-      console.log('Quantity:', quantity);
 
       // Find the product to get shopkeeper ID
       const product = this.products.find(p => p.id === productId);
@@ -117,12 +115,11 @@ const shopping = {
       if (!this.currentShopkeeperId) {
         this.currentShopkeeperId = productShopkeeperId;
         this.currentShopName = productShopName;
-        console.log(`Cart now locked to shop: ${productShopName} (ID: ${productShopkeeperId})`);
+
       }
 
       const response = await ordersAPI.addToCart(productId, quantity);
-      console.log('Add to cart response:', response);
-      
+
       toast.success(`Added to cart from ${productShopName}!`);
       this.updateCartCount();
       
@@ -180,12 +177,11 @@ const shopping = {
   // Load cart items
   async loadCart() {
     try {
-      console.log('Loading cart...');
+
       const response = await ordersAPI.getCart();
-      console.log('Cart response:', response);
+
       this.cart = response.items || [];
-      console.log('Cart items:', this.cart);
-      
+
       // Determine shopkeeper ID from cart items
       if (this.cart.length > 0) {
         // Get the first item's shopkeeper ID
@@ -465,14 +461,13 @@ const shopping = {
     }
 
     try {
-      console.log('Placing order...', { shippingAddress, paymentMode, notes });
+
       const response = await ordersAPI.placeOrder({
         shippingAddress,
         paymentMode,
         notes
       });
-      
-      console.log('Order placed successfully:', response);
+
       modal.closeAll();
       toast.success('Order placed successfully!');
       

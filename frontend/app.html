@@ -110,13 +110,15 @@
     </main>
   </div>
 
-  <!-- Modals (kept inside app shell) -->
+  <!-- ═══════════════════════════════════════════════════════════
+       MODAL OVERLAY — all app modals live here
+       ═══════════════════════════════════════════════════════════ -->
   <div id="modal-overlay" class="modal-overlay hidden">
-    <!-- (All modal markup copied from original index.html) -->
-    <!-- Add Payment Modal -->
+
+    <!-- ── Add Payment Modal ─────────────────────────────────── -->
     <div id="add-payment-modal" class="modal hidden">
       <div class="modal-header">
-        <h3>Add Payment</h3>
+        <h3><i class="fas fa-credit-card" style="color:var(--primary);margin-right:6px;"></i> Add Payment</h3>
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
@@ -152,8 +154,202 @@
       </div>
     </div>
 
-    <!-- Other modals (add product, edit product, add expense, etc.) are included similarly -->
-    <!-- For brevity they are left in the file as before (copied) -->
+    <!-- ── Add Product Modal ─────────────────────────────────── -->
+    <div id="add-product-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3><i class="fas fa-plus" style="color:var(--primary);margin-right:6px;"></i> Add Product</h3>
+        <button class="modal-close" onclick="modal.close('add-product-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="add-product-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product Name *</label>
+              <input type="text" id="product-name" placeholder="Enter product name" required>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" id="product-category" placeholder="e.g. Groceries, Electronics">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="product-description" rows="2" placeholder="Optional description"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>MRP (₹) *</label>
+              <input type="number" id="product-mrp" placeholder="0.00" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Cost / Billing Price (₹)</label>
+              <input type="number" id="product-cost-price" placeholder="0.00" step="0.01" min="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stock Quantity *</label>
+              <input type="number" id="product-stock" placeholder="0" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Low Stock Threshold</label>
+              <input type="number" id="product-low-stock" placeholder="10" min="0" value="10">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Barcode</label>
+              <input type="text" id="product-barcode" placeholder="Scan or type barcode">
+            </div>
+            <div class="form-group">
+              <label>Product Image</label>
+              <input type="file" id="product-image" accept="image/*">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Product</button>
+            <button type="button" class="btn btn-secondary" onclick="modal.close('add-product-modal')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Edit Product Modal ────────────────────────────────── -->
+    <div id="edit-product-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3><i class="fas fa-edit" style="color:var(--primary);margin-right:6px;"></i> Edit Product</h3>
+        <button class="modal-close" onclick="modal.close('edit-product-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-product-form">
+          <input type="hidden" id="edit-product-id">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product Name *</label>
+              <input type="text" id="edit-product-name" required>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" id="edit-product-category">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="edit-product-description" rows="2"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>MRP (₹) *</label>
+              <input type="number" id="edit-product-mrp" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Cost / Billing Price (₹)</label>
+              <input type="number" id="edit-product-cost-price" step="0.01" min="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stock Quantity *</label>
+              <input type="number" id="edit-product-stock" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Low Stock Threshold</label>
+              <input type="number" id="edit-product-low-stock" min="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Barcode</label>
+              <input type="text" id="edit-product-barcode">
+            </div>
+            <div class="form-group">
+              <label>Replace Image</label>
+              <input type="file" id="edit-product-image" accept="image/*">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Product</button>
+            <button type="button" class="btn btn-secondary" onclick="modal.close('edit-product-modal')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Add Expense Modal ─────────────────────────────────── -->
+    <div id="add-expense-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3><i class="fas fa-wallet" style="color:var(--primary);margin-right:6px;"></i> Add Expense</h3>
+        <button class="modal-close" onclick="modal.close('add-expense-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="add-expense-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expense Type *</label>
+              <select id="expense-type" required onchange="expenses.toggleInventoryFields(this.value)">
+                <option value="Inventory">Inventory Purchase</option>
+                <option value="Salary">Salary</option>
+                <option value="Rent">Rent</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Transport">Transport</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date *</label>
+              <input type="date" id="expense-date" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Agency / Distributor Name</label>
+            <input type="text" id="expense-agency-name" placeholder="e.g. ABC Traders (optional)">
+          </div>
+
+          <!-- Inventory item rows — shown only when type = Inventory -->
+          <div id="inventory-purchase-fields">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <label style="margin:0;font-weight:600;color:var(--primary);font-size:0.875rem;"><i class="fas fa-boxes"></i> Items Purchased</label>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="expenses.addInventoryRow()">
+                <i class="fas fa-plus"></i> Add Row
+              </button>
+            </div>
+            <div id="inventory-items-container"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Total Amount (₹) *</label>
+              <input type="number" id="expense-amount" placeholder="Auto-calculated or enter manually" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Notes / Description</label>
+              <input type="text" id="expense-description" placeholder="Optional notes">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Expense</button>
+            <button type="button" class="btn btn-secondary" onclick="modal.close('add-expense-modal')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Expense Details Modal ─────────────────────────────── -->
+    <div id="expense-details-modal" class="modal hidden">
+      <div class="modal-header">
+        <h3><i class="fas fa-receipt" style="color:var(--primary);margin-right:6px;"></i> Expense Details</h3>
+        <button class="modal-close" onclick="modal.close('expense-details-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="expense-details-body">
+        <!-- Filled dynamically by expenses.viewExpenseDetails() -->
+      </div>
+    </div>
+
+    <!-- Dynamic modals appended here by billing.js, shopping.js, etc. -->
   </div>
 
   <!-- Toast Notifications -->

@@ -47,14 +47,12 @@ const reports = {
       this.renderPaymentModeChart(paymentAnalysis.analysis);
       this.renderProfitLossSummary(profitLossData.summary);
       this.renderCustomerBreakdown(this.currentBills);
-      
-      console.log('✅ Reports updated at', new Date().toLocaleTimeString());
-      
+
       // Setup live update interval - refresh reports every 10 seconds
       if (!this.liveUpdateInterval) {
-        console.log('🔄 Setting up live update interval (10s)');
+
         this.liveUpdateInterval = setInterval(() => {
-          console.log('🔄 Auto-refreshing reports...');
+
           this.loadReportData();
         }, 10000);
       }

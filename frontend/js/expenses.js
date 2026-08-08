@@ -48,7 +48,7 @@ const expenses = {
             });
           }
         } catch (err) {
-          console.warn('Fallback expense fetch error:', err);
+
         }
       }
 

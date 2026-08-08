@@ -27,7 +27,7 @@ const payments = {
   async loadPaymentSummary() {
     try {
       const response = await paymentsAPI.getSummary();
-      console.log('Payment Summary Response:', response);
+
       this.renderPaymentSummary(response.summary);
     } catch (error) {
       console.error('Payment Summary Error:', error);
@@ -65,7 +65,7 @@ const payments = {
   async loadPendingDues() {
     try {
       const response = await paymentsAPI.getPendingDues();
-      console.log('Pending Dues Response:', response);
+
       this.pendingDues = response.bills || [];
       this.renderPendingDues();
       const countEl = document.getElementById('pending-count');
@@ -84,8 +84,6 @@ const payments = {
       console.error('pending-dues-table element not found');
       return;
     }
-
-    console.log('Rendering pending dues:', this.pendingDues);
 
     if (!this.pendingDues || this.pendingDues.length === 0) {
       tbody.innerHTML = `
@@ -120,7 +118,7 @@ const payments = {
   async loadAllPayments() {
     try {
       const response = await paymentsAPI.getPayments({ limit: 50 });
-      console.log('All Payments Response:', response);
+
       this.renderAllPayments(response.payments || []);
     } catch (error) {
       console.error('All Payments Error:', error);
@@ -131,7 +129,7 @@ const payments = {
   async loadAllBills() {
     try {
       const response = await paymentsAPI.getAllBillsForPayments();
-      console.log('All Bills Response:', response);
+
       this.allBills = response.bills || [];
       this.renderAllBills();
     } catch (error) {
@@ -148,8 +146,6 @@ const payments = {
       console.error('all-bills-table element not found');
       return;
     }
-
-    console.log('Rendering all bills:', this.allBills);
 
     if (!this.allBills || this.allBills.length === 0) {
       tbody.innerHTML = `
@@ -183,8 +179,6 @@ const payments = {
       console.error('all-payments-table element not found');
       return;
     }
-
-    console.log('Rendering all payments:', paymentsList);
 
     if (!paymentsList || paymentsList.length === 0) {
       tbody.innerHTML = `

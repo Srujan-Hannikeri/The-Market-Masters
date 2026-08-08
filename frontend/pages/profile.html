@@ -1,26 +1,151 @@
 <section id="profile-page" class="page">
-  <div class="profile-container">
+  <div class="profile-container" style="max-width:760px;margin:0 auto;">
     <div class="card">
       <div class="card-header">
-        <h3>Shopkeeper Profile</h3>
+        <h3 id="profile-card-title"><i class="fas fa-user-circle" style="color:var(--primary);margin-right:6px;"></i> My Profile</h3>
         <button id="edit-profile-btn" class="btn btn-primary"><i class="fas fa-edit"></i> Edit Profile</button>
       </div>
+
       <div class="card-body">
+
+        <!-- ══ VIEW MODE ══════════════════════════════════════ -->
         <div id="profile-view">
-          <div class="profile-section">
-            <h4>Personal Information</h4>
-            <div class="profile-field"><label>Full Name:</label><span id="profile-name">-</span></div>
-            <div class="profile-field"><label>Phone Number:</label><span id="profile-phone">-</span></div>
-            <div class="profile-field"><label>Email:</label><span id="profile-email">-</span></div>
-            <div class="profile-field"><label>Role:</label><span id="profile-role">-</span></div>
+
+          <div class="profile-section" style="margin-bottom:1.5rem;">
+            <h4 style="color:var(--primary);font-size:0.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);">
+              <i class="fas fa-id-card"></i> Personal Information
+            </h4>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;border-bottom:1px solid var(--border);">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;">Full Name</label>
+              <span id="profile-name" style="color:var(--dark);font-size:.875rem;">-</span>
+            </div>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;border-bottom:1px solid var(--border);">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;">Phone Number</label>
+              <span id="profile-phone" style="color:var(--dark);font-size:.875rem;">-</span>
+            </div>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;border-bottom:1px solid var(--border);">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;">Email</label>
+              <span id="profile-email" style="color:var(--dark);font-size:.875rem;">-</span>
+            </div>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;">Role</label>
+              <span id="profile-role" style="color:var(--dark);font-size:.875rem;">-</span>
+            </div>
           </div>
-          <div class="profile-section">
-            <h4>Shop Information</h4>
-            <div class="profile-field"><label>Shop Name:</label><span id="profile-shop-name">-</span></div>
-            <div class="profile-field"><label>Shop Address:</label><span id="profile-shop-address">-</span></div>
-            <div class="profile-field"><label>UPI ID:</label><span id="profile-upi-id">-</span></div>
+
+          <!-- Shop info — shown only for shopkeepers -->
+          <div class="profile-section" style="margin-bottom:1.5rem;">
+            <h4 style="color:var(--primary);font-size:0.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);">
+              <i class="fas fa-store"></i> Shop Information
+            </h4>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;border-bottom:1px solid var(--border);">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;">Shop Name</label>
+              <span id="profile-shop-name" style="color:var(--dark);font-size:.875rem;">-</span>
+            </div>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;border-bottom:1px solid var(--border);">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;">Shop Address</label>
+              <span id="profile-shop-address" style="color:var(--dark);font-size:.875rem;">-</span>
+            </div>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;border-bottom:1px solid var(--border);">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;">UPI ID</label>
+              <span id="profile-upi-id" style="color:var(--dark);font-size:.875rem;">Not set</span>
+            </div>
+            <div class="profile-field" style="display:flex;padding:.6rem 0;align-items:flex-start;">
+              <label style="width:160px;font-weight:600;color:var(--gray);font-size:.875rem;flex-shrink:0;padding-top:4px;">UPI QR Code</label>
+              <div>
+                <img id="profile-upi-qr-image" src="" alt="UPI QR Code"
+                  style="display:none;max-width:160px;border:1px solid var(--border);border-radius:8px;padding:4px;">
+                <span id="profile-upi-qr-text" style="color:var(--gray-light);font-size:.875rem;">Not uploaded</span>
+              </div>
+            </div>
           </div>
+
         </div>
+        <!-- end #profile-view -->
+
+        <!-- ══ EDIT MODE ══════════════════════════════════════ -->
+        <div id="profile-edit" class="hidden">
+          <form id="edit-profile-form">
+
+            <div class="profile-section" style="margin-bottom:1.5rem;">
+              <h4 style="color:var(--primary);font-size:0.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);">
+                <i class="fas fa-id-card"></i> Personal Information
+              </h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Full Name *</label>
+                  <input type="text" id="edit-profile-name" required placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                  <label>Phone Number *</label>
+                  <input type="tel" id="edit-profile-phone" required placeholder="10-digit phone">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="edit-profile-email" placeholder="your@email.com">
+              </div>
+            </div>
+
+            <!-- Shop info — shown only for shopkeepers -->
+            <div class="profile-section" id="edit-shop-section" style="margin-bottom:1.5rem;">
+              <h4 style="color:var(--primary);font-size:0.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);">
+                <i class="fas fa-store"></i> Shop Information
+              </h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Shop Name</label>
+                  <input type="text" id="edit-profile-shop-name" placeholder="Your shop name">
+                </div>
+                <div class="form-group">
+                  <label>UPI ID</label>
+                  <input type="text" id="edit-profile-upi-id" placeholder="e.g. shopname@upi">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Shop Address</label>
+                <textarea id="edit-profile-shop-address" rows="2" placeholder="Full shop address"></textarea>
+              </div>
+              <div class="form-group">
+                <label>UPI QR Code Image <small style="color:var(--gray-light);font-weight:400;">(max 2 MB)</small></label>
+                <input type="file" id="edit-profile-upi-qr-file" accept="image/*">
+                <div style="margin-top:8px;">
+                  <img id="upi-qr-preview-image" src="" alt="QR Preview"
+                    style="display:none;max-width:140px;border:1px solid var(--border);border-radius:8px;padding:4px;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Password confirmation -->
+            <div class="profile-section" style="margin-bottom:1.5rem;">
+              <h4 style="color:var(--primary);font-size:0.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);">
+                <i class="fas fa-lock"></i> Confirm Changes
+              </h4>
+              <div class="form-group">
+                <label>Current Password <span style="color:var(--danger);">*</span></label>
+                <div class="password-input-container">
+                  <input type="password" id="edit-profile-current-password"
+                    placeholder="Enter your current password to save" required>
+                  <i class="fas fa-eye password-toggle"
+                    onclick="togglePasswordVisibility('edit-profile-current-password', this)"></i>
+                </div>
+                <small style="color:var(--gray-light);">Required to confirm any changes.</small>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+              </button>
+              <button type="button" id="cancel-edit-profile" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </div>
+
+          </form>
+        </div>
+        <!-- end #profile-edit -->
+
       </div>
     </div>
   </div>
