@@ -177,11 +177,13 @@ exports.placeOrder = async (req, res) => {
     }
 
     const firstProduct = cart.items[0].productId;
-    if (!firstProduct || !firstProduct.userId) {
+    if (!firstProduct) {
       return res.status(400).json({ message: 'Invalid product in cart.' });
     }
-
-    const shopkeeperId = firstProduct.userId;
+    const resolvedShopkeeperId = firstProduct.userId?._id || firstProduct.userId;
+    if (!resolvedShopkeeperId) {
+      return res.status(400).json({ message: 'Could not determine shopkeeper for this order.' });
+    }
 
     let totalAmount = 0;
     const orderItems = [];
@@ -222,10 +224,13 @@ exports.placeOrder = async (req, res) => {
     const isPaid = paymentMode === 'UPI' || paymentMode === 'Card' || paymentMode === 'Net Banking';
     const paymentStatus = isPaid ? 'Paid' : 'Pending';
 
+    // Map COD -> Cash for Bill model (Bill enum doesn't include 'COD')
+    const billPaymentMode = (paymentMode === 'COD') ? 'Cash' : (paymentMode || 'Cash');
+
     const order = await Order.create({
       orderNumber,
       customerId,
-      shopkeeperId,
+      shopkeeperId: resolvedShopkeeperId,
       items: orderItems,
       totalAmount,
       discount: 0,
@@ -234,24 +239,24 @@ exports.placeOrder = async (req, res) => {
       paymentStatus,
       orderStatus: 'Pending',
       shippingAddress,
-      customerPhone: customer.phone,
+      customerPhone: customer.phone || '',
       notes: notes || ''
     });
 
     const billNumber = generateBillNumber();
     await Bill.create({
       billNumber,
-      shopkeeperId,
+      shopkeeperId: resolvedShopkeeperId,
       customerId,
-      customerName: customer.name,
-      customerPhone: customer.phone,
+      customerName: customer.name || 'Customer',
+      customerPhone: customer.phone || '',
       items: billItems,
       subtotal: totalAmount,
       discount: 0,
       totalAmount,
       paidAmount: isPaid ? totalAmount : 0,
       balanceAmount: isPaid ? 0 : totalAmount,
-      paymentMode: paymentMode || 'COD',
+      paymentMode: billPaymentMode,
       paymentStatus,
       notes: `Order: ${orderNumber}`
     });

@@ -459,11 +459,13 @@ const expenses = {
               mrp: mrp || costPrice,
               price: mrp || costPrice,
               costPrice: costPrice,
-              agencyName: agencyName || null,
-              stock: stock
+              agencyName: agencyName || '',
+              stock: stock,
+              lowStockThreshold: 10,
+              minStock: 10
             });
           } catch (err) {
-            console.error('Failed to auto-add product to inventory:', err);
+            // Product may already exist — createProduct handles stock merging server-side
           }
           addedItemsSummary.push(`${name} (Qty: ${stock})`);
           itemsDetailList.push({ name, mrp: mrp || costPrice, billingPrice: costPrice, qty: stock });

@@ -83,7 +83,7 @@ const billSchema = new mongoose.Schema(
     },
     paymentMode: {
       type: String,
-      enum: ['Cash', 'UPI', 'Card', 'Net Banking', 'Pending'],
+      enum: ['Cash', 'COD', 'UPI', 'Card', 'Net Banking', 'Pending'],
       default: 'Cash'
     },
     paymentStatus: {

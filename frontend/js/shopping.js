@@ -356,7 +356,7 @@ const shopping = {
               <label>Payment Mode *</label>
               <select id="payment-mode" required>
                 <option value="">Select Payment Mode</option>
-                <option value="COD">Cash on Delivery (COD)</option>
+                <option value="Cash">Cash on Delivery (COD)</option>
                 <option value="UPI">UPI</option>
                 <option value="Card">Credit/Debit Card</option>
                 <option value="Net Banking">Net Banking</option>

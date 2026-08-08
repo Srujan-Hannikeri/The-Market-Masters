@@ -34,6 +34,10 @@ const loader = (() => {
         if (getMsg() && depth > 0) getMsg().textContent = messages[msgIdx];
       }, 1800);
     }
+
+    // Safety net: auto-hide after 4 s so it never gets stuck
+    clearTimeout(loader._safetyTimer);
+    loader._safetyTimer = setTimeout(() => forceHide(), 4000);
   }
 
   function hide() {

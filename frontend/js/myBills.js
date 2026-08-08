@@ -60,12 +60,11 @@ class MyBills {
     }
 
     container.innerHTML = this.bills.map(function(bill) {
-      // Only show pay button if bill is NOT fully paid
       var payButton = '';
       var isFullyPaid = bill.paymentStatus === 'Paid' || parseFloat(bill.balanceAmount) <= 0;
       
       if (!isFullyPaid) {
-        payButton = '<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); myBills.makePayment(' + bill.id + ', ' + bill.totalAmount + ', ' + bill.balanceAmount + ')" title="Make Payment"><i class="fas fa-credit-card"></i> Pay Now</button>';
+        payButton = '<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); myBills.makePayment(\'' + bill.id + '\', ' + bill.totalAmount + ', ' + bill.balanceAmount + ')" title="Make Payment"><i class="fas fa-credit-card"></i> Pay Now</button>';
       } else {
         payButton = '<span style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Paid</span>';
       }
@@ -77,7 +76,7 @@ class MyBills {
         dueLine = '<p style="color: #28a745;"><strong>Fully Paid</strong></p>';
       }
 
-      return '<div class="bill-card" onclick="myBills.viewBill(' + bill.id + ')">' +
+      return '<div class="bill-card" onclick="myBills.viewBill(\'' + bill.id + '\')">' +
         '<div class="bill-card-header">' +
           '<div>' +
             '<h4>' + bill.billNumber + '</h4>' +
@@ -96,9 +95,9 @@ class MyBills {
           '<span class="bill-amount">' + formatCurrency(bill.totalAmount) + '</span>' +
           '<div class="bill-actions">' +
             payButton +
-            '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); myBills.viewBill(' + bill.id + ')" title="View Bill"><i class="fas fa-eye"></i></button>' +
-            '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill(' + bill.id + ')" title="Print Bill"><i class="fas fa-print"></i></button>' +
-            '<button class="btn btn-sm btn-info" onclick="event.stopPropagation(); billing.downloadBillPDF(' + bill.id + ')" title="Download PDF"><i class="fas fa-download"></i></button>' +
+            '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); myBills.viewBill(\'' + bill.id + '\')" title="View Bill"><i class="fas fa-eye"></i></button>' +
+            '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill(\'' + bill.id + '\')" title="Print Bill"><i class="fas fa-print"></i></button>' +
+            '<button class="btn btn-sm btn-info" onclick="event.stopPropagation(); billing.downloadBillPDF(\'' + bill.id + '\')" title="Download PDF"><i class="fas fa-download"></i></button>' +
           '</div>' +
         '</div>' +
       '</div>';

@@ -132,8 +132,8 @@ exports.createBill = async (req, res) => {
     const bill = await Bill.create({
       billNumber: generateBillNumber(),
       shopkeeperId: req.user.id,
-      customerName,
-      customerPhone,
+      customerName: customerName || 'Walk-in Customer',
+      customerPhone: customerPhone || 'N/A',
       items: billItems,
       subtotal,
       discount,

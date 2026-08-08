@@ -1,5 +1,16 @@
 <section id="inventory-page" class="page">
   <div class="inventory-container">
+
+    <!-- Low Stock Alert Banner (shopkeeper only) -->
+    <div id="inventory-low-stock-alert" class="low-stock-alert hidden" style="display:none;">
+      <div class="alert-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Low Stock Alert!</h3>
+        <button onclick="closeInventoryLowStockAlert(event)" class="alert-close">&times;</button>
+      </div>
+      <div id="inventory-low-stock-products" class="low-stock-products"></div>
+    </div>
+
     <div class="inventory-actions">
       <button id="add-product-btn" class="btn btn-primary">
         <i class="fas fa-plus"></i> Add Product

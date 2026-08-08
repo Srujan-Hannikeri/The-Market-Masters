@@ -20,7 +20,7 @@ const profile = {
       console.error('Error loading profile:', error);
       if (error.message === 'User not found or inactive.' || error.message.includes('Unauthorized')) {
         toast.error('Session expired. Please login again.');
-        api.clearToken();
+        api.removeToken();
         auth.showAuth();
       } else {
         toast.error('Failed to load profile');

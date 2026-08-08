@@ -250,12 +250,12 @@ const billing = {
     }
 
     const billData = {
-      customerName: document.getElementById('bill-customer-name')?.value,
-      customerPhone: document.getElementById('bill-customer-phone')?.value,
+      customerName: document.getElementById('bill-customer-name')?.value?.trim() || 'Walk-in Customer',
+      customerPhone: document.getElementById('bill-customer-phone')?.value?.trim() || 'N/A',
       items,
-      discount: 0, // No discount
+      discount: 0,
       paidAmount: parseFloat(document.getElementById('paid-amount')?.value) || 0,
-      paymentMode: document.getElementById('payment-mode')?.value
+      paymentMode: document.getElementById('payment-mode')?.value || 'Cash'
     };
 
     try {
@@ -432,9 +432,9 @@ const billing = {
                 </tr>
               </thead>
               <tbody>
-                ${bill.BillItems.map(item => {
+                ${(bill.BillItems || bill.items || []).map(item => {
                   const mrp = parseFloat(item.mrp || item.unitPrice || 0);
-                  const cost = parseFloat(item.Product?.costPrice || item.costPrice || 0);
+                  const cost = parseFloat(item.productId?.costPrice || item.Product?.costPrice || item.costPrice || 0);
                   const profitPerUnit = mrp - cost;
                   const totalProfit = profitPerUnit * (parseInt(item.quantity) || 1);
 
@@ -595,27 +595,10 @@ const billing = {
     const link = document.createElement('a');
     link.href = `/api/bills/${billId}/pdf?format=${format}`;
     link.download = `bill_${billId}.pdf`;
+    document.body.appendChild(link);
     link.click();
-  },
-
-  async downloadBillPDF(billId) {
-    try {
-      const response = await billsAPI.generatePDF(billId);
-      if (response.pdfUrl) {
-        // Create temporary link to download
-        const link = document.createElement('a');
-        link.href = response.pdfUrl;
-        link.download = `Bill-${response.billNumber || billId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('PDF downloaded successfully!');
-      } else {
-        toast.error('Failed to generate PDF');
-      }
-    } catch (error) {
-      toast.error('Failed to download PDF: ' + error.message);
-    }
+    document.body.removeChild(link);
+    toast.success('Downloading PDF…');
   },
 
   resetForm() {
