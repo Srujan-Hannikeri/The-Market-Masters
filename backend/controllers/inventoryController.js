@@ -55,14 +55,17 @@ exports.createProduct = async (req, res) => {
   try {
     const { name, description, price, mrp, costPrice, agencyName, stock, lowStockThreshold, expiryDate, category, barcode, image } = req.body;
     const trimmedName = name.trim();
+    const mrpValue = mrp !== undefined ? Number(mrp) : (price !== undefined ? Number(price) : 0);
 
+    // Match existing product by same name AND same MRP (within ±0.01 tolerance)
     const existingProduct = await Product.findOne({
       userId: req.user.id,
-      name: { $regex: `^${trimmedName}$`, $options: 'i' }
+      name: { $regex: `^${trimmedName}$`, $options: 'i' },
+      mrp: { $gte: mrpValue - 0.01, $lte: mrpValue + 0.01 }
     });
 
     if (existingProduct) {
-      const newStock = Number(existingProduct.stock) + Number(stock);
+      const newStock = Number(existingProduct.stock) + Number(stock || 0);
       existingProduct.stock = newStock;
       existingProduct.isActive = true;
       if (price !== undefined) existingProduct.price = price;
@@ -70,6 +73,7 @@ exports.createProduct = async (req, res) => {
       if (costPrice !== undefined) existingProduct.costPrice = costPrice;
       if (agencyName !== undefined) existingProduct.agencyName = agencyName;
       if (description !== undefined) existingProduct.description = description;
+      if (lowStockThreshold !== undefined) existingProduct.minStock = lowStockThreshold;
       if (category !== undefined) existingProduct.category = category;
       if (barcode !== undefined) existingProduct.barcode = barcode;
       if (image !== undefined) existingProduct.image = image;
@@ -77,7 +81,7 @@ exports.createProduct = async (req, res) => {
       await existingProduct.save();
 
       return res.status(200).json({ 
-        message: `Product stock updated successfully. Added ${stock} units to existing product "${existingProduct.name}".`,
+        message: `Product stock updated. Added ${stock} units to "${existingProduct.name}" (MRP ₹${mrpValue}).`,
         product: existingProduct,
         stockUpdated: true
       });

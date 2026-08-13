@@ -16,7 +16,9 @@ const shopping = {
   async loadProducts() {
     try {
       const response = await inventoryAPI.getProducts({ status: 'active' });
-      this.products = response.products || [];
+      // Filter: only show products that are active and have stock > 0
+      const all = response.products || [];
+      this.products = all.filter(p => p.isActive !== false && parseInt(p.stock) > 0);
       this.renderProductCatalog();
     } catch (error) {
       console.error('Error loading products:', error);
@@ -125,9 +127,20 @@ const shopping = {
       const productShopName = product.User && product.User.shopName ? product.User.shopName : 'Unknown Shop';
 
       // Check if cart already has items from a different shop
-      if (this.currentShopkeeperId && productShopkeeperId !== this.currentShopkeeperId) {
-        toast.error(`⚠️ Your cart already has items from "${this.currentShopName}". Please checkout those items first or clear your cart to order from "${productShopName}".`);
-        return;
+      if (this.currentShopkeeperId && productShopkeeperId && productShopkeeperId.toString() !== this.currentShopkeeperId.toString()) {
+        // Ask user if they want to clear cart and start fresh
+        const confirmed = await confirmDialog(
+          `⚠️ Your cart has items from "${this.currentShopName}".\n\nAdding items from "${productShopName}" requires clearing your current cart.\n\nClear cart and add from "${productShopName}"?`
+        );
+        if (confirmed) {
+          await ordersAPI.clearCart();
+          this.cart = [];
+          this.currentShopkeeperId = null;
+          this.currentShopName = null;
+          this.updateCartCount();
+        } else {
+          return;
+        }
       }
 
       // Set the shopkeeper ID if this is the first item
@@ -276,7 +289,7 @@ const shopping = {
       summaryContainer.innerHTML = `
         <div class="cart-summary-box">
           <h3>Order Summary</h3>
-          ${this.currentShopName ? `<div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 13px;"><i class="fas fa-store"></i> <strong>Shop:</strong> ${this.currentShopName}</div>` : ''}
+          ${this.currentShopName ? `<div style="background:#e3f2fd;padding:10px;border-radius:5px;margin-bottom:15px;font-size:13px;"><i class="fas fa-store"></i> <strong>Shop:</strong> ${this.currentShopName}</div>` : ''}
           <div class="summary-row">
             <span>Subtotal (${this.cart.length} items)</span>
             <span>₹${totalAmount.toFixed(2)}</span>
@@ -289,29 +302,42 @@ const shopping = {
             <span>Total</span>
             <span>₹${totalAmount.toFixed(2)}</span>
           </div>
-          <button onclick="shopping.showCheckout()" class="btn btn-primary btn-checkout">
-            Proceed to Checkout
+          <button onclick="shopping.showCheckout()" class="btn btn-primary btn-checkout" style="width:100%;margin-top:16px;padding:14px;font-size:1rem;">
+            <i class="fas fa-credit-card"></i> Proceed to Checkout
           </button>
-          <button onclick="shopping.clearCart()" class="btn btn-warning" style="margin-top: 10px; width: 100%;">
+          <button onclick="app.navigateTo('shop')" class="btn btn-secondary" style="width:100%;margin-top:10px;">
+            <i class="fas fa-arrow-left"></i> Continue Shopping
+          </button>
+          <button onclick="shopping.clearCart()" class="btn btn-warning" style="width:100%;margin-top:10px;">
             <i class="fas fa-trash"></i> Clear Cart
-          </button>
-          <button onclick="app.navigateTo('shop')" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
-            Continue Shopping
           </button>
         </div>
       `;
     }
   },
 
-  // Update cart count badge
+  // Update cart count badge — uses local cart if available to avoid extra API call
   async updateCartCount() {
     try {
-      const response = await ordersAPI.getCart();
-      const count = response.itemCount || 0;
+      let count = this.cart.length;
+      // If cart is empty locally, verify with server (handles cases where cart changed server-side)
+      if (count === 0) {
+        const response = await ordersAPI.getCart();
+        count = response.itemCount || (response.items && response.items.length) || 0;
+        if (count > 0) {
+          this.cart = response.items || [];
+        }
+      }
       const badge = document.getElementById('cart-count');
       if (badge) {
         badge.textContent = count;
-        badge.style.display = count > 0 ? 'inline' : 'none';
+        if (count > 0) {
+          badge.style.display = 'inline-flex';
+          badge.classList.remove('hidden');
+        } else {
+          badge.style.display = 'none';
+          badge.classList.add('hidden');
+        }
       }
     } catch (error) {
       console.error('Error updating cart count:', error);

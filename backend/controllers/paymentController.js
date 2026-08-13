@@ -167,12 +167,32 @@ exports.updatePayment = async (req, res) => {
       return res.status(404).json({ message: 'Payment not found.' });
     }
 
-    const { paymentMode, transactionId, notes } = req.body;
+    const { amount, paymentMode, transactionId, notes } = req.body;
+    const oldAmount = Number(payment.amount);
+    const newAmount = amount !== undefined ? Number(amount) : oldAmount;
+
     if (paymentMode) payment.paymentMode = paymentMode;
+    if (amount !== undefined) payment.amount = newAmount;
     if (transactionId !== undefined) payment.transactionId = transactionId;
     if (notes !== undefined) payment.notes = notes;
 
     await payment.save();
+
+    // If amount changed, recalculate bill totals
+    if (amount !== undefined && newAmount !== oldAmount) {
+      const bill = await Bill.findById(payment.billId);
+      if (bill) {
+        // Recalculate from all payments
+        const { Payment: PaymentModel } = require('../models');
+        const allPayments = await PaymentModel.find({ billId: bill._id });
+        const totalPaid = allPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+        const newBalance = Math.max(0, Number(bill.totalAmount) - totalPaid);
+        bill.paidAmount = totalPaid;
+        bill.balanceAmount = newBalance;
+        bill.paymentStatus = calculatePaymentStatus(bill.totalAmount, totalPaid);
+        await bill.save();
+      }
+    }
 
     res.json({ message: 'Payment updated successfully.', payment });
   } catch (error) {

@@ -1,23 +1,24 @@
-/* Print Stylesheet for Bills */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MARKET MASTERS — PRINT STYLESHEET
+   Supports: A4, A3, A5, Letter, 80mm thermal, 58mm thermal
+═══════════════════════════════════════════════════════════════════════════ */
 
-/* Print Stylesheet for Bills & Receipts */
-
+/* ─────────────────────────────────────────────────────────────────────────
+   DEFAULT (A4 / Standard)
+───────────────────────────────────────────────────────────────────────── */
 @media print {
-  /* Page Setup & Margins */
   @page {
-    size: auto;
-    margin: 8mm;
+    size: A4 portrait;
+    margin: 12mm 10mm;
   }
 
-  /* Reset defaults for crisp thermal and standard paper rendering */
+  /* Reset */
   *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-shadow: none !important;
     text-shadow: none !important;
     box-sizing: border-box;
-    background: transparent !important;
-    color: #000 !important;
   }
 
   html, body {
@@ -27,38 +28,24 @@
     padding: 0 !important;
     background: #fff !important;
     color: #000 !important;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-family: 'Segoe UI', Arial, sans-serif !important;
     font-size: 10pt;
-    line-height: 1.35;
+    line-height: 1.4;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* Hide all non-printable application elements */
-  .sidebar,
-  .header,
-  .btn,
-  .form-actions,
-  #logout-btn,
-  .hamburger-menu,
-  .sidebar-overlay,
-  .nav-item,
-  .breadcrumb,
-  .search-bar,
-  .page-actions,
-  .modal-overlay,
-  .toast-container,
-  .alert,
-  .bill-view-actions,
-  .modal-header .modal-close {
+  /* Hide UI chrome */
+  .sidebar, .header, .btn, .form-actions, #logout-btn,
+  .hamburger-menu, .sidebar-overlay, .nav-item, .breadcrumb,
+  .search-bar, .page-actions, .modal-overlay, .toast-container,
+  .alert, .bill-view-actions, .modal-header .modal-close,
+  .bill-print-hide, .no-print {
     display: none !important;
   }
 
-  /* Force modal containers to display cleanly during print */
-  .modal,
-  .modal-body,
-  .bill-view-modal,
-  .bill-print-container {
+  /* Show only print content */
+  .modal, .modal-body, .bill-view-modal, .bill-print-container {
     position: static !important;
     display: block !important;
     width: 100% !important;
@@ -68,9 +55,47 @@
     border: none !important;
     box-shadow: none !important;
     overflow: visible !important;
+    background: #fff !important;
   }
 
-  /* Bill Layout Header */
+  /* ── Bill Layout ──────────────── */
+  .bill-print-wrapper {
+    width: 100%;
+    background: #fff;
+    padding: 0;
+  }
+
+  /* Shop Header */
+  .bill-shop-header {
+    text-align: center;
+    border-bottom: 2.5px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  .bill-shop-header .shop-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 6px;
+  }
+
+  .bill-shop-header h1, .bill-header h1, .bill-view-header h2 {
+    font-size: 16pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 3px;
+    color: #000 !important;
+  }
+
+  .bill-shop-header p, .bill-header p, .bill-view-header p {
+    font-size: 9pt;
+    margin: 2px 0;
+    color: #333 !important;
+  }
+
   .bill-header, .bill-view-header {
     text-align: center;
     margin-bottom: 12px;
@@ -78,24 +103,22 @@
     border-bottom: 2px solid #000;
   }
 
-  .bill-header h1, .bill-view-header h2 {
-    font-size: 16pt;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
-
-  .bill-header p, .bill-view-header p {
+  /* Bill Meta (number, date) */
+  .bill-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
     font-size: 9pt;
-    margin: 2px 0;
+    border-bottom: 1px dashed #999;
+    padding-bottom: 8px;
   }
 
-  /* Customer & Details Info Block */
+  /* Customer Info */
   .bill-info, .bill-view-details {
     width: 100%;
     margin-bottom: 12px;
     font-size: 9.5pt;
+    color: #000 !important;
   }
 
   .bill-view-section {
@@ -103,15 +126,16 @@
   }
 
   .bill-view-section h4 {
-    font-size: 10pt;
+    font-size: 9.5pt;
     font-weight: bold;
     text-transform: uppercase;
     border-bottom: 1px dashed #000;
     padding-bottom: 3px;
     margin-bottom: 6px;
+    color: #000 !important;
   }
 
-  /* Table Styling */
+  /* Items Table */
   .bill-items-table, table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -120,24 +144,28 @@
   }
 
   .bill-items-table thead, table thead {
-    border-top: 1.5px solid #000;
-    border-bottom: 1.5px solid #000;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    background: #f0f0f0 !important;
   }
 
   .bill-items-table th, table th {
-    padding: 5px 4px;
+    padding: 6px 5px;
     font-size: 9pt;
     font-weight: bold;
     text-transform: uppercase;
     text-align: left;
     border: none;
+    color: #000 !important;
+    background: #f0f0f0 !important;
   }
 
   .bill-items-table td, table td {
-    padding: 4px 4px;
-    font-size: 9pt;
+    padding: 5px 5px;
+    font-size: 9.5pt;
     border: none;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #ddd;
+    color: #000 !important;
   }
 
   .bill-items-table tr, table tr {
@@ -152,18 +180,21 @@
     text-align: right;
   }
 
-  /* Alignment Utilities */
+  /* Text alignment */
   .text-right { text-align: right !important; }
   .text-center { text-align: center !important; }
   .text-left { text-align: left !important; }
 
-  /* Summary Section */
+  /* Summary */
   .bill-summary, .bill-view-section:last-of-type {
     width: 100%;
-    max-width: 320px;
+    max-width: 340px;
     margin-left: auto;
     margin-top: 10px;
     page-break-inside: avoid;
+    border: 1px solid #ccc;
+    padding: 8px 10px;
+    border-radius: 4px;
   }
 
   .bill-summary-row, .summary-row {
@@ -171,18 +202,19 @@
     justify-content: space-between;
     padding: 3px 0;
     font-size: 9.5pt;
+    color: #000 !important;
   }
 
   .bill-summary-row.due, .summary-row.total {
     font-weight: bold;
-    font-size: 11pt;
-    border-top: 1.5px solid #000;
-    border-bottom: 1.5px solid #000;
+    font-size: 12pt;
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
     padding: 5px 0;
     margin-top: 4px;
   }
 
-  /* Print Badges Styling */
+  /* Payment Status Badge */
   .badge {
     border: 1px solid #000 !important;
     background: #fff !important;
@@ -192,36 +224,22 @@
     font-weight: bold !important;
     border-radius: 3px !important;
   }
+  .badge i { display: none !important; }
 
-  .badge i {
-    display: none !important;
+  /* UPI QR section */
+  .bill-upi-section {
+    margin-top: 15px;
+    text-align: center;
+    border-top: 1px dashed #999;
+    padding-top: 10px;
   }
 
-  /* Thermal Receipt Specific Adjustments (for narrow print width up to 80mm / 3inch) */
-  @media print and (max-width: 80mm) {
-    @page {
-      margin: 2mm;
-    }
-
-    body {
-      font-size: 8.5pt !important;
-    }
-
-    .bill-header h1, .bill-view-header h2 {
-      font-size: 12pt !important;
-    }
-
-    .bill-items-table th, .bill-items-table td, table th, table td {
-      padding: 3px 2px !important;
-      font-size: 8pt !important;
-    }
-
-    .bill-summary, .bill-view-section:last-of-type {
-      max-width: 100% !important;
-    }
+  .bill-upi-section img {
+    width: 100px;
+    height: 100px;
   }
 
-  /* Footer & Signatures */
+  /* Footer */
   .bill-footer {
     display: flex;
     justify-content: space-between;
@@ -235,6 +253,7 @@
   .bill-footer-left, .bill-footer-right, .bill-footer-center {
     text-align: center;
     font-size: 8.5pt;
+    color: #333 !important;
   }
 
   .signature-line {
@@ -244,8 +263,168 @@
     margin: 0 auto 4px auto;
   }
 
-  .page-break {
-    page-break-after: always;
+  /* Thank you message */
+  .bill-thank-you {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 9pt;
+    font-style: italic;
+    border-top: 1px dashed #ccc;
+    padding-top: 8px;
+    color: #333 !important;
+  }
+
+  .page-break { page-break-after: always; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   A3 SIZE (420mm × 297mm)
+───────────────────────────────────────────────────────────────────────── */
+@media print and (min-width: 280mm) {
+  @page {
+    size: A3 portrait;
+    margin: 15mm 20mm;
+  }
+
+  html, body {
+    font-size: 12pt !important;
+  }
+
+  .bill-shop-header h1, .bill-header h1, .bill-view-header h2 {
+    font-size: 20pt !important;
+  }
+
+  .bill-items-table th, .bill-items-table td,
+  table th, table td {
+    padding: 8px 6px !important;
+    font-size: 11pt !important;
+  }
+
+  .bill-summary, .bill-view-section:last-of-type {
+    max-width: 400px !important;
+  }
+
+  .bill-summary-row.due, .summary-row.total {
+    font-size: 14pt !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   THERMAL 80mm ROLL  (80mm wide)
+───────────────────────────────────────────────────────────────────────── */
+@media print and (max-width: 82mm) {
+  @page {
+    size: 80mm auto;
+    margin: 2mm 2mm;
+  }
+
+  html, body {
+    font-size: 8pt !important;
+    width: 76mm !important;
+    line-height: 1.25 !important;
+  }
+
+  .bill-shop-header h1, .bill-header h1, .bill-view-header h2 {
+    font-size: 11pt !important;
+    letter-spacing: 0 !important;
+  }
+
+  .bill-shop-header p, .bill-header p {
+    font-size: 7.5pt !important;
+  }
+
+  .bill-meta {
+    flex-direction: column !important;
+    gap: 2px;
+  }
+
+  .bill-items-table th, .bill-items-table td,
+  table th, table td {
+    padding: 3px 2px !important;
+    font-size: 7.5pt !important;
+  }
+
+  .bill-summary, .bill-view-section:last-of-type {
+    max-width: 100% !important;
+    border: none !important;
+    padding: 4px 0 !important;
+  }
+
+  .bill-summary-row, .summary-row {
+    font-size: 8pt !important;
+    padding: 2px 0 !important;
+  }
+
+  .bill-summary-row.due, .summary-row.total {
+    font-size: 9.5pt !important;
+    border-top: 1.5px solid #000 !important;
+    border-bottom: 1.5px solid #000 !important;
+  }
+
+  .bill-footer {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px;
+  }
+
+  .bill-upi-section img {
+    width: 70px !important;
+    height: 70px !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   THERMAL 58mm ROLL  (58mm wide)
+───────────────────────────────────────────────────────────────────────── */
+@media print and (max-width: 60mm) {
+  @page {
+    size: 58mm auto;
+    margin: 1mm 1mm;
+  }
+
+  html, body {
+    font-size: 7pt !important;
+    width: 56mm !important;
+    line-height: 1.2 !important;
+  }
+
+  .bill-shop-header h1, .bill-header h1, .bill-view-header h2 {
+    font-size: 9pt !important;
+    letter-spacing: 0 !important;
+  }
+
+  .bill-shop-header p, .bill-header p {
+    font-size: 6.5pt !important;
+  }
+
+  .bill-items-table th, .bill-items-table td,
+  table th, table td {
+    padding: 2px 1px !important;
+    font-size: 6.5pt !important;
+  }
+
+  .bill-summary, .bill-view-section:last-of-type {
+    max-width: 100% !important;
+    border: none !important;
+    padding: 2px 0 !important;
+  }
+
+  .bill-summary-row, .summary-row {
+    font-size: 7pt !important;
+    padding: 2px 0 !important;
+  }
+
+  .bill-summary-row.due, .summary-row.total {
+    font-size: 8pt !important;
+  }
+
+  .bill-upi-section img {
+    width: 55px !important;
+    height: 55px !important;
+  }
+
+  .signature-line {
+    width: 80px !important;
   }
 }
 

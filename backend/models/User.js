@@ -47,6 +47,14 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+    sessionToken: {
+      type: String,
+      default: null
+    },
+    sessionDevice: {
+      type: String,
+      default: null
     }
   },
   {

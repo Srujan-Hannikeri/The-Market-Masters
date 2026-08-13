@@ -310,24 +310,24 @@ const billing = {
     }
   },
 
-  searchBills(query) {
+  async searchBills(query) {
     if (!query || query.trim() === '') {
-      this.renderBillsList(this.allBills);
+      this.loadBills();
       return;
     }
 
-    const searchTerm = query.toLowerCase().trim();
-    const filteredBills = this.allBills.filter(bill => {
-      const customerName = (bill.customerName || '').toLowerCase();
-      const customerPhone = (bill.customerPhone || '').toLowerCase();
-      const billNumber = (bill.billNumber || '').toLowerCase();
+    try {
+      const status = document.getElementById('bill-status-filter')?.value;
+      const params = { search: query.trim() };
+      if (status) params.status = status;
       
-      return customerName.includes(searchTerm) || 
-             customerPhone.includes(searchTerm) || 
-             billNumber.includes(searchTerm);
-    });
-
-    this.renderBillsList(filteredBills);
+      const response = await billsAPI.getBills(params);
+      const filteredBills = response.bills || [];
+      this.renderBillsList(filteredBills);
+    } catch (error) {
+      console.error('Error searching bills:', error);
+      toast.error('Search failed');
+    }
   },
 
   renderBillsList(bills) {

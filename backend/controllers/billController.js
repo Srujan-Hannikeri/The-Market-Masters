@@ -16,7 +16,7 @@ const calculatePaymentStatus = (totalAmount, paidAmount) => {
 
 exports.getAllBills = async (req, res) => {
   try {
-    const { status, customerPhone, startDate, endDate, page = 1, limit = 20 } = req.query;
+    const { status, customerPhone, search, startDate, endDate, page = 1, limit = 20 } = req.query;
     
     const query = {};
     if (req.user.role === 'shopkeeper') {
@@ -28,6 +28,13 @@ exports.getAllBills = async (req, res) => {
     if (status) query.paymentStatus = status;
     if (customerPhone && req.user.role === 'shopkeeper') {
       query.customerPhone = customerPhone;
+    }
+    if (search) {
+      query.$or = [
+        { billNumber: { $regex: search, $options: 'i' } },
+        { customerName: { $regex: search, $options: 'i' } },
+        { customerPhone: { $regex: search, $options: 'i' } }
+      ];
     }
     if (startDate && endDate && startDate !== 'undefined' && endDate !== 'undefined') {
       const s = new Date(startDate);

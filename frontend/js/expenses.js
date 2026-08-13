@@ -159,7 +159,7 @@ const expenses = {
         title="Remove Row">
         <i class="fas fa-times"></i>
       </button>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr;gap:10px;padding-right:30px;">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr 0.8fr;gap:10px;padding-right:30px;">
         <div>
           <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Item Name *</label>
           <input type="text" class="exp-item-name" placeholder="e.g. Rice 10kg" required
@@ -185,6 +185,13 @@ const expenses = {
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;text-align:center;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'"
             oninput="expenses.calculateInventoryTotal()">
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#e67e22;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;" title="Minimum quantity before low-stock alert fires">Low Stock * <i class="fas fa-exclamation-triangle" style="font-size:9px;"></i></label>
+          <input type="number" class="exp-item-lowstock" placeholder="e.g. 5" min="1" value="10" required
+            style="width:100%;padding:8px 10px;border:1px solid #fbbf24;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;text-align:center;background:#fffbeb;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#fbbf24'"
+            title="Minimum stock before a low-stock alert appears on the dashboard">
         </div>
       </div>
     `;
@@ -451,6 +458,14 @@ const expenses = {
         const mrp = parseFloat(row.querySelector('.exp-item-mrp').value) || 0;
         const costPrice = parseFloat(row.querySelector('.exp-item-cost').value) || 0;
         const stock = parseInt(row.querySelector('.exp-item-qty').value) || 1;
+        const lowStockInput = row.querySelector('.exp-item-lowstock');
+        const lowStockVal = lowStockInput ? (parseInt(lowStockInput.value) || 10) : 10;
+
+        // Validate low stock field is filled
+        if (name && (!lowStockInput || !lowStockInput.value)) {
+          toast.error(`Please enter a Low Stock Threshold for "${name || 'an item'}".`);
+          return;
+        }
 
         if (name) {
           try {
@@ -461,8 +476,8 @@ const expenses = {
               costPrice: costPrice,
               agencyName: agencyName || '',
               stock: stock,
-              lowStockThreshold: 10,
-              minStock: 10
+              lowStockThreshold: lowStockVal,
+              minStock: lowStockVal
             });
           } catch (err) {
             // Product may already exist — createProduct handles stock merging server-side

@@ -147,6 +147,11 @@ const auth = {
       this.user = response.user;
       toast.success('Login successful!');
       
+      // Store session token for multi-device detection
+      if (response.sessionToken) {
+        localStorage.setItem('sessionToken', response.sessionToken);
+      }
+      
       this.clearSessionData();
       window.location.href = 'app.html';
     } catch (error) {
@@ -293,11 +298,19 @@ const auth = {
 
     // Initialize app if available
     try { if (typeof app !== 'undefined' && typeof app.init === 'function') app.init(); } catch(e) {}
+    // Start session polling to detect multi-device logins
+    try { this.startSessionPolling(); } catch(e) {}
   },
 
 
   // Logout
   logout() {
+    // Stop session polling
+    if (this._sessionPollTimer) {
+      clearInterval(this._sessionPollTimer);
+      this._sessionPollTimer = null;
+    }
+    localStorage.removeItem('sessionToken');
     api.removeToken();
     this.user = null;
     
@@ -373,6 +386,55 @@ const auth = {
     
     // Clear any cached data in sessionStorage
     sessionStorage.clear();
+  },
+
+  // Poll every 60s to detect if this session was kicked by another login
+  startSessionPolling() {
+    if (this._sessionPollTimer) clearInterval(this._sessionPollTimer);
+    this._sessionPollTimer = setInterval(async () => {
+      const sessionToken = localStorage.getItem('sessionToken');
+      const token = api.getToken();
+      if (!sessionToken || !token || !this.user) return;
+      try {
+        const response = await api.post('/auth/check-session', { sessionToken });
+        if (response && response.isValid === false) {
+          clearInterval(this._sessionPollTimer);
+          this._sessionPollTimer = null;
+          this._showKickedNotification();
+        }
+      } catch (e) { /* silently ignore network errors */ }
+    }, 60000);
+  },
+
+  _showKickedNotification() {
+    if (document.getElementById('session-kicked-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'session-kicked-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Segoe UI,sans-serif;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:40px 32px;max-width:420px;width:90%;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+        <div style="width:72px;height:72px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+          <i class="fas fa-sign-out-alt" style="font-size:30px;color:#ef4444;"></i>
+        </div>
+        <h2 style="font-size:1.4rem;font-weight:700;color:#1f2937;margin-bottom:12px;">Logged In Elsewhere</h2>
+        <p style="color:#6b7280;font-size:0.95rem;line-height:1.6;margin-bottom:24px;">
+          Your account was logged in on another device. You have been signed out of this session for security.
+        </p>
+        <button onclick="auth._handleKickedLogout()" style="background:linear-gradient(135deg,#1e5f5b,#2d8a84);color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;width:100%;">
+          OK, Go to Login
+        </button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  },
+
+  _handleKickedLogout() {
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('token');
+    this.user = null;
+    const overlay = document.getElementById('session-kicked-overlay');
+    if (overlay) overlay.remove();
+    window.location.href = 'index.html';
   },
 
   // Check if user is shopkeeper

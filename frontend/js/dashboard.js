@@ -80,7 +80,8 @@ const dashboard = {
     // Hide low stock alert for customers
     const alertBox = document.getElementById("low-stock-alert");
     if (alertBox && auth.user?.role !== "shopkeeper") {
-      alertBox.style.display = "none";
+      alertBox.classList.add('hidden');
+      alertBox.style.display = 'none';
     }
   },
 
@@ -97,7 +98,10 @@ const dashboard = {
     if (statsGrid) statsGrid.style.display = "none";
     if (dashboardGrid) dashboardGrid.style.display = "none";
     if (recentBillsCard) recentBillsCard.style.display = "none";
-    if (alertBox) alertBox.style.display = "none";
+    if (alertBox) {
+      alertBox.classList.add('hidden');
+      alertBox.style.display = 'none';
+    }
 
     // Show customer welcome
     const container = document.querySelector("#dashboard-page");
@@ -364,10 +368,12 @@ const dashboard = {
         });
 
         productsContainer.innerHTML = html;
-        alertBox.style.display = "block";
+        alertBox.classList.remove('hidden');
+        alertBox.style.display = 'block';
 
       } else {
-        alertBox.style.display = "none";
+        alertBox.classList.add('hidden');
+        alertBox.style.display = 'none';
         }
     } catch (error) {
       console.error("Low stock check error:", error);
@@ -382,6 +388,7 @@ function closeLowStockAlert(event) {
   }
   const alertBox = document.getElementById("low-stock-alert");
   if (alertBox) {
-    alertBox.style.display = "none";
+    alertBox.classList.add('hidden');
+    alertBox.style.display = 'none';
   }
 }

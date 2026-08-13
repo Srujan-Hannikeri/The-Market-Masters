@@ -15,6 +15,10 @@ const generateToken = (user) => {
   );
 };
 
+const generateSessionToken = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
 exports.register = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -30,6 +34,7 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const sessionToken = generateSessionToken();
 
     const user = await User.create({
       name,
@@ -38,7 +43,8 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role: role || 'customer',
       shopName,
-      shopAddress
+      shopAddress,
+      sessionToken
     });
 
     const token = generateToken(user);
@@ -46,6 +52,7 @@ exports.register = async (req, res) => {
     res.status(201).json({
       message: 'User registered successfully.',
       token,
+      sessionToken,
       user: {
         id: user.id || user._id,
         name: user.name,
@@ -90,11 +97,22 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Account is deactivated.' });
     }
 
+    // Check if already logged in elsewhere
+    const wasAlreadyLoggedIn = !!user.sessionToken;
+
+    // Generate new session token (invalidates old session on other devices)
+    const sessionToken = generateSessionToken();
+    user.sessionToken = sessionToken;
+    user.sessionDevice = req.headers['user-agent'] || 'Unknown device';
+    await user.save();
+
     const token = generateToken(user);
 
     res.json({
       message: 'Login successful.',
       token,
+      sessionToken,
+      wasAlreadyLoggedIn,
       user: {
         id: user.id || user._id,
         name: user.name,
@@ -188,6 +206,21 @@ exports.getShopkeeperProfile = async (req, res) => {
   } catch (error) {
     console.error('Get shopkeeper profile error:', error);
     res.status(500).json({ message: 'Error fetching shopkeeper profile.', error: error.message });
+  }
+};
+
+// Check if current session token is still valid (for multi-device detection)
+exports.checkSession = async (req, res) => {
+  try {
+    const { sessionToken } = req.body;
+    const user = await User.findById(req.user.id).select('sessionToken');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    const isValid = user.sessionToken === sessionToken;
+    res.json({ isValid });
+  } catch (error) {
+    res.status(500).json({ message: 'Error checking session.', error: error.message });
   }
 };
 

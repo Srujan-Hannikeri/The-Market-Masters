@@ -30,5 +30,6 @@ router.post('/forgot-password/verify-otp', [
 router.get('/profile', authMiddleware, authController.getProfile);
 router.put('/profile', authMiddleware, authController.updateProfile);
 router.get('/shopkeeper/:id', authController.getShopkeeperProfile);
+router.post('/check-session', authMiddleware, authController.checkSession);
 
 module.exports = router;
