@@ -156,7 +156,7 @@ const billing = {
     itemRow.innerHTML = `
       <select class="product-select" required>
         <option value="">Select Product</option>
-        ${this.products.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name} (₹${p.price})</option>`).join('')}
+        ${this.products.map(p => `<option value="${p.id || p._id}" data-price="${p.price}">${p.name} (₹${p.price})</option>`).join('')}
       </select>
       <input type="number" class="quantity-input" value="1" min="1" required>
       <span class="price-display">₹0</span>

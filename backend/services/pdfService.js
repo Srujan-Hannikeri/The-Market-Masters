@@ -371,9 +371,10 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   // ══════════════════════════════════════════
   const totW = Math.floor(CW * 0.38);
   const totX = margin + CW - totW;
+  const totalsStartY = y; // Save original Y coordinate before mutating it with tRow
 
   // Totals panel background
-  doc.rect(totX - 8, y, totW + 8, 110).fill(GRAY).stroke('#dddddd');
+  doc.rect(totX - 8, totalsStartY, totW + 8, 110).fill(GRAY).stroke('#dddddd');
 
   const tRow = (label, value, bold = false, color = DGRAY) => {
     doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(9.5).fillColor(MID)
@@ -396,7 +397,7 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   // Payment summary (left of totals)
   const payX = margin;
   const payW = CW - totW - 30;
-  const payStartY = y - 110 - 8; // align top with totals panel
+  const payStartY = totalsStartY; // Use the saved Y coordinate to correctly align left box
 
   doc.rect(payX, payStartY, payW, 110).fill(GRAY).stroke('#dddddd');
   doc.fillColor(GREEN).fontSize(10).font('Helvetica-Bold').text('Payment Summary', payX + 10, payStartY + 8);
