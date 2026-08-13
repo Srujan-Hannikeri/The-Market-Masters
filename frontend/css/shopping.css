@@ -138,7 +138,7 @@
 /* Cart Styles */
 .cart-container {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 380px;
   gap: 24px;
   padding: 20px 0;
 }
@@ -739,7 +739,7 @@
   }
 
   .cart-summary {
-    order: -1;
+    order: 2;
   }
 }
 

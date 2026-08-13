@@ -248,7 +248,7 @@ class MyBills {
       } else {
         // Show UPI QR code and ID
         var qrDisplay = qrCode ? 
-          '<img src="' + qrCode + '" alt="UPI QR Code" style="max-width: 200px; max-height: 200px;">' :
+          '<img src="' + qrCode + '" alt="UPI QR Code" style="max-width: 200px; max-height: 200px; width: 100%; height: auto;">' :
           '<i class="fas fa-qrcode" style="font-size: 120px; color: #2c5f2d;"></i>';
         
         container.innerHTML = 
@@ -262,7 +262,7 @@ class MyBills {
             '</div>' +
             '<div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">' +
               '<p style="margin: 5px 0; color: #666; font-size: 13px;">UPI ID:</p>' +
-              '<p style="margin: 5px 0; font-size: 20px; font-weight: bold; color: #2c5f2d; user-select: all; letter-spacing: 1px;">' + upiId + '</p>' +
+              '<p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #2c5f2d; user-select: all; letter-spacing: 1px; word-break: break-all;">' + upiId + '</p>' +
               '<button type="button" onclick="navigator.clipboard.writeText(\'' + upiId + '\'); toast.success(\'UPI ID copied!\');" style="margin-top: 10px; padding: 8px 16px; background: #e3f2fd; border: none; border-radius: 5px; cursor: pointer; color: #1976d2; font-size: 13px;"><i class="fas fa-copy"></i> Copy UPI ID</button>' +
             '</div>' +
             '<div style="background: #d1ecf1; padding: 12px; border-radius: 8px; margin-top: 15px;">' +
