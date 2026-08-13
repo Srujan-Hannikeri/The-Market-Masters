@@ -59,49 +59,83 @@ class MyBills {
       return;
     }
 
-    container.innerHTML = this.bills.map(function(bill) {
-      var payButton = '';
-      var isFullyPaid = bill.paymentStatus === 'Paid' || parseFloat(bill.balanceAmount) <= 0;
-      
-      if (!isFullyPaid) {
-        payButton = '<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); myBills.makePayment(\'' + bill.id + '\', ' + bill.totalAmount + ', ' + bill.balanceAmount + ')" title="Make Payment"><i class="fas fa-credit-card"></i> Pay Now</button>';
-      } else {
-        payButton = '<span style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Paid</span>';
-      }
-      
-      var dueLine = '';
-      if (bill.balanceAmount > 0) {
-        dueLine = '<p style="color: var(--danger);"><strong>Due:</strong> ' + formatCurrency(bill.balanceAmount) + '</p>';
-      } else {
-        dueLine = '<p style="color: #28a745;"><strong>Fully Paid</strong></p>';
-      }
+    // Sort bills descending by created_at
+    const sortedBills = [...this.bills].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      return '<div class="bill-card" onclick="myBills.viewBill(\'' + bill.id + '\')">' +
-        '<div class="bill-card-header">' +
-          '<div>' +
-            '<h4>' + bill.billNumber + '</h4>' +
-            '<small>' + formatDate(bill.created_at) + '</small>' +
+    // Group bills by date
+    const groups = {};
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+    sortedBills.forEach(bill => {
+      const billDate = new Date(bill.created_at).toDateString();
+      let groupName = billDate;
+      if (billDate === today) groupName = 'Today';
+      else if (billDate === yesterday) groupName = 'Yesterday';
+      else {
+        groupName = new Date(bill.created_at).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+      }
+      
+      if (!groups[groupName]) groups[groupName] = [];
+      groups[groupName].push(bill);
+    });
+
+    let html = '';
+    for (const [groupName, groupBills] of Object.entries(groups)) {
+      html += '<div class="bill-date-group">' +
+              '<h4 class="bill-group-header" style="margin: 1.5rem 0 0.5rem; color: var(--gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">' + groupName + '</h4>' +
+              '<div class="bill-group-grid" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">';
+
+      html += groupBills.map(function(bill) {
+        var payButton = '';
+        var isFullyPaid = bill.paymentStatus === 'Paid' || parseFloat(bill.balanceAmount) <= 0;
+        
+        if (!isFullyPaid) {
+          payButton = '<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); myBills.makePayment(\'' + bill.id + '\', ' + bill.totalAmount + ', ' + bill.balanceAmount + ')" title="Make Payment"><i class="fas fa-credit-card"></i> Pay Now</button>';
+        } else {
+          payButton = '<span style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Paid</span>';
+        }
+        
+        var dueLine = '';
+        if (bill.balanceAmount > 0) {
+          dueLine = '<p style="color: var(--danger);"><strong>Due:</strong> ' + formatCurrency(bill.balanceAmount) + '</p>';
+        } else {
+          dueLine = '<p style="color: #28a745;"><strong>Fully Paid</strong></p>';
+        }
+
+        return '<div class="bill-card" onclick="myBills.viewBill(\'' + bill.id + '\')">' +
+          '<div class="bill-card-header">' +
+            '<div>' +
+              '<h4>' + bill.billNumber + '</h4>' +
+              '<small>' + new Date(bill.created_at).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'}) + '</small>' +
+            '</div>' +
+            getStatusBadge(bill.paymentStatus) +
           '</div>' +
-          getStatusBadge(bill.paymentStatus) +
-        '</div>' +
-        '<div class="bill-card-body">' +
-          (bill.User && bill.User.shopName ? '<p style="background: #e8f5e9; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;"><i class="fas fa-store" style="color: #2c5f2d;"></i> <strong style="color: #2c5f2d;">' + bill.User.shopName + '</strong></p>' : '') +
-          (bill.User && bill.User.shopAddress ? '<p style="font-size: 13px; color: #666; margin-bottom: 10px;"><i class="fas fa-map-marker-alt" style="color: #dc3545;"></i> ' + bill.User.shopAddress + '</p>' : '') +
-          '<p><strong>Total:</strong> ' + formatCurrency(bill.totalAmount) + '</p>' +
-          '<p><strong>Paid:</strong> ' + formatCurrency(bill.paidAmount) + '</p>' +
-          dueLine +
-        '</div>' +
-        '<div class="bill-card-footer">' +
-          '<span class="bill-amount">' + formatCurrency(bill.totalAmount) + '</span>' +
-          '<div class="bill-actions">' +
-            payButton +
-            '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); myBills.viewBill(\'' + bill.id + '\')" title="View Bill"><i class="fas fa-eye"></i></button>' +
-            '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill(\'' + bill.id + '\')" title="Print Bill"><i class="fas fa-print"></i></button>' +
-            '<button class="btn btn-sm btn-info" onclick="event.stopPropagation(); billing.downloadBillPDF(\'' + bill.id + '\')" title="Download PDF"><i class="fas fa-download"></i></button>' +
+          '<div class="bill-card-body">' +
+            (bill.User && bill.User.shopName ? '<p style="background: #e8f5e9; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;"><i class="fas fa-store" style="color: #2c5f2d;"></i> <strong style="color: #2c5f2d;">' + bill.User.shopName + '</strong></p>' : '') +
+            (bill.User && bill.User.shopAddress ? '<p style="font-size: 13px; color: #666; margin-bottom: 10px;"><i class="fas fa-map-marker-alt" style="color: #dc3545;"></i> ' + bill.User.shopAddress + '</p>' : '') +
+            '<p><strong>Total:</strong> ' + formatCurrency(bill.totalAmount) + '</p>' +
+            '<p><strong>Paid:</strong> ' + formatCurrency(bill.paidAmount) + '</p>' +
+            dueLine +
           '</div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+          '<div class="bill-card-footer">' +
+            '<span class="bill-amount">' + formatCurrency(bill.totalAmount) + '</span>' +
+            '<div class="bill-actions">' +
+              payButton +
+              '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); myBills.viewBill(\'' + bill.id + '\')" title="View Bill"><i class="fas fa-eye"></i></button>' +
+              '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill(\'' + bill.id + '\')" title="Print Bill"><i class="fas fa-print"></i></button>' +
+              '<button class="btn btn-sm btn-info" onclick="event.stopPropagation(); billing.downloadBillPDF(\'' + bill.id + '\')" title="Download PDF"><i class="fas fa-download"></i></button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      
+      html += '</div></div>';
+    }
+    
+    container.innerHTML = html;
   }
 
   async viewBill(billId) {

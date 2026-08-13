@@ -442,22 +442,22 @@ const shopping = {
               <h4 style="color: #2c5f2d; margin-bottom: 15px;">Shop Payment Details</h4>
               
               ${qrCode ? `
-                <div style="margin: 20px 0;">
-                  <img src="${qrCode}" alt="UPI QR Code" style="max-width: 250px; border: 2px solid #ddd; border-radius: 10px; padding: 10px; background: white;">
+                <div style="margin: 20px 0; text-align: center;">
+                  <img src="${qrCode}" alt="UPI QR Code" style="max-width: 100%; height: auto; max-height: 250px; border: 2px solid #ddd; border-radius: 10px; padding: 10px; background: white; margin: 0 auto; display: block;">
                   <p style="color: #666; font-size: 12px; margin-top: 10px;">Scan this QR code to pay</p>
                 </div>
               ` : `
-                <div style="margin: 20px 0; padding: 40px; background: #fff; border: 2px dashed #ddd; border-radius: 10px;">
+                <div style="margin: 20px 0; padding: 40px; background: #fff; border: 2px dashed #ddd; border-radius: 10px; text-align: center;">
                   <i class="fas fa-qrcode" style="font-size: 48px; color: #ccc;"></i>
                   <p style="color: #999; margin-top: 10px;">QR Code not available</p>
                 </div>
               `}
               
-              <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 5px 0; color: #666;">UPI ID:</p>
-                <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #2c5f2d; user-select: all;">${upiId}</p>
+              <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <p style="margin: 5px 0; color: #666; font-size: 13px;">UPI ID:</p>
+                <p style="margin: 5px 0; font-size: 16px; font-weight: bold; color: #2c5f2d; user-select: all; word-break: break-all;">${upiId}</p>
                 <button onclick="navigator.clipboard.writeText('${upiId}'); toast.success('UPI ID copied!');" 
-                        style="margin-top: 10px; padding: 8px 16px; background: #e3f2fd; border: none; border-radius: 5px; cursor: pointer; color: #1976d2; font-size: 12px;">
+                        style="margin-top: 10px; padding: 8px 16px; background: #e3f2fd; border: none; border-radius: 5px; cursor: pointer; color: #1976d2; font-size: 13px;">
                   <i class="fas fa-copy"></i> Copy UPI ID
                 </button>
               </div>
@@ -470,14 +470,18 @@ const shopping = {
                   <li>Open your UPI app (GPay, PhonePe, Paytm, etc.)</li>
                   <li>Scan the QR code or enter UPI ID</li>
                   <li>Enter the amount and complete payment</li>
-                  <li>Order will be confirmed after payment verification</li>
+                  <li>Click 'I Have Paid' below to place order</li>
                 </ol>
               </div>
             </div>
             
-            <button onclick="document.getElementById('upi-payment-modal').remove();" 
-                    class="btn btn-secondary" style="margin-top: 10px;">
-              <i class="fas fa-times"></i> Close
+            <button onclick="document.getElementById('upi-payment-modal').remove(); document.querySelector('#checkout-form button[type=submit]').click();" 
+                    class="btn btn-success" style="margin-top: 10px; width: 100%; font-weight: bold; padding: 12px;">
+              <i class="fas fa-check-circle"></i> I Have Paid - Place Order
+            </button>
+            <button onclick="document.getElementById('upi-payment-modal').remove(); document.getElementById('payment-mode').value = '';" 
+                    class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
+              <i class="fas fa-times"></i> Cancel
             </button>
           </div>
         </div>
@@ -823,7 +827,14 @@ const shopping = {
       'Cancelled': { bg: '#f8d7da', border: '#dc3545', text: '#721c24' }
     };
 
-    container.innerHTML = orders.map(order => {
+    // Sort orders: Delivered at bottom, newest first
+    const sortedOrders = [...orders].sort((a, b) => {
+      if (a.orderStatus === 'Delivered' && b.orderStatus !== 'Delivered') return 1;
+      if (a.orderStatus !== 'Delivered' && b.orderStatus === 'Delivered') return -1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    container.innerHTML = sortedOrders.map(order => {
       const colors = statusColors[order.orderStatus] || { bg: '#f8f9fa', border: '#6c757d', text: '#495057' };
       const isNew = order.orderStatus === 'Pending';
       

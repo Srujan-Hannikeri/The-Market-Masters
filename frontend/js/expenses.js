@@ -162,7 +162,7 @@ const expenses = {
       <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr 0.8fr;gap:10px;padding-right:30px;">
         <div>
           <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Item Name *</label>
-          <input type="text" class="exp-item-name" placeholder="e.g. Rice 10kg" required
+          <input type="text" class="exp-item-name" placeholder="e.g. Rice 10kg" list="product-names-list" required
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
         </div>

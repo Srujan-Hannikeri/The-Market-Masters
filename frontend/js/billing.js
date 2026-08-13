@@ -345,30 +345,63 @@ const billing = {
       return;
     }
 
-    container.innerHTML = bills.map(bill => `
-      <div class="bill-card ${bill.paymentStatus.toLowerCase().replaceAll(' ', '-')}">
-        <div class="bill-card-header">
-          <h4>${bill.billNumber}</h4>
-          ${getStatusBadge(bill.paymentStatus)}
-        </div>
-        <div class="bill-card-body">
-          <p><i class="fas fa-user"></i> ${bill.customerName || 'Walk-in Customer'}</p>
-          <p><i class="fas fa-phone" onclick="copyPhoneNumber('${bill.customerPhone}', event)" title="Click to copy phone number" style="cursor: pointer; color: var(--primary);"></i> ${bill.customerPhone || 'N/A'}</p>
-          <p><i class="fas fa-calendar"></i> ${formatDate(bill.created_at)}</p>
-        </div>
-        <div class="bill-card-footer">
-          <span class="bill-amount">${formatCurrency(bill.totalAmount)}</span>
-          <div class="bill-actions">
-            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); billing.viewBill('${bill.id}')" title="View Bill">
-              <i class="fas fa-eye"></i> View
-            </button>
-            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill('${bill.id}')" title="Print Bill">
-              <i class="fas fa-print"></i> Print
-            </button>
+    // Sort bills descending by created_at
+    const sortedBills = [...bills].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // Group bills by date
+    const groups = {};
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+    sortedBills.forEach(bill => {
+      const billDate = new Date(bill.created_at).toDateString();
+      let groupName = billDate;
+      if (billDate === today) groupName = 'Today';
+      else if (billDate === yesterday) groupName = 'Yesterday';
+      else {
+        groupName = new Date(bill.created_at).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+      }
+      
+      if (!groups[groupName]) groups[groupName] = [];
+      groups[groupName].push(bill);
+    });
+
+    let html = '';
+    for (const [groupName, groupBills] of Object.entries(groups)) {
+      html += `<div class="bill-date-group">
+                 <h4 class="bill-group-header" style="margin: 1.5rem 0 0.5rem; color: var(--gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">${groupName}</h4>
+                 <div class="bill-group-grid" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+              `;
+      html += groupBills.map(bill => `
+        <div class="bill-card ${bill.paymentStatus.toLowerCase().replaceAll(' ', '-')}">
+          <div class="bill-card-header">
+            <h4>${bill.billNumber}</h4>
+            ${getStatusBadge(bill.paymentStatus)}
+          </div>
+          <div class="bill-card-body">
+            <p><i class="fas fa-user"></i> ${bill.customerName || 'Walk-in Customer'}</p>
+            <p><i class="fas fa-phone" onclick="copyPhoneNumber('${bill.customerPhone}', event)" title="Click to copy phone number" style="cursor: pointer; color: var(--primary);"></i> ${bill.customerPhone || 'N/A'}</p>
+            <p><i class="fas fa-clock"></i> ${new Date(bill.created_at).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}</p>
+          </div>
+          <div class="bill-card-footer">
+            <span class="bill-amount">${formatCurrency(bill.totalAmount)}</span>
+            <div class="bill-actions">
+              <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); billing.viewBill('${bill.id}')" title="View Bill">
+                <i class="fas fa-eye"></i> View
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); billing.printBill('${bill.id}')" title="Print Bill">
+                <i class="fas fa-print"></i> Print
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `).join('');
+      html += `</div></div>`;
+    }
+    
+    container.innerHTML = html;
   },
 
   async viewBill(billId) {

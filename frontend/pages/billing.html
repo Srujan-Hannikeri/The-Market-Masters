@@ -6,7 +6,7 @@
           <h3>Create New Bill</h3>
         </div>
         <div class="card-body">
-          <form id="create-bill-form">
+          <form id="create-bill-form" onsubmit="event.preventDefault(); billing.createBill();">
             <div class="form-row">
               <div class="form-group">
                 <label>Customer Name</label>

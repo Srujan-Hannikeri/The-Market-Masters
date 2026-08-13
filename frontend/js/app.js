@@ -8,8 +8,13 @@ const app = {
     this.setupEventListeners();
     this.updateDate();
     
-    // Load initial page
-    this.navigateTo('dashboard');
+    // Load initial page from hash or default to dashboard
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+      this.navigateTo(hash);
+    } else {
+      this.navigateTo('dashboard');
+    }
     
     // No auto-refresh interval — pages only refresh when the user navigates to them.
     // Individual modules (dashboard, etc.) handle their own light background polls.

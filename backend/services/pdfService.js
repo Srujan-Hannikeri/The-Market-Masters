@@ -113,114 +113,111 @@ const buildRollLayout = (doc, bill, items, shop, cfg) => {
   let y = margin;
 
   // ── Shop header ──
-  doc.fontSize(11).font('Helvetica-Bold')
+  // ── Shop header ──
+  doc.fontSize(12).font('Helvetica-Bold')
     .text(shop.shopName || 'The Market Masters', margin, y, { align: 'center', width: cx });
-  y += 14;
+  y += 16;
 
-  doc.fontSize(7).font('Helvetica');
+  doc.fontSize(8).font('Helvetica');
   if (shop.shopAddress) {
     doc.text(shop.shopAddress, margin, y, { align: 'center', width: cx });
-    y += 10;
+    y += 12;
   }
   if (shop.phone) {
     doc.text(`Ph: ${shop.phone}`, margin, y, { align: 'center', width: cx });
-    y += 10;
+    y += 12;
   }
   y += 4;
 
   // ── Divider ──
   divider(doc, margin, y, width); y += 8;
 
-  doc.fontSize(9).font('Helvetica-Bold')
+  doc.fontSize(10).font('Helvetica-Bold')
     .text('TAX INVOICE', margin, y, { align: 'center', width: cx });
-  y += 13;
+  y += 14;
 
   // ── Bill meta ──
-  doc.fontSize(7).font('Helvetica');
-  doc.text(`Bill #: ${bill.billNumber}`, margin, y);               y += 9;
-  doc.text(`Date: ${new Date(bill.created_at).toLocaleDateString('en-IN')}`, margin, y); y += 9;
-  doc.text(`Customer: ${bill.customerName || 'Walk-in'}`, margin, y); y += 9;
-  if (bill.customerPhone) { doc.text(`Phone: ${bill.customerPhone}`, margin, y); y += 9; }
+  doc.fontSize(8).font('Helvetica');
+  doc.text(`Bill #: ${bill.billNumber}`, margin, y);               y += 11;
+  doc.text(`Date: ${new Date(bill.created_at).toLocaleDateString('en-IN')}`, margin, y); y += 11;
+  doc.text(`Customer: ${bill.customerName || 'Walk-in'}`, margin, y); y += 11;
+  if (bill.customerPhone) { doc.text(`Phone: ${bill.customerPhone}`, margin, y); y += 11; }
   y += 4;
 
-  divider(doc, margin, y, width); y += 6;
+  divider(doc, margin, y, width); y += 8;
 
   // ── Column setup for roll ──
-  // Narrow roll: Item | Qty | Amt
-  // 80mm (cx ≈ 206):  item=100, qty=36, rate=36, amt=34
-  // 58mm (cx ≈ 148):  item=70,  qty=28, rate=26, amt=24
   const is80 = cx >= 190;
   const colW = is80
-    ? { item: 100, qty: 32, rate: 38, amt: cx - 170 }
-    : { item: 68,  qty: 24, rate: 28, amt: cx - 120 };
+    ? { item: cx - 100, qty: 25, rate: 35, amt: 40 }
+    : { item: cx - 75,  qty: 20, rate: 25, amt: 30 };
 
-  doc.fontSize(7.5).font('Helvetica-Bold');
+  doc.fontSize(8).font('Helvetica-Bold');
   doc.text('Item',  margin,                         y, { width: colW.item });
   doc.text('Qty',   margin + colW.item,             y, { width: colW.qty,  align: 'center' });
   if (is80) doc.text('Rate', margin + colW.item + colW.qty, y, { width: colW.rate, align: 'right' });
   doc.text('Amt',   margin + colW.item + colW.qty + (is80 ? colW.rate : 0), y, { width: colW.amt, align: 'right' });
-  y += 11;
+  y += 12;
 
-  divider(doc, margin, y, width); y += 5;
+  divider(doc, margin, y, width); y += 6;
 
   // ── Items ──
-  doc.fontSize(7).font('Helvetica');
+  doc.fontSize(8).font('Helvetica');
   items.forEach(item => {
-    const maxName = is80 ? 18 : 12;
     let name = item.productName || '';
-    if (name.length > maxName) name = name.substring(0, maxName - 2) + '..';
     const rate = parseFloat(item.unitPrice || 0);
     const total = parseFloat(item.total || 0);
-    const rateStr = 'Rs.' + rate.toFixed(0);
-    const totalStr = 'Rs.' + total.toFixed(0);
-
+    
+    const textHeight = doc.heightOfString(name, { width: colW.item });
+    
     doc.text(name, margin, y, { width: colW.item });
     doc.text(String(item.quantity), margin + colW.item, y, { width: colW.qty, align: 'center' });
-    if (is80) doc.text(rateStr, margin + colW.item + colW.qty, y, { width: colW.rate, align: 'right' });
-    doc.text(totalStr, margin + colW.item + colW.qty + (is80 ? colW.rate : 0), y, { width: colW.amt, align: 'right' });
-    y += 12;
+    if (is80) doc.text(rate.toFixed(2), margin + colW.item + colW.qty, y, { width: colW.rate, align: 'right' });
+    doc.text(total.toFixed(2), margin + colW.item + colW.qty + (is80 ? colW.rate : 0), y, { width: colW.amt, align: 'right' });
+    
+    y += textHeight + 4;
   });
 
   divider(doc, margin, y, width); y += 6;
 
   // ── Totals ──
-  const labelX = margin + Math.floor(cx * 0.35);
-  const valueW = cx - Math.floor(cx * 0.35);
-  doc.fontSize(7.5).font('Helvetica');
+  const labelX = margin;
+  const valueW = cx;
+  doc.fontSize(8).font('Helvetica');
 
-  doc.text('Subtotal:', labelX, y, { width: cx * 0.35, align: 'right' });
-  doc.text(fmt(bill.subtotal), labelX + cx * 0.35, y, { width: valueW, align: 'right' });
-  y += 11;
+  doc.text('Subtotal:', labelX, y, { width: cx * 0.5, align: 'left' });
+  doc.text(fmt(bill.subtotal), labelX + cx * 0.5, y, { width: cx * 0.5, align: 'right' });
+  y += 12;
 
   if (parseFloat(bill.discount) > 0) {
-    doc.text('Discount:', labelX, y, { width: cx * 0.35, align: 'right' });
-    doc.text(fmt(bill.discount), labelX + cx * 0.35, y, { width: valueW, align: 'right' });
-    y += 11;
+    doc.text('Discount:', labelX, y, { width: cx * 0.5, align: 'left' });
+    doc.text(fmt(bill.discount), labelX + cx * 0.5, y, { width: cx * 0.5, align: 'right' });
+    y += 12;
   }
 
-  doc.fontSize(9).font('Helvetica-Bold');
-  doc.text('TOTAL:', labelX, y, { width: cx * 0.35, align: 'right' });
-  doc.text(fmt(bill.totalAmount), labelX + cx * 0.35, y, { width: valueW, align: 'right' });
+  doc.fontSize(10).font('Helvetica-Bold');
+  doc.text('TOTAL:', labelX, y, { width: cx * 0.5, align: 'left' });
+  doc.text(fmt(bill.totalAmount), labelX + cx * 0.5, y, { width: cx * 0.5, align: 'right' });
   y += 14;
 
   divider(doc, margin, y, width); y += 6;
 
-  doc.fontSize(7).font('Helvetica');
+  doc.fontSize(8).font('Helvetica');
   doc.text(`Paid: ${fmt(bill.paidAmount)}`, margin, y);
-  doc.text(`Due: ${fmt(bill.balanceAmount)}`, labelX, y, { width: valueW + cx * 0.35, align: 'right' });
-  y += 11;
+  doc.text(`Due: ${fmt(bill.balanceAmount)}`, labelX + cx * 0.5, y, { width: cx * 0.5, align: 'right' });
+  y += 12;
 
   // ── Payment mode ──
   if (bill.paymentMode) {
-    doc.text(`Mode: ${bill.paymentMode}`, margin, y); y += 11;
+    doc.text(`Mode: ${bill.paymentMode}`, margin, y); y += 12;
   }
 
-  divider(doc, margin, y, width); y += 8;
+  divider(doc, margin, y, width); y += 10;
 
-  doc.fontSize(7.5).font('Helvetica-Bold')
+  doc.fontSize(9).font('Helvetica-Bold')
     .text('Thank You! Visit Again', margin, y, { align: 'center', width: cx });
-  y += 11;
-  doc.fontSize(6.5).font('Helvetica').fillColor('#555')
+  y += 14;
+  doc.fontSize(7).font('Helvetica').fillColor('#555')
     .text('Powered by The Market Masters', margin, y, { align: 'center', width: cx });
 };
 

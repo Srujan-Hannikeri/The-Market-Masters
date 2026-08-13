@@ -290,7 +290,7 @@ exports.getShopOrders = async (req, res) => {
 
     const orders = await Order.find(query)
       .populate('customerId', 'name email phone')
-      .sort({ createdAt: -1 });
+      .sort({ created_at: -1 });
 
     const newOrdersCount = await Order.countDocuments({
       shopkeeperId: req.user.id,
