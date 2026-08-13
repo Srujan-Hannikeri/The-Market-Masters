@@ -228,13 +228,16 @@ const expenses = {
       return;
     }
 
-    list.innerHTML = matches.map(p => 
-      \`<div style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;"
-             onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'"
-             onclick="expenses.selectAutocompleteItem(this, '\${p.name.replace(/'/g, "\\'")}', \${p.mrp || p.price || 0}, \${p.minStock || 10})">
-        \${p.name} <span style="color:#94a3b8;font-size:11px;">(₹\${p.mrp || p.price || 0})</span>
-      </div>\`
-    ).join('');
+    list.innerHTML = matches.map(p => {
+      const name = p.name.replace(/'/g, "\\'");
+      const mrp = p.mrp || p.price || 0;
+      const minStock = p.minStock || 10;
+      return '<div style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;"' +
+        ' onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'"' +
+        ' onclick="expenses.selectAutocompleteItem(this, \'' + name + '\', ' + mrp + ', ' + minStock + ')">' +
+        p.name + ' <span style="color:#94a3b8;font-size:11px;">(₹' + mrp + ')</span>' +
+        '</div>';
+    }).join('');
     list.style.display = 'block';
   },
 
