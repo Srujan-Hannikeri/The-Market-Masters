@@ -221,8 +221,8 @@ exports.placeOrder = async (req, res) => {
     }
 
     const orderNumber = generateOrderNumber();
-    const isPaid = paymentMode === 'UPI' || paymentMode === 'Card' || paymentMode === 'Net Banking';
-    const paymentStatus = isPaid ? 'Paid' : 'Pending';
+    const isPaid = false; // All online orders start as pending until verified
+    const paymentStatus = 'Pending';
 
     // Map COD -> Cash for Bill model (Bill enum doesn't include 'COD')
     const billPaymentMode = (paymentMode === 'COD') ? 'Cash' : (paymentMode || 'Cash');

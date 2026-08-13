@@ -57,10 +57,12 @@ exports.createProduct = async (req, res) => {
     const trimmedName = name.trim();
     const mrpValue = mrp !== undefined ? Number(mrp) : (price !== undefined ? Number(price) : 0);
 
+    const escapedName = trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     // Match existing product by same name AND same MRP (within ±0.01 tolerance)
     const existingProduct = await Product.findOne({
       userId: req.user.id,
-      name: { $regex: `^${trimmedName}$`, $options: 'i' },
+      name: { $regex: `^${escapedName}$`, $options: 'i' },
       mrp: { $gte: mrpValue - 0.01, $lte: mrpValue + 0.01 }
     });
 

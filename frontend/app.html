@@ -165,7 +165,7 @@
           <div class="form-row">
             <div class="form-group">
               <label>Product Name *</label>
-              <input type="text" id="product-name" placeholder="Enter product name" required>
+              <input type="text" id="product-name" placeholder="Enter product name" list="product-names-list" required>
             </div>
             <div class="form-group">
               <label>Category</label>
@@ -226,7 +226,7 @@
           <div class="form-row">
             <div class="form-group">
               <label>Product Name *</label>
-              <input type="text" id="edit-product-name" required>
+              <input type="text" id="edit-product-name" list="product-names-list" required>
             </div>
             <div class="form-group">
               <label>Category</label>
@@ -274,6 +274,8 @@
         </form>
       </div>
     </div>
+
+    <datalist id="product-names-list"></datalist>
 
     <!-- ── Add Expense Modal ─────────────────────────────────── -->
     <div id="add-expense-modal" class="modal hidden">

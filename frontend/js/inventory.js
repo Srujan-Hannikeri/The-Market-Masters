@@ -55,6 +55,7 @@ const inventory = {
       }
       
       this.renderProducts();
+      this.renderDatalist();
 
       // Check low stock after loading (only for shopkeepers)
       if (auth.user?.role === 'shopkeeper') {
@@ -89,6 +90,15 @@ const inventory = {
     document.getElementById('product-search')?.addEventListener('input', debounce((e) => {
       this.searchProducts(e.target.value);
     }, 300));
+  },
+
+  renderDatalist() {
+    const datalist = document.getElementById('product-names-list');
+    if (!datalist) return;
+    
+    // Get unique product names
+    const uniqueNames = [...new Set(this.products.map(p => p.name))].sort();
+    datalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
   },
 
   renderProducts() {
