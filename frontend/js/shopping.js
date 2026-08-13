@@ -1244,36 +1244,53 @@ const shopping = {
     }
   },
 
-  // Process order payment
+  // Process order payment — calls bill payment endpoint so shopkeeper can verify
   async processOrderPayment(event, orderId, totalAmount) {
     event.preventDefault();
     
     const paymentMode = document.getElementById('order-payment-mode').value;
     const paymentType = document.getElementById('payment-type').value;
-    const amountPaid = paymentType === 'Partial' ? parseFloat(document.getElementById('amount-paid').value) : totalAmount;
+    const amountPaid = paymentType === 'Partial'
+      ? parseFloat(document.getElementById('amount-paid').value)
+      : totalAmount;
     
     if (!paymentMode) {
       toast.error('Please select a payment mode');
       return;
     }
-    
     if (paymentType === 'Partial' && (!amountPaid || amountPaid <= 0 || amountPaid > totalAmount)) {
       toast.error('Please enter a valid amount paid');
       return;
     }
     
     try {
-      // Update order payment status using customer-specific endpoint
+      // Step 1 — find the bill linked to this order
+      const orderResp = await ordersAPI.getOrderDetails(orderId);
+      const order = orderResp.order;
+
+      // Step 2 — find the bill (notes field contains "Order: <orderNumber>")
+      const billsResp = await billsAPI.getBills({ limit: 20 });
+      const linkedBill = (billsResp.bills || []).find(b =>
+        b.notes && b.notes.includes(order.orderNumber)
+      );
+
+      if (linkedBill) {
+        // Call the customer bill payment endpoint — shopkeeper will verify
+        await billsAPI.makePayment(linkedBill.id, {
+          amountPaid,
+          paymentMode,
+          transactionId: ''
+        });
+      }
+
+      // Step 3 — update order payment status
       await ordersAPI.updateOrderPayment(orderId, {
         paymentStatus: paymentType === 'Partial' ? 'Partially Paid' : 'Paid',
-        paymentMode: paymentMode,
-        amountPaid: amountPaid
+        paymentMode
       });
-      
-      toast.success('Payment recorded successfully!');
+
+      toast.success('Payment submitted! Awaiting shopkeeper verification.');
       document.getElementById('order-payment-modal').remove();
-      
-      // Reload orders
       this.loadMyOrders();
     } catch (error) {
       console.error('Error processing payment:', error);

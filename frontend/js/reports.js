@@ -222,6 +222,15 @@ const reports = {
       const phone = bill.customerPhone || 'Walk-in Customer';
       const name = bill.customerName || 'Walk-in Customer';
       
+      // Skip walk-in customers (no phone, or N/A, or 'Walk-in Customer')
+      if (!bill.customerPhone ||
+          bill.customerPhone === 'N/A' ||
+          bill.customerPhone === 'Walk-in Customer' ||
+          !bill.customerName ||
+          bill.customerName === 'Walk-in Customer') {
+        return;
+      }
+      
       if (!customerMap[phone]) {
         customerMap[phone] = {
           name: name,
@@ -376,39 +385,40 @@ const reports = {
             </div>
           </div>
           
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Bill #</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Paid</th>
-                <th>Due</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${customerBills.map(bill => `
-                <tr>
-                  <td>${bill.billNumber}</td>
-                  <td>${formatDate(bill.created_at)}</td>
-                  <td>${formatCurrency(bill.totalAmount)}</td>
-                  <td>${formatCurrency(bill.paidAmount)}</td>
-                  <td style="color: ${parseFloat(bill.balanceAmount) > 0 ? '#e74c3c' : '#27ae60'}; font-weight: bold;">${formatCurrency(bill.balanceAmount)}</td>
-                  <td>${getStatusBadge(bill.paymentStatus)}</td>
-                  <td>
-                    <button class="btn btn-sm btn-info" onclick="billing.viewBill('${bill.id}')" title="View Bill">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="billing.printBill('${bill.id}')" title="Print Bill">
-                      <i class="fas fa-print"></i>
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <!-- Responsive bill cards -->
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            ${customerBills.map(bill => `
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;">
+                <div style="min-width:120px;">
+                  <div style="font-weight:700;color:#1e293b;font-size:0.9rem;">${bill.billNumber}</div>
+                  <div style="color:#64748b;font-size:0.78rem;margin-top:2px;">${formatDate(bill.created_at)}</div>
+                </div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                  <div style="text-align:center;">
+                    <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;">Total</div>
+                    <div style="font-weight:600;color:#0f172a;">${formatCurrency(bill.totalAmount)}</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;">Paid</div>
+                    <div style="font-weight:600;color:#16a34a;">${formatCurrency(bill.paidAmount)}</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-size:0.7rem;color:#94a3b8;text-transform:uppercase;">Due</div>
+                    <div style="font-weight:700;color:${parseFloat(bill.balanceAmount) > 0 ? '#dc2626' : '#16a34a'};">${formatCurrency(bill.balanceAmount)}</div>
+                  </div>
+                  <div>${getStatusBadge(bill.paymentStatus)}</div>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-sm btn-info" onclick="billing.viewBill('${bill.id}')" title="View">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-secondary" onclick="billing.printBill('${bill.id}')" title="Print">
+                    <i class="fas fa-print"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
         </div>
       </div>
     `;
@@ -416,7 +426,6 @@ const reports = {
     const modalEl = document.createElement('div');
     modalEl.id = 'customer-bills-modal';
     modalEl.className = 'modal';
-    modalEl.style.maxWidth = '1400px';
     modalEl.innerHTML = modalContent;
 
     document.getElementById('modal-overlay').appendChild(modalEl);

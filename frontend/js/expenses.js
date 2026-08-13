@@ -159,12 +159,14 @@ const expenses = {
         title="Remove Row">
         <i class="fas fa-times"></i>
       </button>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr 0.8fr;gap:10px;padding-right:30px;">
-        <div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr 0.8fr 1fr;gap:10px;padding-right:30px;">
+        <div style="position:relative;">
           <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Item Name *</label>
-          <input type="text" class="exp-item-name" placeholder="e.g. Rice 10kg" list="product-names-list" required
+          <input type="text" class="exp-item-name" placeholder="e.g. Rice 10kg" autocomplete="off" required
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
-            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
+            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'"
+            oninput="expenses.showAutocomplete(this)">
+          <div class="autocomplete-list" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 6px 6px;max-height:150px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);"></div>
         </div>
         <div>
           <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">MRP (₹) *</label>
@@ -190,13 +192,63 @@ const expenses = {
           <label style="display:block;font-size:11px;font-weight:600;color:#e67e22;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;" title="Minimum quantity before low-stock alert fires">Low Stock * <i class="fas fa-exclamation-triangle" style="font-size:9px;"></i></label>
           <input type="number" class="exp-item-lowstock" placeholder="e.g. 5" min="1" value="10" required
             style="width:100%;padding:8px 10px;border:1px solid #fbbf24;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;text-align:center;background:#fffbeb;transition:border-color 0.2s;"
-            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#fbbf24'"
-            title="Minimum stock before a low-stock alert appears on the dashboard">
+            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#fbbf24'">
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Expiry Date</label>
+          <input type="date" class="exp-item-expiry"
+            style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
         </div>
       </div>
     `;
 
     container.appendChild(row);
+    
+    // Hide autocomplete list if clicked outside
+    document.addEventListener('click', (e) => {
+      const activeList = row.querySelector('.autocomplete-list');
+      if (activeList && e.target !== row.querySelector('.exp-item-name')) {
+        activeList.style.display = 'none';
+      }
+    });
+  },
+
+  showAutocomplete(input) {
+    const list = input.nextElementSibling;
+    const val = input.value.toLowerCase().trim();
+    if (!val) {
+      list.style.display = 'none';
+      return;
+    }
+
+    const matches = (this.inventoryProducts || []).filter(p => p.name.toLowerCase().includes(val));
+    if (matches.length === 0) {
+      list.style.display = 'none';
+      return;
+    }
+
+    list.innerHTML = matches.map(p => 
+      \`<div style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;"
+             onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'"
+             onclick="expenses.selectAutocompleteItem(this, '\${p.name.replace(/'/g, "\\'")}', \${p.mrp || p.price || 0}, \${p.minStock || 10})">
+        \${p.name} <span style="color:#94a3b8;font-size:11px;">(₹\${p.mrp || p.price || 0})</span>
+      </div>\`
+    ).join('');
+    list.style.display = 'block';
+  },
+
+  selectAutocompleteItem(element, name, mrp, lowStock) {
+    const container = element.closest('div').parentElement;
+    const inputName = container.querySelector('.exp-item-name');
+    const inputMrp = container.closest('.expense-inventory-item-row').querySelector('.exp-item-mrp');
+    const inputLowStock = container.closest('.expense-inventory-item-row').querySelector('.exp-item-lowstock');
+    
+    inputName.value = name;
+    if (mrp && !inputMrp.value) inputMrp.value = mrp;
+    if (lowStock && !inputLowStock.value) inputLowStock.value = lowStock;
+    
+    element.parentElement.style.display = 'none';
   },
 
   calculateInventoryTotal() {
@@ -460,6 +512,8 @@ const expenses = {
         const stock = parseInt(row.querySelector('.exp-item-qty').value) || 1;
         const lowStockInput = row.querySelector('.exp-item-lowstock');
         const lowStockVal = lowStockInput ? (parseInt(lowStockInput.value) || 10) : 10;
+        const expiryInput = row.querySelector('.exp-item-expiry');
+        const expiryDate = expiryInput && expiryInput.value ? expiryInput.value : null;
 
         // Validate low stock field is filled
         if (name && (!lowStockInput || !lowStockInput.value)) {
@@ -477,7 +531,8 @@ const expenses = {
               agencyName: agencyName || '',
               stock: stock,
               lowStockThreshold: lowStockVal,
-              minStock: lowStockVal
+              minStock: lowStockVal,
+              expiryDate: expiryDate
             });
           } catch (err) {
             // Product may already exist — createProduct handles stock merging server-side

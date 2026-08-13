@@ -88,7 +88,7 @@ const billSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['Paid', 'Partially Paid', 'Pending'],
+      enum: ['Paid', 'Partially Paid', 'Pending', 'Verification Pending'],
       default: 'Pending'
     },
     notes: {

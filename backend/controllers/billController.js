@@ -314,17 +314,12 @@ exports.customerMakePayment = async (req, res) => {
       customerId: req.user.id,
       amount: amountPaid,
       paymentMode,
+      paymentStatus: 'Verification Pending',
       transactionId: transactionId || '',
       notes: `Payment by customer ${req.user.name}`
     });
 
-    const newPaidAmount = Number(bill.paidAmount) + Number(amountPaid);
-    const newBalanceAmount = Math.max(0, Number(bill.totalAmount) - newPaidAmount);
-    const newPaymentStatus = calculatePaymentStatus(bill.totalAmount, newPaidAmount);
-
-    bill.paidAmount = newPaidAmount;
-    bill.balanceAmount = newBalanceAmount;
-    bill.paymentStatus = newPaymentStatus;
+    bill.paymentStatus = 'Verification Pending';
     await bill.save();
 
     res.json({ 

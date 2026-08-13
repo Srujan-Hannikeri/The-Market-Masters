@@ -169,11 +169,14 @@ const inventory = {
           </td>
         `;
 
+        const expiryDisplay = product.expiryDate ? `<br><small style="color:#e74c3c;font-size:0.8em;"><i class="fas fa-calendar-times"></i> Expires: ${new Date(product.expiryDate).toLocaleDateString('en-IN')}</small>` : '';
+
         return `
           <tr>
             <td>
               <strong>${product.name}</strong>
               ${product.barcode ? `<br><small class="text-muted"><i class="fas fa-barcode"></i> ${product.barcode}</small>` : ''}
+              ${expiryDisplay}
             </td>
             <td><strong>${mrpVal}</strong></td>
             <td>${costVal}</td>
@@ -200,9 +203,14 @@ const inventory = {
           <td><button class="btn btn-sm btn-disabled" disabled>Out of Stock</button></td>
         `;
 
+        const expiryDisplay = product.expiryDate ? `<br><small style="color:#e74c3c;font-size:0.8em;"><i class="fas fa-calendar-times"></i> Expires: ${new Date(product.expiryDate).toLocaleDateString('en-IN')}</small>` : '';
+        
         return `
           <tr>
-            <td><strong>${product.name}</strong></td>
+            <td>
+              <strong>${product.name}</strong>
+              ${expiryDisplay}
+            </td>
             <td>${shopName}</td>
             <td><strong>${mrpVal}</strong></td>
             <td>
@@ -249,7 +257,8 @@ const inventory = {
       stock: parseInt(document.getElementById('product-stock').value) || 0,
       lowStockThreshold: parseInt(document.getElementById('product-low-stock').value) || 10,
       category: document.getElementById('product-category').value,
-      barcode: document.getElementById('product-barcode').value.trim()
+      barcode: document.getElementById('product-barcode').value.trim(),
+      expiryDate: document.getElementById('product-expiry').value || null
     };
 
     // Handle image upload
@@ -311,6 +320,11 @@ const inventory = {
       setVal('edit-product-low-stock', product.minStock || product.lowStockThreshold || '');
       setVal('edit-product-category',    product.category || '');
       setVal('edit-product-barcode',     product.barcode || '');
+      
+      const expiryEl = document.getElementById('edit-product-expiry');
+      if (expiryEl) {
+        expiryEl.value = product.expiryDate ? product.expiryDate.split('T')[0] : '';
+      }
 
       modal.open('edit-product-modal');
     } catch (error) {
@@ -331,7 +345,8 @@ const inventory = {
       stock: parseInt(document.getElementById('edit-product-stock').value),
       lowStockThreshold: parseInt(document.getElementById('edit-product-low-stock').value),
       category: document.getElementById('edit-product-category').value,
-      barcode: document.getElementById('edit-product-barcode').value.trim()
+      barcode: document.getElementById('edit-product-barcode').value.trim(),
+      expiryDate: document.getElementById('edit-product-expiry').value || null
     };
 
     // Handle image upload
@@ -417,32 +432,76 @@ const inventory = {
       });
 
 
+      const expiredProducts = products.filter(p => {
+        if (!p.expiryDate) return false;
+        const expiry = new Date(p.expiryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return expiry < today;
+      });
+
+      const soonExpiringProducts = products.filter(p => {
+        if (!p.expiryDate) return false;
+        const expiry = new Date(p.expiryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const in7Days = new Date(today);
+        in7Days.setDate(in7Days.getDate() + 7);
+        return expiry >= today && expiry <= in7Days;
+      });
+
       // Show alert if there are low stock or out of stock products
       const alertBox = document.getElementById('inventory-low-stock-alert');
       const productsContainer = document.getElementById('inventory-low-stock-products');
-      
-      if (!alertBox || !productsContainer) {
 
+      if (!alertBox || !productsContainer) {
         return;
       }
-      
-      if (lowStockProducts.length > 0 || outOfStockProducts.length > 0) {
+
+      if (lowStockProducts.length > 0 || outOfStockProducts.length > 0 || expiredProducts.length > 0 || soonExpiringProducts.length > 0) {
         let html = '';
-        
-        // Out of stock products first (more critical)
+
+        // Expired (RED)
+        expiredProducts.forEach(product => {
+          html += `
+            <div class="low-stock-product">
+              <i class="fas fa-calendar-times" style="color:#e74c3c;"></i>
+              <div>
+                <div class="product-name">${product.name}</div>
+                <div class="product-stock" style="color:#e74c3c;font-weight:bold;">EXPIRED on ${new Date(product.expiryDate).toLocaleDateString('en-IN')}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        // Soon expiring (ORANGE)
+        soonExpiringProducts.forEach(product => {
+          const daysLeft = Math.ceil((new Date(product.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+          html += `
+            <div class="low-stock-product" style="border-left:3px solid #e67e22;">
+              <i class="fas fa-clock" style="color:#e67e22;"></i>
+              <div>
+                <div class="product-name">${product.name}</div>
+                <div class="product-stock" style="color:#e67e22;font-weight:bold;">Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — ${new Date(product.expiryDate).toLocaleDateString('en-IN')}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        // Out of stock (RED)
         outOfStockProducts.forEach(product => {
           html += `
             <div class="low-stock-product">
               <i class="fas fa-exclamation-circle"></i>
               <div>
                 <div class="product-name">${product.name}</div>
-                <div class="product-stock" style="color: #e74c3c; font-weight: bold;">OUT OF STOCK</div>
+                <div class="product-stock" style="color:#e74c3c;font-weight:bold;">OUT OF STOCK</div>
               </div>
             </div>
           `;
         });
-        
-        // Low stock products
+
+        // Low stock (YELLOW)
         lowStockProducts.forEach(product => {
           const threshold = parseInt(product.minStock || product.lowStockThreshold) || 10;
           html += `

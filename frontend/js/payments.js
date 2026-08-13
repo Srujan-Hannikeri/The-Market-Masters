@@ -235,21 +235,43 @@ const payments = {
   },
 
   async recordPayment() {
-    const paymentData = {
-      billId: document.getElementById('payment-bill-id').value,
-      amountPaid: parseFloat(document.getElementById('payment-amount').value),
-      paymentMode: document.getElementById('payment-mode-input').value,
-      transactionId: document.getElementById('payment-transaction-id').value
-    };
+    // Gather values
+    const billId       = document.getElementById('payment-bill-id').value;
+    const billNumber   = document.getElementById('payment-bill-number').value;
+    const amount       = parseFloat(document.getElementById('payment-amount').value);
+    const paymentMode  = document.getElementById('payment-mode-input').value;
+    const transactionId = document.getElementById('payment-transaction-id').value;
+
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid amount.');
+      return;
+    }
+
+    // ── Confirmation dialog before recording ──
+    const dueAmountText = document.getElementById('payment-due-amount').value;
+    const confirmed = await confirmDialog(
+      `Confirm Payment\n\nBill: ${billNumber}\nAmount: ₹${amount.toFixed(2)}\nMode: ${paymentMode}\n\nClick OK to confirm this payment.`
+    );
+    if (!confirmed) return;
+
+    const submitBtn = document.querySelector('#add-payment-form button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Recording…'; }
 
     try {
-      await paymentsAPI.createPayment(paymentData);
-      toast.success('Payment recorded successfully!');
+      await paymentsAPI.createPayment({
+        billId,
+        amountPaid: amount,
+        paymentMode,
+        transactionId
+      });
+      toast.success('Payment confirmed and recorded!');
       modal.close('add-payment-modal');
       document.getElementById('add-payment-form').reset();
       await this.load();
     } catch (error) {
       toast.error(error.message || 'Failed to record payment');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Confirm & Record Payment'; }
     }
   }
 };
