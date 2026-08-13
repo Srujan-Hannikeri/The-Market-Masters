@@ -114,8 +114,8 @@ class MyBills {
             getStatusBadge(bill.paymentStatus) +
           '</div>' +
           '<div class="bill-card-body">' +
-            (bill.User && bill.User.shopName ? '<p style="background: #e8f5e9; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;"><i class="fas fa-store" style="color: #2c5f2d;"></i> <strong style="color: #2c5f2d;">' + bill.User.shopName + '</strong></p>' : '') +
-            (bill.User && bill.User.shopAddress ? '<p style="font-size: 13px; color: #666; margin-bottom: 10px;"><i class="fas fa-map-marker-alt" style="color: #dc3545;"></i> ' + bill.User.shopAddress + '</p>' : '') +
+            (bill.shopkeeperId && bill.shopkeeperId.shopName ? '<p style="background: #e8f5e9; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;"><i class="fas fa-store" style="color: #2c5f2d;"></i> <strong style="color: #2c5f2d;">' + (bill.shopkeeperId.shopName || bill.shopkeeperId.name) + '</strong></p>' : '') +
+            (bill.shopkeeperId && bill.shopkeeperId.shopAddress ? '<p style="font-size: 13px; color: #666; margin-bottom: 10px;"><i class="fas fa-map-marker-alt" style="color: #dc3545;"></i> ' + bill.shopkeeperId.shopAddress + '</p>' : '') +
             '<p><strong>Total:</strong> ' + formatCurrency(bill.totalAmount) + '</p>' +
             '<p><strong>Paid:</strong> ' + formatCurrency(bill.paidAmount) + '</p>' +
             dueLine +

@@ -1050,30 +1050,27 @@ const shopping = {
   // Show payment modal for order
   async showPaymentModal(orderId, currentPaymentMode, amount) {
     try {
-      // Fetch shopkeeper's UPI details
+      // Fetch the shopkeeper's UPI directly from the order
       let shopkeeperUPI = null;
       try {
-        const response = await api.get('/auth/profile');
-        if (response.user && response.user.role === 'customer') {
-          // For customer, we need to get the shopkeeper info from the order
-          const orderResponse = await ordersAPI.getOrderDetails(orderId);
-          const order = orderResponse.order;
-          if (order && order.shopkeeperId) {
-            // Get shopkeeper profile
-            const shopProfile = await api.get(`/auth/shopkeeper/${order.shopkeeperId}`);
-            if (shopProfile.user) {
-              shopkeeperUPI = {
-                upiId: shopProfile.user.upiId,
-                upiQrCode: shopProfile.user.upiQrCode
-              };
-            }
+        const orderResponse = await ordersAPI.getOrderDetails(orderId);
+        const order = orderResponse.order;
+        // shopkeeperId is populated as an object when order is fetched
+        const shopkeeperId = order?.shopkeeperId?._id || order?.shopkeeperId;
+        if (shopkeeperId) {
+          const shopProfile = await api.get(`/auth/shopkeeper/${shopkeeperId}`);
+          if (shopProfile.user) {
+            shopkeeperUPI = {
+              upiId: shopProfile.user.upiId,
+              upiQrCode: shopProfile.user.upiQrCode
+            };
           }
         }
-      } catch (error) {
-        console.error('Error fetching shopkeeper UPI:', error);
+      } catch (err) {
+        // UPI details are optional — payment can proceed without them
       }
-      
-      // Store UPI data globally for the modal to access
+
+      // Store globally so the onchange handler can access it
       window.currentOrderShopkeeperUPI = shopkeeperUPI;
       
       const paymentModal = document.createElement('div');

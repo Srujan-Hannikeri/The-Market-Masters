@@ -22,7 +22,17 @@ exports.getAllBills = async (req, res) => {
     if (req.user.role === 'shopkeeper') {
       query.shopkeeperId = req.user.id;
     } else if (req.user.role === 'customer') {
-      query.customerPhone = req.user.phone;
+      // Match by customerId (ObjectId) OR customerPhone so bills are
+      // always found even when phone is empty
+      query.$or = [
+        { customerId: req.user.id },
+        { customerPhone: req.user.phone }
+      ];
+      // Remove phone-only condition if phone is empty/N/A
+      if (!req.user.phone || req.user.phone === 'N/A') {
+        delete query.$or;
+        query.customerId = req.user.id;
+      }
     }
 
     if (status) query.paymentStatus = status;
@@ -68,7 +78,25 @@ exports.getAllBills = async (req, res) => {
 
 exports.getCustomerBills = async (req, res) => {
   try {
-    const bills = await Bill.find({ customerPhone: req.user.phone }).sort({ created_at: -1 });
+    // Query by customerId (ObjectId) OR customerPhone so bills created
+    // from both the billing page (phone-based) and online orders
+    // (customerId-based) are always returned
+    const query = {
+      $or: [
+        { customerId: req.user.id },
+        { customerPhone: req.user.phone }
+      ]
+    };
+    // If phone is missing/N/A, only match by ID
+    if (!req.user.phone || req.user.phone === 'N/A') {
+      delete query.$or;
+      query.customerId = req.user.id;
+    }
+
+    const bills = await Bill.find(query)
+      .populate('shopkeeperId', 'name shopName shopAddress phone upiId upiQrCode')
+      .sort({ created_at: -1 });
+
     res.json({ bills });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching customer bills.', error: error.message });
@@ -279,10 +307,16 @@ exports.getPendingBills = async (req, res) => {
     if (req.user.role === 'shopkeeper') {
       query.shopkeeperId = req.user.id;
     } else if (req.user.role === 'customer') {
-      query.customerPhone = req.user.phone;
+      const orClauses = [{ customerId: req.user.id }];
+      if (req.user.phone && req.user.phone !== 'N/A') {
+        orClauses.push({ customerPhone: req.user.phone });
+      }
+      query.$or = orClauses;
     }
     
-    const bills = await Bill.find(query).sort({ created_at: -1 });
+    const bills = await Bill.find(query)
+      .populate('shopkeeperId', 'name shopName shopAddress upiId upiQrCode')
+      .sort({ created_at: -1 });
 
     res.json({ bills });
   } catch (error) {
@@ -300,43 +334,64 @@ exports.customerMakePayment = async (req, res) => {
       return res.status(404).json({ message: 'Bill not found.' });
     }
 
-    // Allow payment if: customerId matches, OR customerPhone matches, OR customer placed the order
+    // Allow payment if: customerId matches OR customerPhone matches
     const customerId = req.user.id.toString();
     const billCustomerId = bill.customerId ? bill.customerId.toString() : null;
-    const phoneMatch = bill.customerPhone && bill.customerPhone === req.user.phone;
+    const phoneMatch = req.user.phone && req.user.phone !== 'N/A' &&
+                       bill.customerPhone === req.user.phone;
     const idMatch = billCustomerId && billCustomerId === customerId;
 
     if (!phoneMatch && !idMatch) {
       return res.status(403).json({ message: 'You can only pay your own bills.' });
     }
 
-    if (!amountPaid || amountPaid <= 0) {
+    const payAmt = parseFloat(amountPaid);
+    if (!payAmt || payAmt <= 0) {
       return res.status(400).json({ message: 'Invalid payment amount.' });
     }
 
-    if (amountPaid > bill.balanceAmount) {
-      return res.status(400).json({ message: `Payment amount ₹${amountPaid} exceeds balance ₹${bill.balanceAmount}.` });
+    const currentBalance = parseFloat(bill.balanceAmount);
+    if (payAmt > currentBalance + 0.01) { // small float tolerance
+      return res.status(400).json({
+        message: `Payment ₹${payAmt} exceeds balance ₹${currentBalance}.`
+      });
     }
 
-    // Create payment record
+    // Create Payment record under the SHOPKEEPER so it appears in their dashboard
+    const { Payment } = require('../models');
     await Payment.create({
-      billId,
-      shopkeeperId: bill.shopkeeperId,
+      billId: bill._id,
+      shopkeeperId: bill.shopkeeperId,   // ← goes to the correct shopkeeper
       customerId: req.user.id,
-      amount: amountPaid,
+      amount: payAmt,
       paymentMode: paymentMode || 'Cash',
       paymentStatus: 'Verification Pending',
       transactionId: transactionId || '',
       notes: `Customer payment by ${req.user.name || req.user.phone}`
     });
 
-    // Update bill balances immediately
-    const newPaid = Number(bill.paidAmount) + Number(amountPaid);
-    const newBalance = Math.max(0, Number(bill.totalAmount) - newPaid);
+    // Update bill balance
+    const newPaid = parseFloat(bill.paidAmount) + payAmt;
+    const newBalance = Math.max(0, parseFloat(bill.totalAmount) - newPaid);
     bill.paidAmount = newPaid;
     bill.balanceAmount = newBalance;
-    bill.paymentStatus = newBalance === 0 ? 'Paid' : 'Partially Paid';
+    bill.paymentStatus = newBalance <= 0 ? 'Paid' : 'Partially Paid';
     await bill.save();
+
+    // If this bill was linked to an order (notes contains "Order: ORD-..."),
+    // also update the Order's paymentStatus
+    if (bill.notes && bill.notes.startsWith('Order:')) {
+      const { Order } = require('../models');
+      const orderNumber = bill.notes.replace('Order:', '').trim();
+      const order = await Order.findOne({ orderNumber });
+      if (order) {
+        order.paymentStatus = bill.paymentStatus;
+        if (bill.paymentMode && bill.paymentMode !== 'Pending') {
+          order.paymentMode = bill.paymentMode;
+        }
+        await order.save();
+      }
+    }
 
     res.json({
       message: 'Payment recorded. Shopkeeper will verify shortly.',
