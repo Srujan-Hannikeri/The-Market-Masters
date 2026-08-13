@@ -1244,16 +1244,16 @@ const shopping = {
     }
   },
 
-  // Process order payment — calls bill payment endpoint so shopkeeper can verify
+  // Process order payment — finds linked bill and records payment for shopkeeper verification
   async processOrderPayment(event, orderId, totalAmount) {
     event.preventDefault();
-    
+
     const paymentMode = document.getElementById('order-payment-mode').value;
     const paymentType = document.getElementById('payment-type').value;
     const amountPaid = paymentType === 'Partial'
       ? parseFloat(document.getElementById('amount-paid').value)
       : totalAmount;
-    
+
     if (!paymentMode) {
       toast.error('Please select a payment mode');
       return;
@@ -1262,39 +1262,47 @@ const shopping = {
       toast.error('Please enter a valid amount paid');
       return;
     }
-    
+
+    const submitBtn = document.querySelector('#order-payment-form button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Processing…'; }
+
     try {
-      // Step 1 — find the bill linked to this order
+      // Get order details to find the order number
       const orderResp = await ordersAPI.getOrderDetails(orderId);
       const order = orderResp.order;
 
-      // Step 2 — find the bill (notes field contains "Order: <orderNumber>")
-      const billsResp = await billsAPI.getBills({ limit: 20 });
-      const linkedBill = (billsResp.bills || []).find(b =>
+      // Find the linked bill by searching customer's bills for the order number in notes
+      // Use a wider search so we don't miss it
+      const billsResp = await billsAPI.getBills({ limit: 100 });
+      const allBills = billsResp.bills || [];
+      const linkedBill = allBills.find(b =>
         b.notes && b.notes.includes(order.orderNumber)
       );
 
       if (linkedBill) {
-        // Call the customer bill payment endpoint — shopkeeper will verify
+        // Record payment against the bill
         await billsAPI.makePayment(linkedBill.id, {
           amountPaid,
           paymentMode,
           transactionId: ''
         });
+        toast.success('Payment recorded! Shopkeeper will verify shortly.');
+      } else {
+        // Bill not found — at minimum update the order status
+        await ordersAPI.updateOrderPayment(orderId, {
+          paymentStatus: paymentType === 'Partial' ? 'Partially Paid' : 'Paid',
+          paymentMode
+        });
+        toast.success('Payment status updated. Please contact the shopkeeper to confirm.');
       }
 
-      // Step 3 — update order payment status
-      await ordersAPI.updateOrderPayment(orderId, {
-        paymentStatus: paymentType === 'Partial' ? 'Partially Paid' : 'Paid',
-        paymentMode
-      });
-
-      toast.success('Payment submitted! Awaiting shopkeeper verification.');
       document.getElementById('order-payment-modal').remove();
       this.loadMyOrders();
     } catch (error) {
       console.error('Error processing payment:', error);
       toast.error(error.message || 'Failed to process payment');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Confirm Payment'; }
     }
   },
 

@@ -300,7 +300,13 @@ exports.customerMakePayment = async (req, res) => {
       return res.status(404).json({ message: 'Bill not found.' });
     }
 
-    if (bill.customerPhone !== req.user.phone) {
+    // Allow payment if: customerId matches, OR customerPhone matches, OR customer placed the order
+    const customerId = req.user.id.toString();
+    const billCustomerId = bill.customerId ? bill.customerId.toString() : null;
+    const phoneMatch = bill.customerPhone && bill.customerPhone === req.user.phone;
+    const idMatch = billCustomerId && billCustomerId === customerId;
+
+    if (!phoneMatch && !idMatch) {
       return res.status(403).json({ message: 'You can only pay your own bills.' });
     }
 
@@ -308,23 +314,32 @@ exports.customerMakePayment = async (req, res) => {
       return res.status(400).json({ message: 'Invalid payment amount.' });
     }
 
-    const payment = await Payment.create({
+    if (amountPaid > bill.balanceAmount) {
+      return res.status(400).json({ message: `Payment amount ₹${amountPaid} exceeds balance ₹${bill.balanceAmount}.` });
+    }
+
+    // Create payment record
+    await Payment.create({
       billId,
       shopkeeperId: bill.shopkeeperId,
       customerId: req.user.id,
       amount: amountPaid,
-      paymentMode,
+      paymentMode: paymentMode || 'Cash',
       paymentStatus: 'Verification Pending',
       transactionId: transactionId || '',
-      notes: `Payment by customer ${req.user.name}`
+      notes: `Customer payment by ${req.user.name || req.user.phone}`
     });
 
-    bill.paymentStatus = 'Verification Pending';
+    // Update bill balances immediately
+    const newPaid = Number(bill.paidAmount) + Number(amountPaid);
+    const newBalance = Math.max(0, Number(bill.totalAmount) - newPaid);
+    bill.paidAmount = newPaid;
+    bill.balanceAmount = newBalance;
+    bill.paymentStatus = newBalance === 0 ? 'Paid' : 'Partially Paid';
     await bill.save();
 
-    res.json({ 
-      message: 'Payment recorded successfully.',
-      payment,
+    res.json({
+      message: 'Payment recorded. Shopkeeper will verify shortly.',
       bill
     });
   } catch (error) {
