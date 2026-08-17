@@ -94,12 +94,38 @@
   font-weight: 700;
 }
 
+/* =========================================================
+   RECENT BILLS - KEEP EVERYTHING ON ONE LINE
+   ========================================================= */
+
+.recent-bills-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 20px;
+}
+
+.recent-bills-header h2 {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .filter-group select {
   padding: 0.625rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--white);
   transition: all 0.3s ease;
+  min-width: 155px;
 }
 
 .filter-group select:focus {
@@ -166,7 +192,9 @@
   background: #fff;
 }
 
-.bill-table-scroll .bill-items-table { min-width: 620px; }
+.bill-table-scroll .bill-items-table {
+  min-width: 620px;
+}
 
 .bill-items-table th,
 .bill-items-table td {
@@ -209,16 +237,6 @@
   justify-content: flex-end;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
-}
-
-@media (max-width: 560px) {
-  #bill-view-modal-content { width: calc(100vw - 20px) !important; max-width: none !important; }
-  .bill-view-header { align-items: flex-start; gap: 0.5rem; }
-  .bill-view-header h2 { min-width: 0; font-size: 1rem; overflow-wrap: anywhere; }
-  .bill-view-section { padding: 0.7rem; }
-  .bill-table-scroll { -webkit-overflow-scrolling: touch; }
-  .bill-view-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
-  .bill-view-actions .btn { min-width: 0; padding: 0.55rem 0.35rem; font-size: 0.72rem; }
 }
 
 /* Customer Bills Grouping */
@@ -275,4 +293,66 @@
 .customer-bills-list .bill-card {
   margin-bottom: 10px;
   border: 1px solid var(--border);
+}
+
+/* =========================================================
+   MOBILE RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 560px) {
+  #bill-view-modal-content {
+    width: calc(100vw - 20px) !important;
+    max-width: none !important;
+  }
+
+  .bill-view-header {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .bill-view-header h2 {
+    min-width: 0;
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .bill-view-section {
+    padding: 0.7rem;
+  }
+
+  .bill-table-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bill-view-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .bill-view-actions .btn {
+    min-width: 0;
+    padding: 0.55rem 0.35rem;
+    font-size: 0.72rem;
+  }
+
+  /* Keep Recent Bills heading and filters in one line */
+  .recent-bills-header {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .recent-bills-header h2 {
+    font-size: 1rem;
+  }
+
+  .filter-group {
+    gap: 5px;
+  }
+
+  .filter-group select {
+    min-width: 100px;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
 }
