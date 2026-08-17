@@ -387,6 +387,11 @@ const inventory = {
       await inventoryAPI.deleteProduct(id);
       toast.success('Product deleted successfully!');
       await this.loadProducts();
+      // Refresh the dashboard alert immediately, even if the item was removed
+      // from the Inventory page rather than the dashboard.
+      if (typeof dashboard !== 'undefined' && typeof dashboard.checkLowStock === 'function') {
+        await dashboard.checkLowStock();
+      }
     } catch (error) {
       console.error('Delete product error:', error);
       toast.error(error.message || 'Failed to delete product');
@@ -445,9 +450,9 @@ const inventory = {
         const expiry = new Date(p.expiryDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const in7Days = new Date(today);
-        in7Days.setDate(in7Days.getDate() + 7);
-        return expiry >= today && expiry <= in7Days;
+        const in10Days = new Date(today);
+        in10Days.setDate(in10Days.getDate() + 10);
+        return expiry >= today && expiry <= in10Days;
       });
 
       // Show alert if there are low stock or out of stock products

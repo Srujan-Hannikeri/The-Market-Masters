@@ -328,8 +328,8 @@ const dashboard = {
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const in7Days = new Date(today);
-      in7Days.setDate(in7Days.getDate() + 7);
+      const in10Days = new Date(today);
+      in10Days.setDate(in10Days.getDate() + 10);
 
       const expiredProducts = products.filter(p => {
         if (!p.expiryDate) return false;
@@ -339,7 +339,7 @@ const dashboard = {
       const soonExpiringProducts = products.filter(p => {
         if (!p.expiryDate) return false;
         const exp = parseExpiryCalendarDate(p.expiryDate);
-        return exp >= today && exp <= in7Days;
+        return exp >= today && exp <= in10Days;
       });
 
       const outOfStockProducts = products.filter(p => parseInt(p.stock) === 0);
