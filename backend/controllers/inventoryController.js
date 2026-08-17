@@ -9,10 +9,13 @@ exports.getAllProducts = async (req, res) => {
     if (req.user.role === 'shopkeeper') {
       query.userId = req.user.id;
     } else {
-      // Customers must never see products that are past their expiry date.
+      // Customers must never see a product on its expiry day or afterwards.
+      // Compare against the next calendar day rather than the current time.
+      const nextDay = new Date();
+      nextDay.setHours(24, 0, 0, 0);
       query.$or = [
         { expiryDate: null },
-        { expiryDate: { $gt: new Date() } }
+        { expiryDate: { $gte: nextDay } }
       ];
     }
 

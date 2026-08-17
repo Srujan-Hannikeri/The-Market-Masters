@@ -5,6 +5,7 @@ const path = require('path');
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmt = (amount) => 'Rs. ' + parseFloat(amount || 0).toFixed(2);
+const logoPath = path.join(__dirname, '..', '..', 'frontend', 'assets', 'logo.jpg');
 
 /**
  * Get a writable directory that works on both local dev and Vercel serverless.
@@ -114,6 +115,11 @@ const buildRollLayout = (doc, bill, items, shop, cfg) => {
 
   // ── Shop header ──
   // ── Shop header ──
+  if (fs.existsSync(logoPath)) {
+    const logoSize = cx >= 190 ? 34 : 28;
+    doc.image(logoPath, margin + (cx - logoSize) / 2, y, { fit: [logoSize, logoSize] });
+    y += logoSize + 4;
+  }
   doc.fontSize(12).font('Helvetica-Bold')
     .text(shop.shopName || 'The Market Masters', margin, y, { align: 'center', width: cx });
   y += 16;
@@ -228,6 +234,7 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   const PW = doc.page.width;
   const PH = doc.page.height;
   const CW = PW - margin * 2;    // content width
+  const smallPaper = CW < 400;
 
   // Brand colours
   const GREEN  = '#2c5f2d';
@@ -241,26 +248,38 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   // ══════════════════════════════════════════
   // HEADER BAND
   // ══════════════════════════════════════════
-  const headerH = 90;
+  const headerH = smallPaper ? 78 : 92;
   doc.rect(margin, y, CW, headerH).fill(GREEN);
 
-  // Shop name
-  doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold')
-    .text(shop.shopName || 'The Market Masters', margin + 10, y + 10, { width: CW - 20, align: 'center' });
+  // Compact logo tile and shop identity
+  const logoBox = smallPaper ? 46 : 60;
+  const logoX = margin + 12;
+  const logoY = y + (headerH - logoBox) / 2;
+  doc.roundedRect(logoX, logoY, logoBox, logoBox, 6).fill('#ffffff');
+  if (fs.existsSync(logoPath)) {
+    doc.image(logoPath, logoX + 4, logoY + 4, { fit: [logoBox - 8, logoBox - 8] });
+  }
 
-  doc.fontSize(9).font('Helvetica');
-  let subY = y + 38;
+  const shopX = logoX + logoBox + 12;
+  const invoiceW = smallPaper ? 68 : 112;
+  doc.fillColor('#ffffff').fontSize(smallPaper ? 14 : 20).font('Helvetica-Bold')
+    .text(shop.shopName || 'The Market Masters', shopX, y + (smallPaper ? 16 : 18), { width: CW - (shopX - margin) - invoiceW - 16 });
+
+  doc.fontSize(smallPaper ? 7 : 8.5).font('Helvetica');
+  let subY = y + (smallPaper ? 39 : 48);
   if (shop.shopAddress) {
-    doc.text(shop.shopAddress, margin + 10, subY, { width: CW - 20, align: 'center' });
-    subY += 14;
+    doc.text(shop.shopAddress, shopX, subY, { width: CW - (shopX - margin) - invoiceW - 16 });
+    subY += smallPaper ? 10 : 12;
   }
   if (shop.phone) {
-    doc.text(`Phone: ${shop.phone}`, margin + 10, subY, { width: CW - 20, align: 'center' });
+    doc.text(`Phone: ${shop.phone}`, shopX, subY, { width: CW - (shopX - margin) - invoiceW - 16 });
   }
 
-  // "INVOICE" badge on right side of header
-  doc.fontSize(28).font('Helvetica-Bold').fillColor('rgba(255,255,255,0.15)')
-    .text('INVOICE', PW - margin - 160, y + 25, { width: 150, align: 'right' });
+  // Invoice marker
+  const invoiceX = margin + CW - invoiceW - 12;
+  doc.roundedRect(invoiceX, y + (headerH - 32) / 2, invoiceW, 32, 5).fill('#dff3e3');
+  doc.fontSize(smallPaper ? 10 : 14).font('Helvetica-Bold').fillColor(GREEN)
+    .text('INVOICE', invoiceX, y + (headerH - 8) / 2, { width: invoiceW, align: 'center' });
 
   y += headerH + 14;
 

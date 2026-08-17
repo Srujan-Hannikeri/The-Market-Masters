@@ -18,11 +18,12 @@ const shopping = {
       const response = await inventoryAPI.getProducts({ status: 'active' });
       // Filter: only show products that are active and have stock > 0
       const all = response.products || [];
-      const now = Date.now();
+      const nextDay = new Date();
+      nextDay.setHours(24, 0, 0, 0);
       this.products = all.filter(p =>
         p.isActive !== false &&
         parseInt(p.stock) > 0 &&
-        (!p.expiryDate || new Date(p.expiryDate).getTime() > now)
+        (!p.expiryDate || new Date(p.expiryDate).getTime() >= nextDay.getTime())
       );
       this.renderProductCatalog();
     } catch (error) {
