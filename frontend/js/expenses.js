@@ -414,16 +414,20 @@ const expenses = {
     let itemsTableHtml = '';
     if (items.length > 0) {
       itemsTableHtml = `
-        <div style="margin-top: 15px;">
-          <h4 style="margin-bottom: 10px; color: var(--primary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fas fa-boxes"></i> Purchased Items Breakdown</h4>
-          <table class="table" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
-            <thead style="background: #f8fafc;">
+        <section class="purchased-items-card">
+          <div class="purchased-items-heading">
+            <span class="purchased-items-icon"><i class="fas fa-boxes"></i></span>
+            <div><h4>Items Purchased</h4><p>${items.length} item${items.length === 1 ? '' : 's'} in this expense</p></div>
+          </div>
+          <div class="purchased-items-table-wrap">
+          <table class="table purchased-items-table">
+            <thead>
               <tr>
-                <th style="padding: 10px; font-size: 12px;">Item Name</th>
-                <th style="padding: 10px; font-size: 12px; text-align: center;">Qty</th>
-                <th style="padding: 10px; font-size: 12px; text-align: right;">Billing Price (₹)</th>
-                <th style="padding: 10px; font-size: 12px; text-align: right;">MRP (₹)</th>
-                <th style="padding: 10px; font-size: 12px; text-align: right;">Total Billing (₹)</th>
+                <th>Item Name</th>
+                <th>Qty</th>
+                <th>Billing Price (₹)</th>
+                <th>MRP (₹)</th>
+                <th>Total Billing (₹)</th>
               </tr>
             </thead>
             <tbody>
@@ -433,18 +437,19 @@ const expenses = {
                 const totVal = bPrice * item.qty;
 
                 return `
-                  <tr style="border-top: 1px solid #f1f5f9;">
-                    <td style="padding: 10px; font-size: 13px; font-weight: 500;">${item.name}</td>
-                    <td style="padding: 10px; font-size: 13px; text-align: center;"><span class="badge badge-info">${item.qty}</span></td>
-                    <td style="padding: 10px; font-size: 13px; text-align: right; font-weight: 600; color: #0f172a;">${formatCurrency(bPrice)}</td>
-                    <td style="padding: 10px; font-size: 13px; text-align: right; color: #64748b;">${formatCurrency(mrpVal)}</td>
-                    <td style="padding: 10px; font-size: 13px; text-align: right; font-weight: 700; color: #047857;">${formatCurrency(totVal)}</td>
+                  <tr>
+                    <td>${item.name}</td>
+                    <td class="item-quantity"><span class="badge badge-info">${item.qty}</span></td>
+                    <td>${formatCurrency(bPrice)}</td>
+                    <td>${formatCurrency(mrpVal)}</td>
+                    <td class="item-total">${formatCurrency(totVal)}</td>
                   </tr>
                 `;
               }).join('')}
             </tbody>
           </table>
-        </div>
+          </div>
+        </section>
       `;
     }
 

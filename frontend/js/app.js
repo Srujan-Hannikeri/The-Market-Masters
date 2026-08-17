@@ -1,6 +1,7 @@
 // Main Application Module
 const app = {
   currentPage: 'dashboard',
+  pageCache: new Map(),
 
   // Initialize application
   init() {
@@ -174,9 +175,14 @@ const app = {
     const partialPath = `pages/${page}.html`;
     let loaded = false;
     try {
-      const res = await fetch(partialPath);
-      if (res.ok) {
-        const html = await res.text();
+      let html = this.pageCache.get(partialPath);
+      if (!html) {
+        const res = await fetch(partialPath);
+        if (!res.ok) throw new Error('Page could not be loaded');
+        html = await res.text();
+        this.pageCache.set(partialPath, html);
+      }
+      if (html) {
         if (container) container.innerHTML = html;
         // Mark loaded section active if it contains the section wrapper
         const loadedSection = container.querySelector(`#${page}-page`);

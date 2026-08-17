@@ -579,7 +579,8 @@ const payments = {
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = "Recording...";
+      submitBtn.classList.add("payment-processing");
+      submitBtn.innerHTML = '<span class="spinner"></span> Recording payment…';
     }
 
     try {
@@ -606,7 +607,8 @@ const payments = {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Confirm & Record Payment";
+        submitBtn.classList.remove("payment-processing");
+        submitBtn.innerHTML = "Confirm & Record Payment";
       }
     }
   },

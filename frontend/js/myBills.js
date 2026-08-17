@@ -326,6 +326,13 @@ class MyBills {
       return;
     }
     
+    const submitBtn = document.querySelector('#bill-payment-form button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('payment-processing');
+      submitBtn.innerHTML = '<span class="spinner"></span> Payment in process…';
+    }
+
     try {
       // Use the new customer payment endpoint
       await billsAPI.makePayment(billId, {
@@ -339,6 +346,12 @@ class MyBills {
     } catch (error) {
       console.error('Error processing payment:', error);
       toast.error(error.message || 'Failed to process payment');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('payment-processing');
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment';
+      }
     }
   }
 

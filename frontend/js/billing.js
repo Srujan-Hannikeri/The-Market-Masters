@@ -917,6 +917,13 @@ const billing = {
       return;
     }
     
+    const submitBtn = document.querySelector('#shopkeeper-payment-form button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('payment-processing');
+      submitBtn.innerHTML = '<span class="spinner"></span> Recording payment…';
+    }
+
     try {
       // Use the payments API to record payment
       await paymentsAPI.createPayment({
@@ -933,6 +940,12 @@ const billing = {
     } catch (error) {
       console.error('Error processing payment:', error);
       toast.error(error.message || 'Failed to process payment');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('payment-processing');
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Record Payment';
+      }
     }
   }
 };
