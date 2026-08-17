@@ -266,7 +266,7 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   doc.fillColor('#ffffff').fontSize(smallPaper ? 11 : 15).font('Helvetica-Bold')
     .text('The Market Masters', brandX, y + 15, { width: brandW });
   doc.fillColor('#dff3e3').fontSize(smallPaper ? 6.5 : 7.5).font('Helvetica')
-    .text('SMART BILLING & INVENTORY', brandX, y + (smallPaper ? 31 : 35), { width: brandW });
+    .text("You Manage Your Shop, We'll Manage Your Bills", brandX, y + (smallPaper ? 31 : 35), { width: brandW });
 
   const shopY = y + (smallPaper ? 51 : 65);
   doc.fillColor('#ffffff').fontSize(smallPaper ? 10 : 14).font('Helvetica-Bold')
