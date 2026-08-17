@@ -39,6 +39,8 @@ expenseSchema.virtual('id').get(function () {
   return this._id.toHexString();
 });
 
+expenseSchema.index({ shopkeeperId: 1, date: -1 });
+
 const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);
 
 module.exports = Expense;

@@ -51,7 +51,7 @@ const shopping = {
       <div class="product-card">
         <div class="product-image">
           ${product.image ?
-            `<img src="${product.image}" alt="${product.name}">` :
+            `<img src="${product.image}" alt="${product.name}" loading="lazy" decoding="async">` :
             `<i class="fas fa-box"></i>`
           }
         </div>

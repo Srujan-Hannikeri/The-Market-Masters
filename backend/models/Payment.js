@@ -84,6 +84,9 @@ paymentSchema.virtual("id").get(function () {
   return this._id.toHexString();
 });
 
+paymentSchema.index({ shopkeeperId: 1, created_at: -1 });
+paymentSchema.index({ billId: 1, created_at: -1 });
+
 const Payment =
   mongoose.models.Payment || mongoose.model("Payment", paymentSchema);
 

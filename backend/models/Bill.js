@@ -115,6 +115,10 @@ billSchema.virtual('BillItems').get(function () {
   return this.items;
 });
 
+billSchema.index({ shopkeeperId: 1, created_at: -1 });
+billSchema.index({ customerId: 1, created_at: -1 });
+billSchema.index({ customerPhone: 1, created_at: -1 });
+
 const Bill = mongoose.models.Bill || mongoose.model('Bill', billSchema);
 
 module.exports = Bill;

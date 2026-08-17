@@ -16,9 +16,28 @@ const app = {
     } else {
       this.navigateTo('dashboard');
     }
+
+    // Load page shells only while the browser is idle. This makes the first
+    // visit to each screen feel instant without delaying the initial screen.
+    const warmPages = () => this.warmPageCache();
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(warmPages, { timeout: 2500 });
+    } else {
+      window.setTimeout(warmPages, 1200);
+    }
     
     // No auto-refresh interval — pages only refresh when the user navigates to them.
     // Individual modules (dashboard, etc.) handle their own light background polls.
+  },
+
+  async warmPageCache() {
+    const pages = ['billing', 'payments', 'inventory', 'expenses', 'reports', 'my-bills', 'profile', 'shop', 'cart', 'my-orders', 'shop-orders'];
+    await Promise.allSettled(pages.map(async (page) => {
+      const path = `pages/${page}.html`;
+      if (this.pageCache.has(path)) return;
+      const response = await fetch(path, { cache: 'force-cache' });
+      if (response.ok) this.pageCache.set(path, await response.text());
+    }));
   },
 
   // Setup navigation

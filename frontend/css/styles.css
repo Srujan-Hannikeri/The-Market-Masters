@@ -1648,9 +1648,9 @@ cursor: default;
    SIDEBAR LOGO — Rounded style
 ═══════════════════════════════════════════════════════ */
 .sidebar-logo {
-  width: 68px !important;
-  height: 68px !important;
-  border-radius: 8px !important;
+  width: 104px !important;
+  height: 58px !important;
+  border-radius: 6px !important;
   object-fit: cover !important;
   border: 2px solid rgba(255,255,255,0.25) !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
