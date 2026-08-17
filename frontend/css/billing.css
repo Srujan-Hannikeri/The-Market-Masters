@@ -1,4 +1,7 @@
-/* Billing Specific Styles */
+/* =========================================================
+   BILLING SPECIFIC STYLES
+   ========================================================= */
+
 .product-select {
   width: 100%;
   padding: 0.625rem;
@@ -95,23 +98,63 @@
 }
 
 /* =========================================================
-   RECENT BILLS - KEEP EVERYTHING ON ONE LINE
+   BILLING CONTAINER
+   CREATE NEW BILL + RECENT BILLS
+   SAME HEIGHT
    ========================================================= */
 
-.recent-bills-header {
+.billing-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(350px, 1fr);
+  gap: 1.5rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Left and right sections */
+.billing-form-section,
+.bills-list-section {
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+
+/* Make both cards exactly fill their columns */
+.billing-form-section > .card,
+.bills-list-section > .card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   RECENT BILLS HEADER
+   EVERYTHING ON ONE LINE
+   ========================================================= */
+
+.bills-list-section > .card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.bills-list-section > .card > .card-header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  width: 100%;
   gap: 12px;
-  flex-wrap: nowrap;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.recent-bills-header h2 {
+.bills-list-section > .card > .card-header h3 {
   margin: 0;
   white-space: nowrap;
-  font-size: 1.25rem;
   flex-shrink: 0;
+  font-size: 1.25rem;
 }
 
 .filter-group {
@@ -124,18 +167,67 @@
 
 .filter-group select {
   width: 130px;
-  min-width: 0;
+  min-width: 0 !important;
+  max-width: 130px;
   padding: 0.625rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--white);
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .filter-group select:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(30, 95, 91, 0.1);
+}
+
+/* =========================================================
+   RECENT BILLS CARD BODY
+   ========================================================= */
+
+.bills-list-section > .card > .card-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Search bar stays at top */
+.bills-list-section .search-bar {
+  flex-shrink: 0;
+}
+
+/* Bills list fills remaining height */
+.bills-list-section #bills-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   RECENT BILLS SCROLLBAR
+   ========================================================= */
+
+.bills-list-section #bills-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.bills-list-section #bills-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.bills-list-section #bills-list::-webkit-scrollbar-thumb {
+  background: #aaa;
+  border-radius: 10px;
+}
+
+.bills-list-section #bills-list::-webkit-scrollbar-thumb:hover {
+  background: #888;
 }
 
 /* =========================================================
@@ -309,6 +401,41 @@
    MOBILE RESPONSIVE
    ========================================================= */
 
+@media (max-width: 900px) {
+  .billing-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .billing-form-section,
+  .bills-list-section {
+    height: auto;
+  }
+
+  .billing-form-section > .card,
+  .bills-list-section > .card {
+    height: auto;
+  }
+
+  .bills-list-section > .card {
+    display: block;
+  }
+
+  .bills-list-section > .card > .card-body {
+    display: block;
+    overflow: visible;
+  }
+
+  .bills-list-section #bills-list {
+    max-height: 600px;
+    overflow-y: auto;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
 @media (max-width: 560px) {
   #bill-view-modal-content {
     width: calc(100vw - 20px) !important;
@@ -347,21 +474,19 @@
   }
 
   /* =======================================================
-     RECENT BILLS - MOBILE ONE LINE
+     RECENT BILLS - ONE LINE ON MOBILE
      ======================================================= */
 
-  .recent-bills-header {
+  .bills-list-section > .card > .card-header {
     display: flex;
     align-items: center;
     gap: 5px;
     flex-wrap: nowrap;
-    width: 100%;
   }
 
-  .recent-bills-header h2 {
+  .bills-list-section > .card > .card-header h3 {
     font-size: 0.95rem;
     white-space: nowrap;
-    flex-shrink: 0;
   }
 
   .filter-group {
@@ -374,8 +499,36 @@
 
   .filter-group select {
     width: 100px;
-    min-width: 0;
+    min-width: 0 !important;
+    max-width: 100px;
     padding: 0.5rem 0.35rem;
     font-size: 0.75rem;
+  }
+
+  /* Modal */
+  .bill-view-header h2 {
+    font-size: 1rem;
+  }
+
+  /* Table */
+  .bill-table-scroll .bill-items-table {
+    min-width: 600px;
+  }
+
+  /* Customer */
+  .customer-header {
+    padding: 12px 14px;
+  }
+
+  .customer-info {
+    gap: 10px;
+  }
+
+  .customer-info i {
+    font-size: 1.5rem;
+  }
+
+  .customer-bills-list {
+    padding: 10px;
   }
 }
