@@ -199,3 +199,77 @@ exports.updatePayment = async (req, res) => {
     res.status(500).json({ message: 'Error updating payment.', error: error.message });
   }
 };
+
+// Shopkeeper confirms a pending payment made by customer
+exports.confirmPayment = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found.' });
+    }
+
+    // Only the shopkeeper of this payment can confirm it
+    if (payment.shopkeeperId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
+    if (payment.paymentStatus !== 'Verification Pending') {
+      return res.status(400).json({ message: 'Payment is not pending verification.' });
+    }
+
+    // Confirm the payment
+    payment.paymentStatus = 'Paid';
+    await payment.save();
+
+    // Now update the bill amounts
+    const bill = await Bill.findById(payment.billId);
+    if (bill) {
+      const newPaidAmount = Number(bill.paidAmount) + Number(payment.amount);
+      const newBalanceAmount = Math.max(0, Number(bill.totalAmount) - newPaidAmount);
+      bill.paidAmount = newPaidAmount;
+      bill.balanceAmount = newBalanceAmount;
+      bill.paymentStatus = calculatePaymentStatus(bill.totalAmount, newPaidAmount);
+      await bill.save();
+
+      // Also update the linked order if any (find by order number in notes)
+      try {
+        const { Order } = require('../models');
+        if (bill.notes && bill.notes.includes('Order:')) {
+          const orderNumberMatch = bill.notes.match(/Order:\s*(ORD-[A-Z0-9-]+)/);
+          if (orderNumberMatch) {
+            const orderNumber = orderNumberMatch[1];
+            const order = await Order.findOne({ orderNumber });
+            if (order) {
+              order.paymentStatus = bill.paymentStatus;
+              await order.save();
+            }
+          }
+        }
+      } catch (orderErr) {
+        console.error('Error updating linked order:', orderErr);
+      }
+    }
+
+    res.json({ message: 'Payment confirmed successfully.', payment, bill });
+  } catch (error) {
+    console.error('Confirm payment error:', error);
+    res.status(500).json({ message: 'Error confirming payment.', error: error.message });
+  }
+};
+
+// Get all bills that have payments pending shopkeeper verification
+exports.getVerificationPendingBills = async (req, res) => {
+  try {
+    const { Payment: PaymentModel } = require('../models');
+    const pendingPayments = await PaymentModel.find({
+      shopkeeperId: req.user.id,
+      paymentStatus: 'Verification Pending'
+    }).populate('billId', 'billNumber customerName customerPhone totalAmount paidAmount balanceAmount paymentStatus')
+      .populate('customerId', 'name phone')
+      .sort({ created_at: -1 });
+
+    res.json({ payments: pendingPayments });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching pending verification bills.', error: error.message });
+  }
+};

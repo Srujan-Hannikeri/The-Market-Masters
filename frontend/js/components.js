@@ -179,10 +179,11 @@ const getStatusBadge = (status) => {
 
   const styleMap = {
     // Payment status
-    'Paid':           { bg: '#10b981', icon: 'fa-check-circle' },   // green
-    'Pending':        { bg: '#ef4444', icon: 'fa-clock' },           // red
-    'Partially Paid': { bg: '#eab308', icon: 'fa-exclamation-circle' }, // yellow
-    'Failed':         { bg: '#ef4444', icon: 'fa-times-circle' },    // red
+    'Paid':                   { bg: '#10b981', icon: 'fa-check-circle' },   // green
+    'Pending':                { bg: '#ef4444', icon: 'fa-clock' },           // red
+    'Partially Paid':         { bg: '#eab308', icon: 'fa-exclamation-circle' }, // yellow
+    'Failed':                 { bg: '#ef4444', icon: 'fa-times-circle' },    // red
+    'Verification Pending':   { bg: '#f59e0b', icon: 'fa-hourglass-half' },  // orange
 
     // Order status
     'Confirmed':  { bg: '#3b82f6', icon: 'fa-check-double' },

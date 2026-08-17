@@ -8,7 +8,8 @@ const payments = {
       this.loadPaymentSummary(),
       this.loadPendingDues(),
       this.loadAllPayments(),
-      this.loadAllBills()
+      this.loadAllBills(),
+      this.loadVerificationPending()
     ]);
     if (!this.listenersSetup) {
       this.setupEventListeners();
@@ -189,7 +190,7 @@ const payments = {
     if (!paymentsList || paymentsList.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="5" class="text-center">
+          <td colspan="6" class="text-center">
             <div class="empty-state">
               <i class="fas fa-credit-card"></i>
               <p>No payments recorded yet.</p>
@@ -203,15 +204,104 @@ const payments = {
     const modeBg = { 'Cash': '#10b981', 'UPI': '#3b82f6', 'Card': '#6366f1', 'Cheque': '#f59e0b', 'Online': '#3b82f6' };
     const badgeStyle = (mode) => `display:inline-flex;align-items:center;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:${modeBg[mode]||'#64748b'};color:#fff`;
 
-    tbody.innerHTML = paymentsList.map(payment => `
-      <tr>
+    tbody.innerHTML = paymentsList.map(payment => {
+      const isPending = payment.paymentStatus === 'Verification Pending';
+      const confirmBtn = isPending
+        ? `<button class="btn btn-sm btn-success" onclick="payments.confirmPayment('${payment.id}')">
+             <i class="fas fa-check"></i> Confirm
+           </button>`
+        : `<span style="color:#10b981;font-size:12px;font-weight:600;">✓ Confirmed</span>`;
+      return `
+        <tr style="${isPending ? 'background:#fffbeb;' : ''}">
+          <td>${formatDate(payment.created_at)}</td>
+          <td>${payment.billId?.billNumber || '-'}</td>
+          <td>${payment.billId?.customerName || '-'}</td>
+          <td><span style="${badgeStyle(payment.paymentMode)}">${payment.paymentMode}</span></td>
+          <td>${formatCurrency(payment.amount)}</td>
+          <td>${confirmBtn}</td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  async loadVerificationPending() {
+    try {
+      const response = await paymentsAPI.getVerificationPendingBills();
+      const pendingPayments = response.payments || [];
+      
+      // Show a notification badge if there are pending verifications
+      const countEl = document.getElementById('verification-pending-count');
+      if (countEl) {
+        countEl.textContent = pendingPayments.length;
+        countEl.style.display = pendingPayments.length > 0 ? 'inline-flex' : 'none';
+      }
+
+      this.renderVerificationPending(pendingPayments);
+    } catch (error) {
+      console.error('Error loading verification pending:', error);
+    }
+  },
+
+  renderVerificationPending(pendingPayments) {
+    const container = document.getElementById('verification-pending-section');
+    if (!container) return;
+
+    if (pendingPayments.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
+    const tbody = document.getElementById('verification-pending-table');
+    if (!tbody) return;
+
+    tbody.innerHTML = pendingPayments.map(payment => `
+      <tr style="background: #fffbeb;">
+        <td>
+          <strong>${payment.billId?.billNumber || '-'}</strong>
+        </td>
+        <td>${payment.customerId?.name || payment.billId?.customerName || '-'}</td>
+        <td>${payment.customerId?.phone || payment.billId?.customerPhone || '-'}</td>
+        <td>${payment.paymentMode}</td>
+        <td><strong>${formatCurrency(payment.amount)}</strong></td>
         <td>${formatDate(payment.created_at)}</td>
-        <td>${payment.billId?.billNumber || '-'}</td>
-        <td>${payment.billId?.customerName || '-'}</td>
-        <td><span style="${badgeStyle(payment.paymentMode)}">${payment.paymentMode}</span></td>
-        <td>${formatCurrency(payment.amount)}</td>
+        <td>
+          <button class="btn btn-sm btn-success" onclick="payments.confirmPayment('${payment.id}')">
+            <i class="fas fa-check-circle"></i> Confirm Payment
+          </button>
+          <button class="btn btn-sm btn-danger" style="margin-left:4px;" onclick="payments.rejectPayment('${payment.id}')">
+            <i class="fas fa-times"></i> Reject
+          </button>
+        </td>
       </tr>
     `).join('');
+  },
+
+  async confirmPayment(paymentId) {
+    const confirmed = await confirmDialog('Confirm this customer payment?\n\nThis will update the bill balance and mark payment as confirmed.');
+    if (!confirmed) return;
+
+    try {
+      await paymentsAPI.confirmPayment(paymentId);
+      toast.success('Payment confirmed! Bill updated.');
+      await this.load();
+    } catch (error) {
+      toast.error(error.message || 'Failed to confirm payment');
+    }
+  },
+
+  async rejectPayment(paymentId) {
+    const confirmed = await confirmDialog('Reject this payment? The bill will remain unpaid.');
+    if (!confirmed) return;
+
+    try {
+      await paymentsAPI.updatePayment(paymentId, { paymentStatus: 'Failed' });
+      // Reset bill back to pending
+      toast.warning('Payment rejected.');
+      await this.load();
+    } catch (error) {
+      toast.error(error.message || 'Failed to reject payment');
+    }
   },
 
   openPaymentModal(billId) {

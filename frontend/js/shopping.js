@@ -1261,36 +1261,52 @@ const shopping = {
     }
 
     const submitBtn = document.querySelector('#order-payment-form button[type="submit"]');
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Processing…'; }
+    if (submitBtn) { 
+      submitBtn.disabled = true; 
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Payment in Process…'; 
+    }
 
     try {
       // Get order details to find the order number
       const orderResp = await ordersAPI.getOrderDetails(orderId);
       const order = orderResp.order;
 
-      // Find the linked bill by searching customer's bills for the order number in notes
-      // Use a wider search so we don't miss it
-      const billsResp = await billsAPI.getBills({ limit: 100 });
-      const allBills = billsResp.bills || [];
-      const linkedBill = allBills.find(b =>
-        b.notes && b.notes.includes(order.orderNumber)
-      );
+      // Use getMyBills (customer accessible) to find linked bill
+      let linkedBill = null;
+      try {
+        const billsResp = await billsAPI.getMyBills();
+        const allBills = billsResp.bills || [];
+        linkedBill = allBills.find(b =>
+          b.notes && b.notes.includes(order.orderNumber)
+        );
+      } catch (billErr) {
+        console.warn('Could not fetch customer bills:', billErr);
+      }
 
       if (linkedBill) {
-        // Record payment against the bill
+        // Record payment against the bill (status = Verification Pending)
         await billsAPI.makePayment(linkedBill.id, {
           amountPaid,
           paymentMode,
           transactionId: ''
         });
-        toast.success('Payment recorded! Shopkeeper will verify shortly.');
+        
+        // Also update order payment status
+        try {
+          await ordersAPI.updateOrderPayment(orderId, {
+            paymentStatus: 'Verification Pending',
+            paymentMode
+          });
+        } catch (e) { console.warn('Order payment status update failed:', e); }
+
+        toast.success('Payment submitted! Waiting for shopkeeper confirmation.');
       } else {
-        // Bill not found — at minimum update the order status
+        // Bill not found — update order payment status directly
         await ordersAPI.updateOrderPayment(orderId, {
-          paymentStatus: paymentType === 'Partial' ? 'Partially Paid' : 'Paid',
+          paymentStatus: 'Verification Pending',
           paymentMode
         });
-        toast.success('Payment status updated. Please contact the shopkeeper to confirm.');
+        toast.success('Payment submitted! The shopkeeper will verify and confirm shortly.');
       }
 
       document.getElementById('order-payment-modal').remove();
@@ -1299,7 +1315,10 @@ const shopping = {
       console.error('Error processing payment:', error);
       toast.error(error.message || 'Failed to process payment');
     } finally {
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Confirm Payment'; }
+      if (submitBtn) { 
+        submitBtn.disabled = false; 
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Payment'; 
+      }
     }
   },
 

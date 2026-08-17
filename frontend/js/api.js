@@ -222,6 +222,14 @@ const paymentsAPI = {
 
   updatePayment(id, paymentData) {
     return api.put(`/payments/${id}`, paymentData);
+  },
+
+  confirmPayment(id) {
+    return api.post(`/payments/${id}/confirm`, {});
+  },
+
+  getVerificationPendingBills() {
+    return api.get('/payments/verification-pending');
   }
 };
 

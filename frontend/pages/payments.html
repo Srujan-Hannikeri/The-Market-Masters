@@ -13,6 +13,39 @@
       </div>
     </div>
 
+    <!-- Customer Payments Awaiting Verification -->
+    <div id="verification-pending-section" class="card" style="display:none; border-left: 4px solid #f59e0b;">
+      <div class="card-header" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+        <h3 style="color: #92400e;">
+          <i class="fas fa-exclamation-circle" style="color: #f59e0b;"></i>
+          Customer Payments Awaiting Confirmation
+          <span id="verification-pending-count" class="badge badge-warning" style="display:none; margin-left:8px;"></span>
+        </h3>
+      </div>
+      <div class="card-body">
+        <p style="color: #92400e; margin-bottom: 12px; font-size: 14px;">
+          <i class="fas fa-info-circle"></i>
+          These are payments made by customers online. Confirm them only after you have verified the payment.
+        </p>
+        <div style="overflow-x:auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Bill #</th>
+                <th>Customer Name</th>
+                <th>Phone</th>
+                <th>Payment Mode</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="verification-pending-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Pending Dues -->
     <div class="card">
       <div class="card-header">
@@ -77,6 +110,7 @@
                 <th>Customer</th>
                 <th>Mode</th>
                 <th>Amount</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="all-payments-table"></tbody>
