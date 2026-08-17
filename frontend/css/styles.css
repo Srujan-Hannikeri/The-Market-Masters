@@ -533,7 +533,7 @@ cursor: default;
 }
 
 .auth-logo .logo-img {
-  width: 220px;
+  width: min(270px, 82vw);
   height: auto;
   margin-bottom: 0.75rem;
   border-radius: 12px;
@@ -1648,9 +1648,9 @@ cursor: default;
    SIDEBAR LOGO — Rounded style
 ═══════════════════════════════════════════════════════ */
 .sidebar-logo {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 50% !important;
+  width: 68px !important;
+  height: 68px !important;
+  border-radius: 8px !important;
   object-fit: cover !important;
   border: 2px solid rgba(255,255,255,0.25) !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
