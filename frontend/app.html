@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Market Masters - You Manage Your Shop, Will Manage Your Bills</title>
+  <link rel="icon" type="image/png" href="assets/logo.jpg">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/billing.css">
@@ -13,6 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
   <div id="app-container" class="app-container hidden">
     <!-- Sidebar -->
@@ -323,7 +326,8 @@
           <!-- Inventory item rows — shown only when type = Inventory -->
           <div id="inventory-purchase-fields">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <label style="margin:0;font-weight:600;color:var(--primary);font-size:0.875rem;"><i class="fas fa-boxes"></i> Items Purchased</label>
+              <label style="margin:0;font-weight:600;color:var(--primary);font-size:0.875rem;"><i
+                  class="fas fa-boxes"></i> Items Purchased</label>
               <button type="button" class="btn btn-sm btn-secondary" onclick="expenses.addInventoryRow()">
                 <i class="fas fa-plus"></i> Add Row
               </button>
@@ -334,7 +338,8 @@
           <div class="form-row">
             <div class="form-group">
               <label>Total Amount (₹) *</label>
-              <input type="number" id="expense-amount" placeholder="Auto-calculated or enter manually" step="0.01" min="0" required>
+              <input type="number" id="expense-amount" placeholder="Auto-calculated or enter manually" step="0.01"
+                min="0" required>
             </div>
             <div class="form-group">
               <label>Notes / Description</label>
@@ -371,21 +376,22 @@
       <!-- Animated SVG: shop/rupee coin spinning around a store -->
       <svg class="loader-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
         <!-- Orbit ring -->
-        <circle cx="60" cy="60" r="44" fill="none" stroke="#e8f5e9" stroke-width="3"/>
+        <circle cx="60" cy="60" r="44" fill="none" stroke="#e8f5e9" stroke-width="3" />
         <!-- Animated orbit dot (coin) -->
-        <circle class="orbit-dot" cx="104" cy="60" r="7" fill="#d4a017"/>
-        <text class="orbit-dot-text" x="104" y="64" text-anchor="middle" font-size="8" font-weight="bold" fill="#1e5f5b">₹</text>
+        <circle class="orbit-dot" cx="104" cy="60" r="7" fill="#d4a017" />
+        <text class="orbit-dot-text" x="104" y="64" text-anchor="middle" font-size="8" font-weight="bold"
+          fill="#1e5f5b">₹</text>
         <!-- Store building -->
-        <rect x="34" y="52" width="52" height="34" rx="3" fill="#1e5f5b"/>
+        <rect x="34" y="52" width="52" height="34" rx="3" fill="#1e5f5b" />
         <!-- Roof / awning -->
-        <polygon points="28,54 60,34 92,54" fill="#2d8a84"/>
+        <polygon points="28,54 60,34 92,54" fill="#2d8a84" />
         <!-- Door -->
-        <rect x="52" y="68" width="16" height="18" rx="2" fill="#d4a017"/>
+        <rect x="52" y="68" width="16" height="18" rx="2" fill="#d4a017" />
         <!-- Windows -->
-        <rect x="37" y="58" width="12" height="10" rx="2" fill="#b2dfdb"/>
-        <rect x="71" y="58" width="12" height="10" rx="2" fill="#b2dfdb"/>
+        <rect x="37" y="58" width="12" height="10" rx="2" fill="#b2dfdb" />
+        <rect x="71" y="58" width="12" height="10" rx="2" fill="#b2dfdb" />
         <!-- Chimney / flag pulse dot -->
-        <circle cx="60" cy="30" r="5" fill="#d4a017" class="pulse-dot"/>
+        <circle cx="60" cy="30" r="5" fill="#d4a017" class="pulse-dot" />
       </svg>
 
       <!-- Animated text bar -->
@@ -418,4 +424,5 @@
   <script src="js/shopping.js?v=3"></script>
   <script src="js/app.js?v=3"></script>
 </body>
+
 </html>
