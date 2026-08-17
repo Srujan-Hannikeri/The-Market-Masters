@@ -1009,15 +1009,7 @@ const shopping = {
               <option value="Cancelled" ${currentOrderStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Payment Status</label>
-            <select id="update-payment-status" required>
-              <option value="Pending" ${currentPaymentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
-              <option value="Paid" ${currentPaymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
-              <option value="Partially Paid" ${currentPaymentStatus === 'Partially Paid' ? 'selected' : ''}>Partially Paid</option>
-              <option value="Failed" ${currentPaymentStatus === 'Failed' ? 'selected' : ''}>Failed</option>
-            </select>
-          </div>
+          <p class="form-hint">Payment status changes only when a payment is recorded or verified.</p>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary">Update Status</button>
             <button type="button" onclick="modal.closeAll()" class="btn btn-secondary">Cancel</button>
@@ -1054,10 +1046,8 @@ const shopping = {
     event.preventDefault();
     
     const orderStatus = document.getElementById('update-order-status').value;
-    const paymentStatus = document.getElementById('update-payment-status').value;
-    
     try {
-      await ordersAPI.updateOrderStatus(orderId, { orderStatus, paymentStatus });
+      await ordersAPI.updateOrderStatus(orderId, { orderStatus });
       modal.closeAll();
       toast.success('Order status updated');
       this.loadShopOrders();
@@ -1107,7 +1097,7 @@ const shopping = {
               <p style="font-size: 28px; font-weight: bold; color: #2c5f2d; margin: 10px 0;">Rs. ${parseFloat(amount).toFixed(2)}</p>
             </div>
             
-            <form id="order-payment-form" onsubmit="shopping.processOrderPayment(event, ${orderId}, ${amount})">
+            <form id="order-payment-form" onsubmit="shopping.processOrderPayment(event, '${orderId}', ${amount})">
               <div class="form-group">
                 <label>Select Payment Mode *</label>
                 <select id="order-payment-mode" required onchange="shopping.showPaymentDetails(this.value, ${amount});">
@@ -1310,22 +1300,9 @@ const shopping = {
           transactionId: ''
         });
         
-        // Also update order payment status
-        try {
-          await ordersAPI.updateOrderPayment(orderId, {
-            paymentStatus: 'Verification Pending',
-            paymentMode
-          });
-        } catch (e) { console.warn('Order payment status update failed:', e); }
-
         toast.success('Payment submitted! Waiting for shopkeeper confirmation.');
       } else {
-        // Bill not found — update order payment status directly
-        await ordersAPI.updateOrderPayment(orderId, {
-          paymentStatus: 'Verification Pending',
-          paymentMode
-        });
-        toast.success('Payment submitted! The shopkeeper will verify and confirm shortly.');
+        throw new Error('No bill was found for this order. Please contact the shopkeeper.');
       }
 
       document.getElementById('order-payment-modal').remove();

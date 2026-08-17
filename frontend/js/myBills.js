@@ -191,7 +191,7 @@ class MyBills {
               '<p style="font-size: 24px; font-weight: bold; color: #dc3545; margin: 10px 0;">Due: Rs. ' + parseFloat(dueAmount).toFixed(2) + '</p>' +
               '<p style="font-size: 16px; color: #666;">Total: Rs. ' + parseFloat(totalAmount).toFixed(2) + '</p>' +
             '</div>' +
-            '<form id="bill-payment-form" onsubmit="myBills.processBillPayment(event, ' + billId + ', ' + totalAmount + ', ' + dueAmount + ')">' +
+            '<form id="bill-payment-form" onsubmit="myBills.processBillPayment(event, \'' + billId + '\', ' + totalAmount + ', ' + dueAmount + ')">' +
               '<div class="form-group">' +
                 '<label>Select Payment Mode *</label>' +
                 '<select id="bill-payment-mode" required onchange="myBills.showBillPaymentDetails(this.value, ' + dueAmount + ');">' +
@@ -333,7 +333,7 @@ class MyBills {
         paymentMode: paymentMode
       });
       
-      toast.success('Payment recorded successfully!');
+      toast.success('Payment submitted! Waiting for shopkeeper confirmation.');
       document.getElementById('bill-payment-modal').remove();
       this.loadBills();
     } catch (error) {

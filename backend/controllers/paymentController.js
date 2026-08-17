@@ -1,5 +1,7 @@
 const { Payment, Bill } = require('../models');
 
+const PAYMENT_MODES = ['Cash', 'UPI', 'Card', 'Net Banking', 'COD'];
+
 const calculatePaymentStatus = (totalAmount, paidAmount) => {
   if (paidAmount >= totalAmount) return 'Paid';
   if (paidAmount === 0) return 'Pending';
@@ -48,6 +50,12 @@ exports.getPayment = async (req, res) => {
       return res.status(404).json({ message: 'Payment not found.' });
     }
 
+    const isShopkeeper = payment.shopkeeperId.toString() === req.user.id.toString();
+    const isCustomer = payment.customerId && payment.customerId.toString() === req.user.id.toString();
+    if (!isShopkeeper && !isCustomer) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
     res.json({ payment });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching payment.', error: error.message });
@@ -57,11 +65,21 @@ exports.getPayment = async (req, res) => {
 exports.createPayment = async (req, res) => {
   try {
     const { billId, amountPaid, amount, paymentMode, transactionId, notes } = req.body;
-    const paymentAmount = amountPaid || amount;
+    const paymentAmount = Number(amountPaid ?? amount);
+
+    if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+      return res.status(400).json({ message: 'Enter a valid payment amount.' });
+    }
+    if (!PAYMENT_MODES.includes(paymentMode)) {
+      return res.status(400).json({ message: 'Select a valid payment mode.' });
+    }
 
     const bill = await Bill.findById(billId);
     if (!bill) {
       return res.status(404).json({ message: 'Bill not found.' });
+    }
+    if (bill.shopkeeperId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'You can only record payments for your own bills.' });
     }
 
     if (paymentAmount > bill.balanceAmount) {
@@ -86,6 +104,7 @@ exports.createPayment = async (req, res) => {
 
     bill.paidAmount = newPaidAmount;
     bill.balanceAmount = newBalanceAmount;
+    bill.paymentMode = paymentMode;
     bill.paymentStatus = paymentStatus;
     await bill.save();
 
@@ -97,6 +116,16 @@ exports.createPayment = async (req, res) => {
 
 exports.getPaymentsByBill = async (req, res) => {
   try {
+    const bill = await Bill.findById(req.params.billId);
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found.' });
+    }
+    const isShopkeeper = bill.shopkeeperId.toString() === req.user.id.toString();
+    const isCustomer = bill.customerId && bill.customerId.toString() === req.user.id.toString();
+    if (!isShopkeeper && !isCustomer) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
     const payments = await Payment.find({ billId: req.params.billId }).sort({ created_at: -1 });
     res.json({ payments });
   } catch (error) {
@@ -106,7 +135,9 @@ exports.getPaymentsByBill = async (req, res) => {
 
 exports.getPaymentSummary = async (req, res) => {
   try {
-    const payments = await Payment.find({ shopkeeperId: req.user.id });
+    // Pending customer claims are deliberately excluded: they do not belong in
+    // the shopkeeper's account until the shopkeeper verifies them.
+    const payments = await Payment.find({ shopkeeperId: req.user.id, paymentStatus: 'Paid' });
 
     const summary = {
       totalPayments: payments.length,
@@ -166,10 +197,32 @@ exports.updatePayment = async (req, res) => {
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found.' });
     }
+    if (payment.shopkeeperId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
 
     const { amount, paymentMode, transactionId, notes } = req.body;
     const oldAmount = Number(payment.amount);
     const newAmount = amount !== undefined ? Number(amount) : oldAmount;
+
+    if (!Number.isFinite(newAmount) || newAmount <= 0) {
+      return res.status(400).json({ message: 'Enter a valid payment amount.' });
+    }
+    if (paymentMode !== undefined && !PAYMENT_MODES.includes(paymentMode)) {
+      return res.status(400).json({ message: 'Select a valid payment mode.' });
+    }
+
+    const bill = await Bill.findById(payment.billId);
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found.' });
+    }
+    if (amount !== undefined) {
+      const allPayments = await Payment.find({ billId: bill._id, _id: { $ne: payment._id }, paymentStatus: 'Paid' });
+      const otherPaymentsTotal = allPayments.reduce((sum, item) => sum + Number(item.amount), 0);
+      if (otherPaymentsTotal + newAmount > Number(bill.totalAmount) + 0.01) {
+        return res.status(400).json({ message: 'Payment amount exceeds the bill total.' });
+      }
+    }
 
     if (paymentMode) payment.paymentMode = paymentMode;
     if (amount !== undefined) payment.amount = newAmount;
@@ -180,11 +233,10 @@ exports.updatePayment = async (req, res) => {
 
     // If amount changed, recalculate bill totals
     if (amount !== undefined && newAmount !== oldAmount) {
-      const bill = await Bill.findById(payment.billId);
       if (bill) {
         // Recalculate from all payments
         const { Payment: PaymentModel } = require('../models');
-        const allPayments = await PaymentModel.find({ billId: bill._id });
+        const allPayments = await PaymentModel.find({ billId: bill._id, paymentStatus: 'Paid' });
         const totalPaid = allPayments.reduce((sum, p) => sum + Number(p.amount), 0);
         const newBalance = Math.max(0, Number(bill.totalAmount) - totalPaid);
         bill.paidAmount = totalPaid;
@@ -217,37 +269,42 @@ exports.confirmPayment = async (req, res) => {
       return res.status(400).json({ message: 'Payment is not pending verification.' });
     }
 
-    // Confirm the payment
+    const bill = await Bill.findById(payment.billId);
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found.' });
+    }
+    if (Number(payment.amount) > Number(bill.balanceAmount) + 0.01) {
+      return res.status(400).json({ message: 'This payment is greater than the remaining bill balance.' });
+    }
+
+    // Confirm the payment only after its linked bill has been validated.
     payment.paymentStatus = 'Paid';
     await payment.save();
 
-    // Now update the bill amounts
-    const bill = await Bill.findById(payment.billId);
-    if (bill) {
-      const newPaidAmount = Number(bill.paidAmount) + Number(payment.amount);
-      const newBalanceAmount = Math.max(0, Number(bill.totalAmount) - newPaidAmount);
-      bill.paidAmount = newPaidAmount;
-      bill.balanceAmount = newBalanceAmount;
-      bill.paymentStatus = calculatePaymentStatus(bill.totalAmount, newPaidAmount);
-      await bill.save();
+    const newPaidAmount = Number(bill.paidAmount) + Number(payment.amount);
+    const newBalanceAmount = Math.max(0, Number(bill.totalAmount) - newPaidAmount);
+    bill.paidAmount = newPaidAmount;
+    bill.balanceAmount = newBalanceAmount;
+    bill.paymentMode = payment.paymentMode;
+    bill.paymentStatus = calculatePaymentStatus(bill.totalAmount, newPaidAmount);
+    await bill.save();
 
-      // Also update the linked order if any (find by order number in notes)
-      try {
-        const { Order } = require('../models');
-        if (bill.notes && bill.notes.includes('Order:')) {
-          const orderNumberMatch = bill.notes.match(/Order:\s*(ORD-[A-Z0-9-]+)/);
-          if (orderNumberMatch) {
-            const orderNumber = orderNumberMatch[1];
-            const order = await Order.findOne({ orderNumber });
-            if (order) {
-              order.paymentStatus = bill.paymentStatus;
-              await order.save();
-            }
+    // Also update the linked order if any (find by order number in notes)
+    try {
+      const { Order } = require('../models');
+      if (bill.notes && bill.notes.includes('Order:')) {
+        const orderNumberMatch = bill.notes.match(/Order:\s*(ORD-[A-Z0-9-]+)/);
+        if (orderNumberMatch) {
+          const orderNumber = orderNumberMatch[1];
+          const order = await Order.findOne({ orderNumber });
+          if (order) {
+            order.paymentStatus = bill.paymentStatus;
+            await order.save();
           }
         }
-      } catch (orderErr) {
-        console.error('Error updating linked order:', orderErr);
       }
+    } catch (orderErr) {
+      console.error('Error updating linked order:', orderErr);
     }
 
     res.json({ message: 'Payment confirmed successfully.', payment, bill });

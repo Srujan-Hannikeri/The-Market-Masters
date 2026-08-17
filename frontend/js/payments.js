@@ -285,7 +285,7 @@ const payments = {
       .map((payment) => {
         const isPending = payment.paymentStatus === "Verification Pending";
 
-        const confirmBtn = isPending
+        const paymentState = isPending
           ? `
             <button
               class="btn btn-sm btn-success"
@@ -294,6 +294,14 @@ const payments = {
               <i class="fas fa-check"></i>
               Confirm
             </button>
+          `
+          : payment.paymentStatus === "Failed"
+            ? `
+            <span
+              style="color:#dc2626;font-size:12px;font-weight:600;"
+            >
+              Failed
+            </span>
           `
           : `
             <span
@@ -336,7 +344,7 @@ const payments = {
             </td>
 
             <td>
-              ${confirmBtn}
+              ${paymentState}
             </td>
           </tr>
         `;

@@ -313,6 +313,11 @@ exports.getOrderDetails = async (req, res) => {
       return res.status(404).json({ message: 'Order not found.' });
     }
 
+    const userId = req.user.id.toString();
+    if (order.customerId.toString() !== userId && order.shopkeeperId.toString() !== userId) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
     res.json({ order });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching order details.', error: error.message });
@@ -321,15 +326,17 @@ exports.getOrderDetails = async (req, res) => {
 
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const { orderStatus, paymentStatus } = req.body;
+    const { orderStatus } = req.body;
     const order = await Order.findById(req.params.orderId || req.params.id);
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
     }
+    if (req.user.role !== 'shopkeeper' || order.shopkeeperId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Only this order\'s shopkeeper can update its status.' });
+    }
 
     if (orderStatus) order.orderStatus = orderStatus;
-    if (paymentStatus) order.paymentStatus = paymentStatus;
 
     await order.save();
 
@@ -391,19 +398,17 @@ exports.processRefund = async (req, res) => {
 
 exports.updateOrderPayment = async (req, res) => {
   try {
-    const { paymentStatus, paymentMode } = req.body;
     const order = await Order.findById(req.params.orderId || req.params.id);
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
     }
 
-    if (paymentStatus) order.paymentStatus = paymentStatus;
-    if (paymentMode) order.paymentMode = paymentMode;
+    if (order.customerId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'You can only pay for your own orders.' });
+    }
 
-    await order.save();
-
-    res.json({ message: 'Payment updated.', order });
+    res.status(400).json({ message: 'Use the bill payment option to submit a payment for this order.' });
   } catch (error) {
     res.status(500).json({ message: 'Error updating order payment.', error: error.message });
   }

@@ -333,6 +333,9 @@ exports.customerMakePayment = async (req, res) => {
     if (!bill) {
       return res.status(404).json({ message: 'Bill not found.' });
     }
+    if (req.user.role !== 'customer') {
+      return res.status(403).json({ message: 'Customer payments must be recorded from the customer account.' });
+    }
 
     // Allow payment if: customerId matches OR customerPhone matches
     const customerId = req.user.id.toString();
@@ -357,6 +360,19 @@ exports.customerMakePayment = async (req, res) => {
       });
     }
 
+    const validModes = ['Cash', 'UPI', 'Card', 'Net Banking', 'COD'];
+    if (!validModes.includes(paymentMode)) {
+      return res.status(400).json({ message: 'Select a valid payment mode.' });
+    }
+
+    const paymentAlreadyAwaitingVerification = await Payment.exists({
+      billId: bill._id,
+      paymentStatus: 'Verification Pending'
+    });
+    if (paymentAlreadyAwaitingVerification) {
+      return res.status(409).json({ message: 'A payment for this bill is already awaiting shopkeeper verification.' });
+    }
+
     // Create Payment record under the SHOPKEEPER so it appears in their dashboard
     const { Payment } = require('../models');
     await Payment.create({
@@ -364,7 +380,7 @@ exports.customerMakePayment = async (req, res) => {
       shopkeeperId: bill.shopkeeperId,   // ← goes to the correct shopkeeper
       customerId: req.user.id,
       amount: payAmt,
-      paymentMode: paymentMode || 'Cash',
+      paymentMode,
       paymentStatus: 'Verification Pending',
       transactionId: transactionId || '',
       notes: `Customer payment by ${req.user.name || req.user.phone}`

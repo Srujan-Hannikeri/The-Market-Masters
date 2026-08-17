@@ -843,7 +843,7 @@ const billing = {
             '<h4 style="color: #2c5f2d; margin-bottom: 10px;">Bill Payment</h4>' +
             '<p style="font-size: 24px; font-weight: bold; color: #dc3545; margin: 10px 0;">Due: Rs. ' + parseFloat(dueAmount).toFixed(2) + '</p>' +
           '</div>' +
-          '<form id="shopkeeper-payment-form" onsubmit="billing.processShopkeeperPayment(event, ' + billId + ', ' + dueAmount + ')">' +
+          '<form id="shopkeeper-payment-form" onsubmit="billing.processShopkeeperPayment(event, \'' + billId + '\', ' + dueAmount + ')">' +
             '<div class="form-group">' +
               '<label>Payment Mode *</label>' +
               '<select id="shopkeeper-payment-mode" required>' +
