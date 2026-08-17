@@ -39,12 +39,12 @@ const resolveFormat = (format = 'a4', itemCount = 0) => {
   // ── Thermal roll formats ──────────────────────────────────────────────────
   if (f === '80mm' || f === 'roll' || f === 'thermal') {
     const width = 226;                                 // ~80 mm in points
-    const height = Math.max(400, 300 + itemCount * 28);
+    const height = Math.max(440, 350 + itemCount * 46);
     return { type: 'roll', width, height, margin: 10, contentWidth: width - 20 };
   }
   if (f === '58mm' || f === 'small') {
     const width = 164;                                 // ~58 mm in points
-    const height = Math.max(360, 280 + itemCount * 26);
+    const height = Math.max(420, 330 + itemCount * 48);
     return { type: 'roll', width, height, margin: 8, contentWidth: 164 - 16 };
   }
 
@@ -301,15 +301,26 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   // ITEMS TABLE
   // ══════════════════════════════════════════
 
-  // Column widths (proportional to CW)
-  const cols = {
-    no:    30,
-    name:  Math.floor(CW * 0.38),
-    qty:   Math.floor(CW * 0.09),
-    mrp:   Math.floor(CW * 0.14),
-    price: Math.floor(CW * 0.15),
-    total: CW - 30 - Math.floor(CW * 0.38) - Math.floor(CW * 0.09) - Math.floor(CW * 0.14) - Math.floor(CW * 0.15)
-  };
+  // A5 has less horizontal room, so its table intentionally uses fewer
+  // columns. This avoids clipped amounts while retaining the useful details.
+  const compactPage = CW < 400;
+  const cols = compactPage
+    ? {
+        no: 22,
+        name: Math.floor(CW * 0.52),
+        qty: 30,
+        mrp: 0,
+        price: 0,
+        total: CW - 22 - Math.floor(CW * 0.52) - 30
+      }
+    : {
+        no: 30,
+        name: Math.floor(CW * 0.38),
+        qty: Math.floor(CW * 0.09),
+        mrp: Math.floor(CW * 0.14),
+        price: Math.floor(CW * 0.15),
+        total: CW - 30 - Math.floor(CW * 0.38) - Math.floor(CW * 0.09) - Math.floor(CW * 0.14) - Math.floor(CW * 0.15)
+      };
 
   const colX = {
     no:    margin,
@@ -323,34 +334,47 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   const rowH = 24;
   const headH = 28;
 
-  // Table header
-  doc.rect(margin, y, CW, headH).fill(GREEN);
-  doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
-  doc.text('#',          colX.no    + 5,  y + 9, { width: cols.no - 5 });
-  doc.text('Description',colX.name  + 5,  y + 9, { width: cols.name - 5 });
-  doc.text('Qty',        colX.qty,         y + 9, { width: cols.qty,   align: 'center' });
-  doc.text('MRP',        colX.mrp,         y + 9, { width: cols.mrp,   align: 'right' });
-  doc.text('Price',      colX.price,       y + 9, { width: cols.price, align: 'right' });
-  doc.text('Amount',     colX.total,       y + 9, { width: cols.total, align: 'right' });
-
-  y += headH;
+  const drawTableHeader = () => {
+    doc.rect(margin, y, CW, headH).fill(GREEN);
+    doc.fillColor('#ffffff').fontSize(compactPage ? 8 : 9.5).font('Helvetica-Bold');
+    doc.text('#', colX.no + 3, y + 9, { width: cols.no - 3 });
+    doc.text('Description', colX.name + 3, y + 9, { width: cols.name - 3 });
+    doc.text('Qty', colX.qty, y + 9, { width: cols.qty, align: 'center' });
+    if (!compactPage) {
+      doc.text('MRP', colX.mrp, y + 9, { width: cols.mrp, align: 'right' });
+      doc.text('Price', colX.price, y + 9, { width: cols.price, align: 'right' });
+    }
+    doc.text('Amount', colX.total, y + 9, { width: cols.total, align: 'right' });
+    y += headH;
+  };
+  drawTableHeader();
 
   // Rows
   doc.fontSize(9).font('Helvetica');
   items.forEach((item, idx) => {
+    // Keep the summary and footer clear on every page. A new page repeats the
+    // table header so multi-page A4/A3 invoices remain easy to read.
+    if (y + rowH > PH - margin - 150) {
+      doc.addPage();
+      y = margin;
+      drawTableHeader();
+      doc.fontSize(compactPage ? 8 : 9).font('Helvetica');
+    }
     // Zebra stripe
     if (idx % 2 === 0) doc.rect(margin, y, CW, rowH).fill(LGTEEN);
     else doc.rect(margin, y, CW, rowH).fill('#ffffff');
 
     doc.fillColor(DGRAY);
-    doc.text(String(idx + 1),          colX.no    + 5,  y + 8, { width: cols.no - 5 });
+    doc.text(String(idx + 1),          colX.no    + 3,  y + 8, { width: cols.no - 3 });
 
     let name = item.productName || '';
     if (name.length > 42) name = name.substring(0, 39) + '...';
-    doc.text(name,                     colX.name  + 5,  y + 8, { width: cols.name - 10 });
+    doc.text(name,                     colX.name  + 3,  y + 8, { width: cols.name - 6 });
     doc.text(String(item.quantity),    colX.qty,         y + 8, { width: cols.qty,   align: 'center' });
-    doc.text(fmt(item.mrp || item.unitPrice), colX.mrp, y + 8, { width: cols.mrp,   align: 'right' });
-    doc.text(fmt(item.unitPrice),      colX.price,       y + 8, { width: cols.price, align: 'right' });
+    if (!compactPage) {
+      doc.text(fmt(item.mrp || item.unitPrice), colX.mrp, y + 8, { width: cols.mrp, align: 'right' });
+      doc.text(fmt(item.unitPrice), colX.price, y + 8, { width: cols.price, align: 'right' });
+    }
     doc.fillColor(GREEN).font('Helvetica-Bold')
       .text(fmt(item.total),           colX.total,       y + 8, { width: cols.total, align: 'right' });
     doc.fillColor(DGRAY).font('Helvetica');
@@ -358,15 +382,17 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
     y += rowH;
   });
 
-  // Table bottom border
-  doc.rect(margin, y - items.length * rowH - headH, CW, items.length * rowH + headH)
-    .lineWidth(1).stroke('#cccccc');
   y += 10;
 
   // ══════════════════════════════════════════
   // TOTALS + PAYMENT SUMMARY
   // ══════════════════════════════════════════
-  const totW = Math.floor(CW * 0.38);
+  if (y + 130 > PH - margin - 55) {
+    doc.addPage();
+    y = margin;
+  }
+
+  const totW = compactPage ? CW : Math.floor(CW * 0.38);
   const totX = margin + CW - totW;
   const totalsStartY = y; // Save original Y coordinate before mutating it with tRow
 
@@ -393,24 +419,26 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
 
   // Payment summary (left of totals)
   const payX = margin;
-  const payW = CW - totW - 30;
+  const payW = compactPage ? 0 : CW - totW - 30;
   const payStartY = totalsStartY; // Use the saved Y coordinate to correctly align left box
 
-  doc.rect(payX, payStartY, payW, 110).fill(GRAY).stroke('#dddddd');
-  doc.fillColor(GREEN).fontSize(10).font('Helvetica-Bold').text('Payment Summary', payX + 10, payStartY + 8);
+  if (!compactPage) {
+    doc.rect(payX, payStartY, payW, 110).fill(GRAY).stroke('#dddddd');
+    doc.fillColor(GREEN).fontSize(10).font('Helvetica-Bold').text('Payment Summary', payX + 10, payStartY + 8);
 
-  doc.fillColor(DGRAY).fontSize(9).font('Helvetica');
-  const pRow = (label, value, valueColor = DGRAY) => {
-    doc.text(label, payX + 10, payStartY + (pRow._i = (pRow._i || 28) ));
-    doc.fillColor(valueColor).font('Helvetica-Bold')
-      .text(value, payX + 120, payStartY + pRow._i, { width: payW - 130, align: 'right' });
-    doc.fillColor(DGRAY).font('Helvetica');
-    pRow._i += 18;
-  };
-  pRow('Amount Paid:', fmt(bill.paidAmount), '#28a745');
-  pRow('Balance Due:', fmt(bill.balanceAmount), bill.balanceAmount > 0 ? '#dc3545' : '#28a745');
-  pRow('Payment Mode:', bill.paymentMode || 'Cash');
-  pRow('Status:', bill.paymentStatus, statusColor);
+    doc.fillColor(DGRAY).fontSize(9).font('Helvetica');
+    const pRow = (label, value, valueColor = DGRAY) => {
+      doc.text(label, payX + 10, payStartY + (pRow._i = (pRow._i || 28) ));
+      doc.fillColor(valueColor).font('Helvetica-Bold')
+        .text(value, payX + 120, payStartY + pRow._i, { width: payW - 130, align: 'right' });
+      doc.fillColor(DGRAY).font('Helvetica');
+      pRow._i += 18;
+    };
+    pRow('Amount Paid:', fmt(bill.paidAmount), '#28a745');
+    pRow('Balance Due:', fmt(bill.balanceAmount), bill.balanceAmount > 0 ? '#dc3545' : '#28a745');
+    pRow('Payment Mode:', bill.paymentMode || 'Cash');
+    pRow('Status:', bill.paymentStatus, statusColor);
+  }
 
   y += 16;
 

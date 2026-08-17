@@ -760,6 +760,7 @@ cursor: default;
   font-size: 1rem;
   font-weight: 600;
   color: var(--secondary);
+  white-space: nowrap;
 }
 
 .sidebar-header .brand-tagline {
@@ -1648,8 +1649,8 @@ cursor: default;
    SIDEBAR LOGO — Rounded style
 ═══════════════════════════════════════════════════════ */
 .sidebar-logo {
-  width: 104px !important;
-  height: 58px !important;
+  width: 78px !important;
+  height: 48px !important;
   border-radius: 6px !important;
   object-fit: cover !important;
   border: 2px solid rgba(255,255,255,0.25) !important;
