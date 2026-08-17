@@ -43,6 +43,10 @@ const shopping = {
 
     container.innerHTML = this.products.map(product => {
       const pid = product.id || product._id;
+      const expiryDate = product.expiryDate ? new Date(product.expiryDate) : null;
+      const expiryLabel = expiryDate && !Number.isNaN(expiryDate.getTime())
+        ? expiryDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '';
       return `
       <div class="product-card">
         <div class="product-image">
@@ -59,6 +63,7 @@ const shopping = {
           <p class="product-stock ${product.stock < 10 ? 'low-stock' : ''}">
             ${product.stock > 0 ? `In Stock: ${product.stock} ${product.unit || 'pcs'}` : 'Out of Stock'}
           </p>
+          ${expiryLabel ? `<p class="product-expiry"><i class="far fa-calendar-alt"></i> Expires: <strong>${expiryLabel}</strong></p>` : ''}
           ${product.stock > 0 ? `
             <div class="product-actions">
               <div class="quantity-selector">

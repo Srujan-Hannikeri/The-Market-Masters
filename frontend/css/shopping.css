@@ -88,6 +88,28 @@
   color: #dc3545;
 }
 
+@media (max-width: 560px) {
+  .order-details-modal { padding: 0; }
+  .order-details-section { padding: 12px; }
+  .order-summary-rows { padding: 12px; }
+  .order-item-detail { gap: 8px; }
+  .order-item-detail .item-qty { width: 34px; flex-shrink: 0; }
+  .order-item-detail .item-price { width: auto; min-width: 76px; flex-shrink: 0; }
+}
+
+.product-expiry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: -3px 0 12px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
 .product-actions {
   display: flex;
   flex-direction: column;
@@ -472,6 +494,8 @@
   width: 100%;
   max-width: 100%;
   padding: 10px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .order-details-header {
@@ -485,6 +509,8 @@
 
 .order-details-section {
   margin-bottom: 20px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .order-details-section h4 {
@@ -513,6 +539,8 @@
 
 .order-item-detail .item-name {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .order-item-detail .item-qty {
@@ -530,6 +558,23 @@
   background: #f8f9fa;
   border-radius: 8px;
   padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.order-summary-rows .summary-row {
+  gap: 12px;
+  min-width: 0;
+}
+
+.order-summary-rows .summary-row span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.order-summary-rows .summary-row span:last-child {
+  flex-shrink: 0;
+  text-align: right;
 }
 
 /* Update Status Modal */
@@ -938,6 +983,13 @@
   .product-info h4 {
     font-size: 12px;
     margin-bottom: 4px;
+  }
+
+  .product-expiry {
+    display: flex;
+    margin: 3px 0 8px;
+    padding: 4px 6px;
+    font-size: 10px;
   }
 
   .product-category {

@@ -526,6 +526,22 @@
   color: var(--dark);
 }
 
+@media (max-width: 560px) {
+  #my-bills-page .card-body { padding: 0.75rem; }
+  #my-bills-page .bill-group-header { margin: 1rem 0 0.55rem !important; font-size: 0.75rem !important; }
+  #my-bills-page .bill-group-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 0.75rem !important; }
+  #my-bills-page .bill-card { min-width: 0; padding: 0.9rem; margin-bottom: 0; border-left-width: 4px; }
+  #my-bills-page .bill-card-header { align-items: flex-start; gap: 0.55rem; }
+  #my-bills-page .bill-card-header > div { min-width: 0; }
+  #my-bills-page .bill-card-header h4 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; }
+  #my-bills-page .bill-card-header span { flex-shrink: 0; font-size: 9px !important; padding: 3px 6px !important; }
+  #my-bills-page .bill-card-body { font-size: 0.8rem; }
+  #my-bills-page .bill-card-footer { align-items: flex-start; flex-direction: column; gap: 0.65rem; }
+  #my-bills-page .bill-amount { font-size: 1rem; }
+  #my-bills-page .bill-actions { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); width: 100%; gap: 0.4rem; }
+  #my-bills-page .bill-actions .btn { min-width: 0; padding: 0.45rem 0.25rem; font-size: 0.72rem; }
+}
+
 /* Payments Page */
 .payments-container {
   display: flex;

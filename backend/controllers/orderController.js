@@ -314,7 +314,9 @@ exports.getOrderDetails = async (req, res) => {
     }
 
     const userId = req.user.id.toString();
-    if (order.customerId.toString() !== userId && order.shopkeeperId.toString() !== userId) {
+    const customerId = (order.customerId?._id || order.customerId).toString();
+    const shopkeeperId = (order.shopkeeperId?._id || order.shopkeeperId).toString();
+    if (customerId !== userId && shopkeeperId !== userId) {
       return res.status(403).json({ message: 'Access denied.' });
     }
 
