@@ -1,103 +1,4 @@
 /* =========================================================
-   BILLING SPECIFIC STYLES
-   ========================================================= */
-
-.product-select {
-  width: 100%;
-  padding: 0.625rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
-  transition: all 0.3s ease;
-}
-
-.product-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(30, 95, 91, 0.1);
-}
-
-.quantity-input {
-  width: 70px;
-  text-align: center;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: all 0.3s ease;
-}
-
-.quantity-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(30, 95, 91, 0.1);
-}
-
-.price-display {
-  font-weight: 700;
-  color: var(--primary);
-  font-size: 1.1rem;
-}
-
-.bill-actions {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.bill-preview {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 2rem;
-  margin-top: 1rem;
-  box-shadow: var(--shadow);
-}
-
-.bill-preview-header {
-  text-align: center;
-  border-bottom: 3px solid var(--primary);
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.bill-preview-header h3 {
-  font-size: 1.5rem;
-  margin-bottom: 0.25rem;
-  font-weight: 700;
-  color: var(--dark);
-}
-
-.bill-preview-items {
-  width: 100%;
-  margin: 1rem 0;
-}
-
-.bill-preview-items th,
-.bill-preview-items td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.875rem;
-}
-
-.bill-preview-items th {
-  background: var(--light);
-  font-weight: 600;
-  color: var(--gray);
-  text-transform: uppercase;
-}
-
-.bill-preview-total {
-  text-align: right;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 2px solid var(--primary);
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-/* =========================================================
    BILLING MAIN LAYOUT
    ========================================================= */
 
@@ -105,152 +6,29 @@
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(400px, 1fr);
   gap: 1.5rem;
-  align-items: stretch;
+  align-items: start; /* IMPORTANT */
   width: 100%;
   box-sizing: border-box;
 }
 
-.billing-form-section,
+/* Create Bill Side */
+.billing-form-section {
+  min-width: 0;
+}
+
+/* Recent Bills Side */
 .bills-list-section {
   min-width: 0;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-}
-
-.billing-form-section > .card,
-.bills-list-section > .card {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  box-sizing: border-box;
+  height: auto;
 }
 
 /* =========================================================
-   CREATE NEW BILL CARD
+   CREATE BILL CARD
    ========================================================= */
 
 .billing-form-section > .card {
-  display: flex;
-  flex-direction: column;
-}
-
-.billing-form-section > .card > .card-header {
-  flex-shrink: 0;
-}
-
-.billing-form-section > .card > .card-body {
-  flex: 1;
-  min-height: 0;
-}
-
-/* =========================================================
-   CREATE BILL FORM
-   ========================================================= */
-
-#billing-page #create-bill-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-#billing-page .form-row {
-  gap: 1rem;
-}
-
-/* =========================================================
-   ITEMS SECTION
-   ========================================================= */
-
-#billing-page .bill-items-section {
-  padding: 1.2rem;
-  background: #f4f5f7;
-  border-radius: 12px;
-}
-
-#billing-page .bill-items-section h4 {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--gray);
-}
-
-#bill-items-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-#add-item-btn {
-  margin-top: 0.9rem;
-}
-
-/* =========================================================
-   BILL SUMMARY
-   ========================================================= */
-
-#billing-page .bill-summary {
-  padding: 1.2rem;
-  background: #f4f5f7;
-  border-radius: 12px;
-}
-
-#billing-page .summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.8rem 0;
-}
-
-#billing-page .summary-row.total {
-  margin-top: 0.3rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e1e5e9;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-/* =========================================================
-   PAYMENT SECTION
-   ========================================================= */
-
-#billing-page .payment-section {
-  padding: 1.2rem;
-  background: #effdf5;
-  border: 1px solid #b8efd1;
-  border-radius: 12px;
-}
-
-#billing-page .payment-section h4 {
-  margin-bottom: 1rem;
-  color: var(--primary);
-  font-size: 1.1rem;
-}
-
-#billing-page .payment-status-display {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.7rem;
-  margin-top: 1rem;
-  padding: 0.85rem;
-  background: #ffffff;
-  border-radius: 10px;
-}
-
-/* =========================================================
-   CREATE BILL BUTTON
-   ========================================================= */
-
-#billing-page .form-actions {
-  margin-top: auto;
-  padding-top: 0.25rem;
-}
-
-#billing-page .form-actions .btn {
-  min-width: 150px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* =========================================================
@@ -258,9 +36,11 @@
    ========================================================= */
 
 .bills-list-section > .card {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: 850px;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
@@ -273,17 +53,15 @@
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  flex-shrink: 0;
   width: 100%;
-  padding: 1rem 1.2rem;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .bills-list-section > .card > .card-header h3 {
   margin: 0;
   white-space: nowrap;
   flex-shrink: 0;
-  font-size: 1.2rem;
 }
 
 /* =========================================================
@@ -306,7 +84,7 @@
   padding: 0 0.5rem;
   border: 1px solid var(--border);
   border-radius: 9px;
-  background: #ffffff;
+  background: var(--white);
   font-size: 0.82rem;
   box-sizing: border-box;
 }
@@ -318,24 +96,19 @@
 }
 
 /* =========================================================
-   RECENT BILLS CARD BODY
+   RECENT BILLS BODY
    ========================================================= */
 
 .bills-list-section > .card > .card-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
   padding: 1rem 1.2rem;
+  box-sizing: border-box;
 }
 
 /* =========================================================
-   SEARCH BAR
+   SEARCH
    ========================================================= */
 
 .bills-list-section .search-bar {
-  flex-shrink: 0;
   width: 100%;
   margin-bottom: 1rem;
 }
@@ -350,11 +123,12 @@
    ========================================================= */
 
 .bills-list-section #bills-list {
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  max-height: 650px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 5px;
+  box-sizing: border-box;
 }
 
 /* =========================================================
@@ -365,94 +139,10 @@
   margin-bottom: 0.85rem;
   padding: 1rem;
   border-radius: 14px;
-  min-height: auto;
 }
 
 .bills-list-section .bill-card:last-child {
   margin-bottom: 0;
-}
-
-.bills-list-section .bill-card-header {
-  gap: 0.5rem;
-}
-
-.bills-list-section .bill-card-body {
-  padding-top: 0.7rem;
-}
-
-.bills-list-section .bill-card-footer {
-  margin-top: 0.7rem;
-  padding-top: 0.7rem;
-}
-
-.bills-list-section .bill-card .bill-amount {
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.bills-list-section .bill-card .btn {
-  padding: 0.5rem 0.85rem;
-  border-radius: 9px;
-  font-size: 0.8rem;
-}
-
-/* =========================================================
-   CUSTOMER BILLS GROUPING
-   ========================================================= */
-
-.customer-bills-group {
-  margin-bottom: 15px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--white);
-}
-
-.customer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 13px 16px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.customer-header:hover {
-  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-}
-
-.customer-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.customer-info i {
-  font-size: 1.8rem;
-  color: var(--primary);
-}
-
-.customer-summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.customer-summary i.fa-chevron-down {
-  transition: transform 0.3s ease;
-  color: var(--gray);
-}
-
-.customer-bills-list {
-  padding: 12px;
-  background: var(--white);
-  border-top: 1px solid var(--border);
-}
-
-.customer-bills-list .bill-card {
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
 }
 
 /* =========================================================
@@ -477,114 +167,6 @@
 }
 
 /* =========================================================
-   BILL VIEW MODAL
-   ========================================================= */
-
-.bill-view-modal {
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.bill-view-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 1px solid #dbe7e0;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #f0fdf4, #f8fafc);
-  margin-bottom: 1rem;
-}
-
-.bill-view-header h2 {
-  font-size: 1.25rem;
-  color: var(--primary);
-}
-
-.bill-view-section {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: #fbfdfc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-}
-
-.bill-view-section h4 {
-  font-size: 1rem;
-  color: var(--dark);
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.bill-view-section p {
-  margin-bottom: 0.5rem;
-  color: var(--gray);
-}
-
-.bill-items-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.bill-table-scroll {
-  width: 100%;
-  overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.bill-table-scroll .bill-items-table {
-  min-width: 620px;
-}
-
-.bill-items-table th,
-.bill-items-table td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-
-.bill-items-table th {
-  background: #f8fafc;
-  font-weight: 600;
-  color: var(--dark);
-}
-
-.bill-summary-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.bill-summary-row.total {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--primary);
-  border-top: 2px solid var(--primary);
-  border-bottom: none;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-}
-
-.bill-summary-row.due {
-  font-weight: 600;
-  color: var(--danger);
-}
-
-.bill-view-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-/* =========================================================
    MOBILE / TABLET
    ========================================================= */
 
@@ -592,31 +174,16 @@
   .billing-container {
     grid-template-columns: 1fr;
     gap: 1rem;
-  }
-
-  .billing-form-section,
-  .bills-list-section {
-    height: auto;
-  }
-
-  .billing-form-section > .card,
-  .bills-list-section > .card {
-    height: auto;
+    align-items: start;
   }
 
   .bills-list-section > .card {
-    display: block;
-    overflow: visible;
-  }
-
-  .bills-list-section > .card > .card-body {
-    display: block;
-    overflow: visible;
+    max-height: none;
+    height: auto !important;
   }
 
   .bills-list-section #bills-list {
     max-height: 600px;
-    overflow-y: auto;
   }
 }
 
@@ -625,24 +192,15 @@
    ========================================================= */
 
 @media (max-width: 560px) {
-  #bill-view-modal-content {
-    width: calc(100vw - 20px) !important;
-    max-width: none !important;
-  }
-
   .billing-container {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  .billing-form-section > .card,
   .bills-list-section > .card {
-    height: auto;
+    width: 100%;
+    height: auto !important;
   }
-
-  /* -------------------------------------------------------
-     Recent Bills Header
-     ------------------------------------------------------- */
 
   .bills-list-section > .card > .card-header {
     padding: 0.8rem;
@@ -652,7 +210,6 @@
 
   .bills-list-section > .card > .card-header h3 {
     font-size: 0.95rem;
-    white-space: nowrap;
   }
 
   .bills-list-section .filter-group {
@@ -668,75 +225,11 @@
     font-size: 0.72rem;
   }
 
-  /* -------------------------------------------------------
-     Recent Bills Body
-     ------------------------------------------------------- */
-
   .bills-list-section > .card > .card-body {
     padding: 0.75rem;
   }
 
-  /* -------------------------------------------------------
-     Bill Cards
-     ------------------------------------------------------- */
-
-  .bills-list-section .bill-card {
-    padding: 0.8rem;
-    border-radius: 11px;
-  }
-
-  /* -------------------------------------------------------
-     Bill View Modal
-     ------------------------------------------------------- */
-
-  .bill-view-header {
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .bill-view-header h2 {
-    min-width: 0;
-    font-size: 1rem;
-    overflow-wrap: anywhere;
-  }
-
-  .bill-view-section {
-    padding: 0.7rem;
-  }
-
-  .bill-table-scroll {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .bill-view-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-  }
-
-  .bill-view-actions .btn {
-    min-width: 0;
-    padding: 0.55rem 0.35rem;
-    font-size: 0.72rem;
-  }
-
-  /* -------------------------------------------------------
-     Customer Bills
-     ------------------------------------------------------- */
-
-  .customer-header {
-    padding: 12px 14px;
-  }
-
-  .customer-info {
-    gap: 10px;
-  }
-
-  .customer-info i {
-    font-size: 1.5rem;
-  }
-
-  .customer-bills-list {
-    padding: 10px;
+  .bills-list-section #bills-list {
+    max-height: 500px;
   }
 }
