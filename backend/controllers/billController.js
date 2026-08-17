@@ -373,8 +373,8 @@ exports.customerMakePayment = async (req, res) => {
       return res.status(409).json({ message: 'A payment for this bill is already awaiting shopkeeper verification.' });
     }
 
-    // Create Payment record under the SHOPKEEPER so it appears in their dashboard
-    const { Payment } = require('../models');
+    // Create the payment under the shopkeeper so it appears in their dashboard.
+    // Payment is already imported at the top of this controller.
     await Payment.create({
       billId: bill._id,
       shopkeeperId: bill.shopkeeperId,   // ← goes to the correct shopkeeper
