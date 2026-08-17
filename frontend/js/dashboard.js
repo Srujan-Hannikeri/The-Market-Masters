@@ -1,4 +1,19 @@
 // Dashboard Module
+const parseExpiryCalendarDate = (value) => {
+  const [year, month, day] = String(value).slice(0, 10).split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const formatExpiryStatus = (value, today) => {
+  const expiry = parseExpiryCalendarDate(value);
+  const days = Math.round((expiry - today) / 86400000);
+  if (days === 0) return 'Expires today';
+  if (days === 1) return 'Expires tomorrow';
+  if (days === -1) return 'Expired yesterday';
+  if (days < -1) return `Expired ${Math.abs(days)} days ago`;
+  return `Expires in ${days} days`;
+};
+
 const dashboard = {
   trendChart: null,
   paymentChart: null,
@@ -318,12 +333,12 @@ const dashboard = {
 
       const expiredProducts = products.filter(p => {
         if (!p.expiryDate) return false;
-        return new Date(p.expiryDate) < today;
+        return parseExpiryCalendarDate(p.expiryDate) < today;
       });
 
       const soonExpiringProducts = products.filter(p => {
         if (!p.expiryDate) return false;
-        const exp = new Date(p.expiryDate);
+        const exp = parseExpiryCalendarDate(p.expiryDate);
         return exp >= today && exp <= in7Days;
       });
 
@@ -378,19 +393,18 @@ const dashboard = {
               <i class="fas fa-calendar-times" style="color:#ef4444;"></i>
               <div>
                 <div class="product-name">${p.name}</div>
-                <div class="product-stock" style="color:#ef4444;font-weight:700;">⚠ EXPIRED — ${new Date(p.expiryDate).toLocaleDateString('en-IN')}</div>
+                <div class="product-stock" style="color:#ef4444;font-weight:700;">⚠ ${formatExpiryStatus(p.expiryDate, today)} — ${parseExpiryCalendarDate(p.expiryDate).toLocaleDateString('en-IN')}</div>
               </div>
             </div>`;
         });
 
         soonExpiringProducts.forEach(p => {
-          const daysLeft = Math.ceil((new Date(p.expiryDate) - today) / 86400000);
           html += `
             <div class="low-stock-product expiry-alert expiring" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
               <i class="fas fa-clock" style="color:#f59e0b;"></i>
               <div>
                 <div class="product-name">${p.name}</div>
-                <div class="product-stock" style="color:#d97706;font-weight:600;">Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — ${new Date(p.expiryDate).toLocaleDateString('en-IN')}</div>
+                <div class="product-stock" style="color:#d97706;font-weight:600;">${formatExpiryStatus(p.expiryDate, today)} — ${parseExpiryCalendarDate(p.expiryDate).toLocaleDateString('en-IN')}</div>
               </div>
             </div>`;
         });

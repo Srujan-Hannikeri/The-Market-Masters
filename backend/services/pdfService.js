@@ -248,38 +248,44 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   // ══════════════════════════════════════════
   // HEADER BAND
   // ══════════════════════════════════════════
-  const headerH = smallPaper ? 78 : 92;
+  const headerH = smallPaper ? 86 : 108;
   doc.rect(margin, y, CW, headerH).fill(GREEN);
 
-  // Compact logo tile and shop identity
-  const logoBox = smallPaper ? 46 : 60;
+  // Website brand - the logo represents The Market Masters, not the shop.
+  const logoBox = smallPaper ? 38 : 48;
   const logoX = margin + 12;
-  const logoY = y + (headerH - logoBox) / 2;
+  const logoY = y + 11;
   doc.roundedRect(logoX, logoY, logoBox, logoBox, 6).fill('#ffffff');
   if (fs.existsSync(logoPath)) {
     doc.image(logoPath, logoX + 4, logoY + 4, { fit: [logoBox - 8, logoBox - 8] });
   }
 
-  const shopX = logoX + logoBox + 12;
+  const brandX = logoX + logoBox + 10;
   const invoiceW = smallPaper ? 68 : 112;
-  doc.fillColor('#ffffff').fontSize(smallPaper ? 14 : 20).font('Helvetica-Bold')
-    .text(shop.shopName || 'The Market Masters', shopX, y + (smallPaper ? 16 : 18), { width: CW - (shopX - margin) - invoiceW - 16 });
+  const brandW = CW - (brandX - margin) - invoiceW - 18;
+  doc.fillColor('#ffffff').fontSize(smallPaper ? 11 : 15).font('Helvetica-Bold')
+    .text('The Market Masters', brandX, y + 15, { width: brandW });
+  doc.fillColor('#dff3e3').fontSize(smallPaper ? 6.5 : 7.5).font('Helvetica')
+    .text('SMART BILLING & INVENTORY', brandX, y + (smallPaper ? 31 : 35), { width: brandW });
 
-  doc.fontSize(smallPaper ? 7 : 8.5).font('Helvetica');
-  let subY = y + (smallPaper ? 39 : 48);
+  const shopY = y + (smallPaper ? 51 : 65);
+  doc.fillColor('#ffffff').fontSize(smallPaper ? 10 : 14).font('Helvetica-Bold')
+    .text(shop.shopName || 'Shop Name', logoX, shopY, { width: CW - 24 - invoiceW });
+  doc.fontSize(smallPaper ? 6.5 : 8).font('Helvetica');
+  let subY = shopY + (smallPaper ? 13 : 18);
   if (shop.shopAddress) {
-    doc.text(shop.shopAddress, shopX, subY, { width: CW - (shopX - margin) - invoiceW - 16 });
-    subY += smallPaper ? 10 : 12;
+    doc.text(shop.shopAddress, logoX, subY, { width: CW - 24 - invoiceW });
+    subY += smallPaper ? 9 : 11;
   }
   if (shop.phone) {
-    doc.text(`Phone: ${shop.phone}`, shopX, subY, { width: CW - (shopX - margin) - invoiceW - 16 });
+    doc.text(`Phone: ${shop.phone}`, logoX, subY, { width: CW - 24 - invoiceW });
   }
 
   // Invoice marker
   const invoiceX = margin + CW - invoiceW - 12;
-  doc.roundedRect(invoiceX, y + (headerH - 32) / 2, invoiceW, 32, 5).fill('#dff3e3');
+  doc.roundedRect(invoiceX, y + 18, invoiceW, 32, 5).fill('#dff3e3');
   doc.fontSize(smallPaper ? 10 : 14).font('Helvetica-Bold').fillColor(GREEN)
-    .text('INVOICE', invoiceX, y + (headerH - 8) / 2, { width: invoiceW, align: 'center' });
+    .text('INVOICE', invoiceX, y + 30, { width: invoiceW, align: 'center' });
 
   y += headerH + 14;
 
