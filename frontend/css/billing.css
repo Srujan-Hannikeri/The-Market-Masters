@@ -775,3 +775,241 @@
     height: 500px;
   }
 }
+
+/* =========================================================
+   FINAL FIX - BILLING TWO COLUMN HEIGHT + RECENT BILLS SCROLL
+   ========================================================= */
+
+/* Main billing layout */
+.billing-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Both columns must stretch to exactly the same height */
+.billing-form-section,
+.bills-list-section {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+/* LEFT - Create New Bill */
+.billing-form-section > .card {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.billing-form-section > .card > .card-body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* =========================================================
+   RIGHT - RECENT BILLS
+   ========================================================= */
+
+.bills-list-section > .card {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header stays at the top */
+.bills-list-section > .card > .card-header {
+  flex-shrink: 0;
+}
+
+/* Card body fills remaining height */
+.bills-list-section > .card > .card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* Search bar stays fixed */
+.bills-list-section .search-bar {
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+/* =========================================================
+   ONLY THE BILL LIST SCROLLS
+   ========================================================= */
+
+.bills-list-section #bills-list,
+.bills-list {
+  flex: 1 1 auto;
+
+  /* IMPORTANT */
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0;
+
+  overflow-y: auto !important;
+  overflow-x: hidden;
+
+  padding-right: 8px;
+
+  scrollbar-width: thin;
+}
+
+/* Chrome / Edge scrollbar */
+.bills-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.bills-list::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 10px;
+}
+
+.bills-list::-webkit-scrollbar-thumb {
+  background: #9aa5a5;
+  border-radius: 10px;
+}
+
+.bills-list::-webkit-scrollbar-thumb:hover {
+  background: #6f7d7d;
+}
+
+/* =========================================================
+   BILL CARDS
+   ========================================================= */
+
+.bills-list .bill-card {
+  flex-shrink: 0;
+  margin-bottom: 14px;
+}
+
+/* =========================================================
+   RECENT BILLS HEADER
+   ========================================================= */
+
+.recent-bills-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.recent-bills-header h2 {
+  margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: 0;
+  flex-shrink: 0;
+}
+
+.filter-group select {
+  width: 120px;
+  min-width: 0;
+  padding: 0.55rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--white);
+}
+
+/* =========================================================
+   BILLING FORM SPACING
+   ========================================================= */
+
+.billing-form-section .card-body {
+  padding: 20px;
+}
+
+.bill-items-section {
+  margin-bottom: 20px;
+}
+
+.bill-summary {
+  margin-bottom: 20px;
+}
+
+.payment-section {
+  margin-bottom: 20px;
+}
+
+.form-actions {
+  margin-top: 0;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .billing-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  /* On mobile, don't force equal-height columns */
+  .billing-form-section,
+  .bills-list-section {
+    height: auto;
+  }
+
+  .billing-form-section > .card {
+    height: auto;
+  }
+
+  .bills-list-section > .card {
+    height: 600px;
+  }
+
+  .bills-list {
+    min-height: 0;
+    overflow-y: auto !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .billing-container {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .bills-list-section > .card {
+    height: 550px;
+  }
+
+  .recent-bills-header {
+    gap: 5px;
+  }
+
+  .recent-bills-header h2 {
+    font-size: 0.95rem;
+  }
+
+  .filter-group {
+    gap: 4px;
+  }
+
+  .filter-group select {
+    width: 100px;
+    padding: 0.5rem 0.35rem;
+    font-size: 0.75rem;
+  }
+}
