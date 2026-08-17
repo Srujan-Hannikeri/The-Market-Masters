@@ -233,3 +233,142 @@
     max-height: 500px;
   }
 }
+
+/* =========================================================
+   FORCE BOTH BILLING SIDES TO EXACTLY THE SAME HEIGHT
+   ========================================================= */
+
+/* Main billing grid */
+.billing-container {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.35fr) minmax(400px, 1fr) !important;
+  gap: 1.5rem !important;
+
+  /* Make both grid columns equal height */
+  align-items: stretch !important;
+}
+
+/* Left and right sections must stretch */
+.billing-form-section,
+.bills-list-section {
+  height: 100% !important;
+  min-height: 0 !important;
+  align-self: stretch !important;
+}
+
+/* Create Bill card */
+.billing-form-section > .card {
+  height: 100% !important;
+  min-height: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Recent Bills card */
+.bills-list-section > .card {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  box-sizing: border-box;
+}
+
+/* Recent Bills body takes remaining space */
+.bills-list-section > .card > .card-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+}
+
+/* Search stays at top */
+.bills-list-section .search-bar {
+  flex-shrink: 0;
+}
+
+/* Only the bills themselves scroll */
+.bills-list-section #bills-list {
+  flex: 1 1 auto;
+
+  min-height: 0;
+
+  max-height: none !important;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding-right: 6px;
+
+  box-sizing: border-box;
+}
+
+/* Scrollbar */
+.bills-list-section #bills-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bills-list-section #bills-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bills-list-section #bills-list::-webkit-scrollbar-thumb {
+  background: #c5c9cc;
+  border-radius: 10px;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .billing-container {
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+
+  .billing-form-section,
+  .bills-list-section {
+    height: auto !important;
+    align-self: auto !important;
+  }
+
+  .billing-form-section > .card,
+  .bills-list-section > .card {
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .bills-list-section > .card > .card-body {
+    display: block;
+  }
+
+  .bills-list-section #bills-list {
+    max-height: 600px !important;
+    overflow-y: auto;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+  .billing-container {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .billing-form-section > .card,
+  .bills-list-section > .card {
+    height: auto !important;
+  }
+
+  .bills-list-section #bills-list {
+    max-height: 500px !important;
+  }
+}
