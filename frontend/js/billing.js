@@ -455,7 +455,7 @@ const billing = {
           </div>
           <div class="bill-view-section">
             <h4>Items</h4>
-            <table class="bill-items-table">
+            <div class="bill-table-scroll"><table class="bill-items-table">
               <thead>
                 <tr>
                   <th>Item</th>
@@ -486,7 +486,7 @@ const billing = {
                   `;
                 }).join('')}
               </tbody>
-            </table>
+            </table></div>
           </div>
           <div class="bill-view-section">
             <h4>Payment Summary</h4>
@@ -506,7 +506,7 @@ const billing = {
           ${bill.Payments && bill.Payments.length > 0 ? `
           <div class="bill-view-section">
             <h4>Payment History</h4>
-            <table class="bill-items-table">
+            <div class="bill-table-scroll"><table class="bill-items-table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -529,7 +529,7 @@ const billing = {
                   </tr>
                 `).join('')}
               </tbody>
-            </table>
+            </table></div>
           </div>
           ` : ''}
         </div>

@@ -125,7 +125,6 @@ orderSchema.virtual('Shopkeeper', {
 
 orderSchema.index({ shopkeeperId: 1, created_at: -1 });
 orderSchema.index({ customerId: 1, created_at: -1 });
-orderSchema.index({ orderNumber: 1 });
 
 const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
 

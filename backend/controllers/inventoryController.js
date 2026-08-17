@@ -8,6 +8,12 @@ exports.getAllProducts = async (req, res) => {
     
     if (req.user.role === 'shopkeeper') {
       query.userId = req.user.id;
+    } else {
+      // Customers must never see products that are past their expiry date.
+      query.$or = [
+        { expiryDate: null },
+        { expiryDate: { $gt: new Date() } }
+      ];
     }
 
     if (search) {
@@ -79,6 +85,7 @@ exports.createProduct = async (req, res) => {
       if (category !== undefined) existingProduct.category = category;
       if (barcode !== undefined) existingProduct.barcode = barcode;
       if (image !== undefined) existingProduct.image = image;
+      if (expiryDate !== undefined) existingProduct.expiryDate = expiryDate || null;
 
       await existingProduct.save();
 

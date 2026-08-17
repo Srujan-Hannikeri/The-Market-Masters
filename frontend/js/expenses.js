@@ -142,60 +142,50 @@ const expenses = {
     const rowId = Date.now();
     const row = document.createElement('div');
     row.className = 'expense-inventory-item-row';
-    row.style.cssText = `
-      background: #fff;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 10px;
-      position: relative;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    `;
 
     row.innerHTML = `
-      <button type="button"
-        style="position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;"
+      <button type="button" class="expense-item-remove"
         onclick="this.closest('.expense-inventory-item-row').remove(); expenses.calculateInventoryTotal();"
         title="Remove Row">
         <i class="fas fa-times"></i>
       </button>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 0.8fr 0.8fr 1fr;gap:10px;padding-right:30px;">
-        <div style="position:relative;">
-          <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Item Name *</label>
+      <div class="expense-inventory-grid">
+        <div class="expense-item-field expense-item-name-field">
+          <label class="expense-item-label">Item Name *</label>
           <input type="text" class="exp-item-name" placeholder="e.g. Rice 10kg" autocomplete="off" required
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'"
             oninput="expenses.showAutocomplete(this)">
           <div class="autocomplete-list" style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 6px 6px;max-height:150px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);"></div>
         </div>
-        <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">MRP (₹) *</label>
+        <div class="expense-item-field">
+          <label class="expense-item-label">MRP (₹) *</label>
           <input type="number" class="exp-item-mrp" placeholder="0.00" step="0.01" min="0" required
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
         </div>
-        <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Billing Amt (₹) *</label>
+        <div class="expense-item-field">
+          <label class="expense-item-label">Billing Amt (₹) *</label>
           <input type="number" class="exp-item-cost" placeholder="0.00" step="0.01" min="0" required
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'"
             oninput="expenses.calculateInventoryTotal()">
         </div>
-        <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Qty *</label>
+        <div class="expense-item-field">
+          <label class="expense-item-label">Qty *</label>
           <input type="number" class="exp-item-qty" placeholder="1" min="1" value="1" required
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;text-align:center;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'"
             oninput="expenses.calculateInventoryTotal()">
         </div>
-        <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:#e67e22;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;" title="Minimum quantity before low-stock alert fires">Low Stock * <i class="fas fa-exclamation-triangle" style="font-size:9px;"></i></label>
+        <div class="expense-item-field">
+          <label class="expense-item-label expense-item-lowstock-label" title="Minimum quantity before low-stock alert fires">Low Stock * <i class="fas fa-exclamation-triangle"></i></label>
           <input type="number" class="exp-item-lowstock" placeholder="e.g. 5" min="1" value="10" required
             style="width:100%;padding:8px 10px;border:1px solid #fbbf24;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;text-align:center;background:#fffbeb;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#fbbf24'">
         </div>
-        <div>
-          <label style="display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Expiry Date</label>
+        <div class="expense-item-field">
+          <label class="expense-item-label">Expiry Date</label>
           <input type="date" class="exp-item-expiry"
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
             onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">

@@ -119,8 +119,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid var(--primary);
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #dbe7e0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f0fdf4, #f8fafc);
   margin-bottom: 1rem;
 }
 
@@ -132,8 +135,9 @@
 .bill-view-section {
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background: var(--light);
-  border-radius: var(--radius);
+  background: #fbfdfc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
 }
 
 .bill-view-section h4 {
@@ -154,6 +158,16 @@
   border-collapse: collapse;
 }
 
+.bill-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.bill-table-scroll .bill-items-table { min-width: 620px; }
+
 .bill-items-table th,
 .bill-items-table td {
   padding: 0.5rem;
@@ -162,7 +176,7 @@
 }
 
 .bill-items-table th {
-  background: var(--white);
+  background: #f8fafc;
   font-weight: 600;
   color: var(--dark);
 }
@@ -195,6 +209,16 @@
   justify-content: flex-end;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+}
+
+@media (max-width: 560px) {
+  #bill-view-modal-content { width: calc(100vw - 20px) !important; max-width: none !important; }
+  .bill-view-header { align-items: flex-start; gap: 0.5rem; }
+  .bill-view-header h2 { min-width: 0; font-size: 1rem; overflow-wrap: anywhere; }
+  .bill-view-section { padding: 0.7rem; }
+  .bill-table-scroll { -webkit-overflow-scrolling: touch; }
+  .bill-view-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .bill-view-actions .btn { min-width: 0; padding: 0.55rem 0.35rem; font-size: 0.72rem; }
 }
 
 /* Customer Bills Grouping */

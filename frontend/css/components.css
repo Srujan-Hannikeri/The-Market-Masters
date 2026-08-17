@@ -82,6 +82,67 @@ td:hover .copy-phone-btn {
   border-top-color: #fff;
 }
 
+/* Inventory purchase rows stay aligned as a single data row. On smaller
+   screens the form scrolls horizontally instead of wrapping fields. */
+.expense-inventory-item-row {
+  position: relative;
+  margin-bottom: 0.75rem;
+  padding: 0.8rem 2.9rem 0.8rem 0.8rem;
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fff, #f8fafc);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.expense-inventory-grid {
+  display: grid;
+  grid-template-columns: minmax(205px, 2fr) minmax(108px, 1fr) minmax(120px, 1.1fr) minmax(74px, 0.65fr) minmax(100px, 0.9fr) minmax(150px, 1.15fr);
+  gap: 0.65rem;
+  min-width: 860px;
+  align-items: end;
+}
+
+.expense-item-field { min-width: 0; }
+.expense-item-name-field { position: relative; }
+.expense-item-label {
+  display: block;
+  min-height: 16px;
+  margin-bottom: 0.3rem;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+.expense-item-lowstock-label { color: #d97706; }
+.expense-item-remove {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 1;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: #fee2e2;
+  color: #dc2626;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+.expense-item-remove:hover { background: #dc2626; color: #fff; transform: scale(1.06); }
+
+/* Keep badge variants consistent even on pages that load shopping.css last. */
+.badge.badge-success { background: #10b981; color: #fff; }
+.badge.badge-warning { background: #f59e0b; color: #fff; }
+.badge.badge-danger { background: #ef4444; color: #fff; }
+.badge.badge-info { background: #3b82f6; color: #fff; }
+.badge.badge-secondary { background: #64748b; color: #fff; }
+
 .purchased-items-card {
   margin-top: 1rem;
   border: 1px solid #dbe7e0;
