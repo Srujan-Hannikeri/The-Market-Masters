@@ -291,13 +291,12 @@ const payments = {
   },
 
   async rejectPayment(paymentId) {
-    const confirmed = await confirmDialog('Reject this payment? The bill will remain unpaid.');
+    const confirmed = await confirmDialog('Reject this payment?\n\nThe bill will remain unpaid and the customer will need to pay again.');
     if (!confirmed) return;
 
     try {
-      await paymentsAPI.updatePayment(paymentId, { paymentStatus: 'Failed' });
-      // Reset bill back to pending
-      toast.warning('Payment rejected.');
+      await paymentsAPI.rejectPayment(paymentId);
+      toast.warning('Payment rejected. Bill remains unpaid.');
       await this.load();
     } catch (error) {
       toast.error(error.message || 'Failed to reject payment');

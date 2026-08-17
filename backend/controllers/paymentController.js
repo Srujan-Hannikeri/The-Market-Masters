@@ -273,3 +273,46 @@ exports.getVerificationPendingBills = async (req, res) => {
     res.status(500).json({ message: 'Error fetching pending verification bills.', error: error.message });
   }
 };
+
+// Shopkeeper rejects a pending customer payment
+exports.rejectPayment = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found.' });
+    }
+    if (payment.shopkeeperId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+    if (payment.paymentStatus !== 'Verification Pending') {
+      return res.status(400).json({ message: 'Payment is not pending verification.' });
+    }
+
+    // Mark payment as Failed
+    payment.paymentStatus = 'Failed';
+    await payment.save();
+
+    // Reset bill back to Pending
+    const bill = await Bill.findById(payment.billId);
+    if (bill) {
+      bill.paymentStatus = calculatePaymentStatus(bill.totalAmount, bill.paidAmount);
+      await bill.save();
+
+      // Reset order too
+      try {
+        const { Order } = require('../models');
+        if (bill.notes && bill.notes.includes('Order:')) {
+          const match = bill.notes.match(/Order:\s*(ORD-[A-Z0-9-]+)/);
+          if (match) {
+            const order = await Order.findOne({ orderNumber: match[1] });
+            if (order) { order.paymentStatus = bill.paymentStatus; await order.save(); }
+          }
+        }
+      } catch (e) { console.error('Order reset error:', e); }
+    }
+
+    res.json({ message: 'Payment rejected.', payment });
+  } catch (error) {
+    res.status(500).json({ message: 'Error rejecting payment.', error: error.message });
+  }
+};

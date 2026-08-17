@@ -14,5 +14,6 @@ router.get('/:id', authMiddleware, paymentController.getPayment);
 router.post('/', authMiddleware, shopkeeperOnly, paymentController.createPayment);
 router.put('/:id', authMiddleware, shopkeeperOnly, paymentController.updatePayment);
 router.post('/:id/confirm', authMiddleware, shopkeeperOnly, paymentController.confirmPayment);
+router.post('/:id/reject', authMiddleware, shopkeeperOnly, paymentController.rejectPayment);
 
 module.exports = router;

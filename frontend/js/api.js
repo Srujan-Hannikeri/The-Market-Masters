@@ -228,6 +228,10 @@ const paymentsAPI = {
     return api.post(`/payments/${id}/confirm`, {});
   },
 
+  rejectPayment(id) {
+    return api.post(`/payments/${id}/reject`, {});
+  },
+
   getVerificationPendingBills() {
     return api.get('/payments/verification-pending');
   }

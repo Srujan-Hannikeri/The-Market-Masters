@@ -412,84 +412,103 @@ const shopping = {
         }
       });
     }
-    
     modal.open('checkout-modal');
   },
 
   // Show UPI Payment Modal
   async showUPIPaymentModal() {
     try {
-      // Get shopkeeper info (first shopkeeper for now)
-      const response = await api.get('/auth/profile');
-      const currentUser = response.user;
-      
-      // For demo, we'll show a placeholder - in production, fetch actual shopkeeper's UPI details
-      const upiId = 'shop@example@upi'; // This should come from shopkeeper's profile
-      const qrCode = null; // This should be shopkeeper's uploaded QR code
-      
+      // Fetch the shopkeeper's actual UPI details
+      let upiId = null;
+      let qrCode = null;
+      let shopName = 'Shop';
+
+      // Try to get shopkeeper info via the current shop being shopped from
+      try {
+        if (this.currentShopkeeperId) {
+          const shopProfile = await api.get(`/auth/shopkeeper/${this.currentShopkeeperId}`);
+          if (shopProfile.user) {
+            upiId = shopProfile.user.upiId || null;
+            qrCode = shopProfile.user.upiQrCode || null;
+            shopName = shopProfile.user.shopName || shopProfile.user.name || 'Shop';
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch shopkeeper UPI:', err);
+      }
+
+      const totalAmount = this.cart.reduce((sum, item) => sum + item.total, 0);
+
       // Create UPI payment modal
       const upiModal = document.createElement('div');
       upiModal.id = 'upi-payment-modal';
       upiModal.className = 'modal';
       upiModal.innerHTML = `
         <div class="modal-header">
-          <h3>Pay via UPI</h3>
+          <h3><i class="fas fa-mobile-alt"></i> Pay via UPI</h3>
           <button class="modal-close" onclick="document.getElementById('upi-payment-modal').remove();">&times;</button>
         </div>
         <div class="modal-body">
-          <div style="text-align: center; padding: 20px;">
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-              <h4 style="color: #2c5f2d; margin-bottom: 15px;">Shop Payment Details</h4>
-              
-              ${qrCode ? `
-                <div style="margin: 20px 0; text-align: center;">
-                  <img src="${qrCode}" alt="UPI QR Code" style="max-width: 100%; height: auto; max-height: 250px; border: 2px solid #ddd; border-radius: 10px; padding: 10px; background: white; margin: 0 auto; display: block;">
-                  <p style="color: #666; font-size: 12px; margin-top: 10px;">Scan this QR code to pay</p>
-                </div>
-              ` : `
-                <div style="margin: 20px 0; padding: 40px; background: #fff; border: 2px dashed #ddd; border-radius: 10px; text-align: center;">
-                  <i class="fas fa-qrcode" style="font-size: 48px; color: #ccc;"></i>
-                  <p style="color: #999; margin-top: 10px;">QR Code not available</p>
-                </div>
-              `}
-              
-              <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
-                <p style="margin: 5px 0; color: #666; font-size: 13px;">UPI ID:</p>
-                <p style="margin: 5px 0; font-size: 16px; font-weight: bold; color: #2c5f2d; user-select: all; word-break: break-all;">${upiId}</p>
-                <button onclick="navigator.clipboard.writeText('${upiId}'); toast.success('UPI ID copied!');" 
-                        style="margin-top: 10px; padding: 8px 16px; background: #e3f2fd; border: none; border-radius: 5px; cursor: pointer; color: #1976d2; font-size: 13px;">
-                  <i class="fas fa-copy"></i> Copy UPI ID
-                </button>
-              </div>
-              
-              <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
-                <p style="margin: 5px 0; font-size: 13px; color: #856404;">
-                  <i class="fas fa-info-circle"></i> <strong>How to pay:</strong>
-                </p>
-                <ol style="margin: 10px 0; padding-left: 20px; font-size: 13px; color: #856404;">
-                  <li>Open your UPI app (GPay, PhonePe, Paytm, etc.)</li>
-                  <li>Scan the QR code or enter UPI ID</li>
-                  <li>Enter the amount and complete payment</li>
-                  <li>Click 'I Have Paid' below to place order</li>
-                </ol>
-              </div>
+          <div style="padding: 16px;">
+            <div style="background: linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:12px; padding:16px; margin-bottom:16px; text-align:center;">
+              <p style="margin:0 0 4px; color:#166534; font-size:13px; font-weight:600;">${shopName}</p>
+              <p style="margin:0; font-size:26px; font-weight:800; color:#15803d;">₹${totalAmount.toFixed(2)}</p>
+              <p style="margin:4px 0 0; color:#166534; font-size:12px;">Total Amount to Pay</p>
             </div>
-            
-            <button onclick="document.getElementById('upi-payment-modal').remove(); document.querySelector('#checkout-form button[type=submit]').click();" 
-                    class="btn btn-success" style="margin-top: 10px; width: 100%; font-weight: bold; padding: 12px;">
-              <i class="fas fa-check-circle"></i> I Have Paid - Place Order
+
+            ${(upiId || qrCode) ? `
+              ${qrCode ? `
+                <div style="text-align:center; margin-bottom:16px;">
+                  <div style="display:inline-block; background:white; padding:12px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <img src="${qrCode}" alt="UPI QR Code" style="max-width:180px; max-height:180px; display:block;">
+                  </div>
+                  <p style="color:#666; font-size:12px; margin-top:8px;">Scan to pay</p>
+                </div>
+              ` : ''}
+
+              ${upiId ? `
+                <div style="background:#f8f9fa; border:1px solid #e0e0e0; border-radius:8px; padding:12px; text-align:center; margin-bottom:12px;">
+                  <p style="margin:0 0 4px; color:#666; font-size:12px;">UPI ID</p>
+                  <p style="margin:0; font-size:16px; font-weight:700; color:#1a1a1a; word-break:break-all;">${upiId}</p>
+                  <button onclick="navigator.clipboard.writeText('${upiId}'); toast.success('UPI ID copied!');"
+                    style="margin-top:8px; padding:6px 14px; background:#e3f2fd; border:none; border-radius:20px; cursor:pointer; color:#1976d2; font-size:12px; font-weight:600;">
+                    <i class="fas fa-copy"></i> Copy UPI ID
+                  </button>
+                </div>
+              ` : ''}
+            ` : `
+              <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:16px; text-align:center; margin-bottom:12px;">
+                <i class="fas fa-info-circle" style="font-size:32px; color:#f59e0b; margin-bottom:8px;"></i>
+                <p style="color:#856404; margin:0; font-size:13px;">Shopkeeper has not set up UPI payment yet.</p>
+                <p style="color:#856404; margin:4px 0 0; font-size:12px;">Please choose another payment method or contact the shop.</p>
+              </div>
+            `}
+
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:12px; margin-bottom:16px; font-size:12px; color:#92400e;">
+              <p style="margin:0 0 6px; font-weight:700;"><i class="fas fa-info-circle"></i> How to pay:</p>
+              <ol style="margin:0; padding-left:16px;">
+                <li>Open GPay, PhonePe, Paytm or any UPI app</li>
+                <li>Scan the QR or enter the UPI ID above</li>
+                <li>Enter <strong>₹${totalAmount.toFixed(2)}</strong> and complete payment</li>
+                <li>Click <strong>"I Have Paid"</strong> below to place your order</li>
+              </ol>
+            </div>
+
+            <button onclick="document.getElementById('upi-payment-modal').remove(); document.querySelector('#checkout-form button[type=submit]').click();"
+                    class="btn btn-success" style="width:100%; padding:12px; font-weight:700; font-size:15px; margin-bottom:8px;">
+              <i class="fas fa-check-circle"></i> I Have Paid — Place Order
             </button>
-            <button onclick="document.getElementById('upi-payment-modal').remove(); document.getElementById('payment-mode').value = '';" 
-                    class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
+            <button onclick="document.getElementById('upi-payment-modal').remove(); document.getElementById('payment-mode').value = '';"
+                    class="btn btn-secondary" style="width:100%; padding:10px;">
               <i class="fas fa-times"></i> Cancel
             </button>
           </div>
         </div>
       `;
-      
+
       document.getElementById('modal-overlay').appendChild(upiModal);
       modal.open('upi-payment-modal');
-      
+
     } catch (error) {
       console.error('Error showing UPI modal:', error);
       toast.error('Failed to load payment details');

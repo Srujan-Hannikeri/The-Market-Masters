@@ -300,127 +300,140 @@ const dashboard = {
   },
 
   async checkLowStock() {
-    // Only shopkeepers should see low stock alerts
     const isShopkeeper = auth.user?.role === "shopkeeper";
+    const alertBox = document.getElementById("low-stock-alert");
     if (!isShopkeeper) {
-      // Hide low stock alert for customers
-      const alertBox = document.getElementById("low-stock-alert");
-      if (alertBox) {
-        alertBox.style.display = "none";
-      }
+      if (alertBox) alertBox.style.display = "none";
       return;
     }
 
     try {
-      // Get inventory products
       const response = await inventoryAPI.getProducts();
       const products = response.products || [];
 
-      // Filter low stock products (stock <= lowStockThreshold)
-      const lowStockProducts = products.filter((p) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const in7Days = new Date(today);
+      in7Days.setDate(in7Days.getDate() + 7);
+
+      const expiredProducts = products.filter(p => {
+        if (!p.expiryDate) return false;
+        return new Date(p.expiryDate) < today;
+      });
+
+      const soonExpiringProducts = products.filter(p => {
+        if (!p.expiryDate) return false;
+        const exp = new Date(p.expiryDate);
+        return exp >= today && exp <= in7Days;
+      });
+
+      const outOfStockProducts = products.filter(p => parseInt(p.stock) === 0);
+
+      const lowStockProducts = products.filter(p => {
         const stock = parseInt(p.stock) || 0;
         const threshold = parseInt(p.minStock || p.lowStockThreshold) || 10;
-        return stock <= threshold && stock > 0;
+        return stock > 0 && stock <= threshold;
       });
 
-      const outOfStockProducts = products.filter((p) => {
-        const stock = parseInt(p.stock) || 0;
-        return stock === 0;
-      });
-
-      const expiredProducts = products.filter((p) => {
-        if (!p.expiryDate) return false;
-        const expiry = new Date(p.expiryDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return expiry < today;
-      });
-
-      const soonExpiringProducts = products.filter((p) => {
-        if (!p.expiryDate) return false;
-        const expiry = new Date(p.expiryDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const in7Days = new Date(today);
-        in7Days.setDate(in7Days.getDate() + 7);
-        return expiry >= today && expiry <= in7Days;
-      });
-
-      // Show alert if there are low stock, out of stock, or expired products
-      const alertBox = document.getElementById("low-stock-alert");
       const productsContainer = document.getElementById("low-stock-products");
+      if (!alertBox || !productsContainer) return;
 
-      if (!alertBox || !productsContainer) {
+      const hasExpiry = expiredProducts.length > 0 || soonExpiringProducts.length > 0;
+      const hasStock = outOfStockProducts.length > 0 || lowStockProducts.length > 0;
+      const hasAny = hasExpiry || hasStock;
+
+      if (!hasAny) {
+        alertBox.classList.add("hidden");
+        alertBox.style.display = "none";
         return;
       }
 
-      if (lowStockProducts.length > 0 || outOfStockProducts.length > 0 || expiredProducts.length > 0 || soonExpiringProducts.length > 0) {
-        let html = "";
-
-        // Expired products (RED)
-        expiredProducts.forEach((product) => {
-          html += `
-            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;border-left:3px solid #e74c3c;">
-              <i class="fas fa-calendar-times" style="color:#e74c3c;"></i>
-              <div>
-                <div class="product-name">${product.name}</div>
-                <div class="product-stock" style="color:#e74c3c;font-weight:bold;">EXPIRED on ${new Date(product.expiryDate).toLocaleDateString('en-IN')}</div>
-              </div>
-            </div>
-          `;
-        });
-
-        // Soon expiring products (ORANGE)
-        soonExpiringProducts.forEach((product) => {
-          const daysLeft = Math.ceil((new Date(product.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
-          html += `
-            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;border-left:3px solid #e67e22;">
-              <i class="fas fa-clock" style="color:#e67e22;"></i>
-              <div>
-                <div class="product-name">${product.name}</div>
-                <div class="product-stock" style="color:#e67e22;font-weight:bold;">Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — ${new Date(product.expiryDate).toLocaleDateString('en-IN')}</div>
-              </div>
-            </div>
-          `;
-        });
-
-        // Out of stock products (RED)
-        outOfStockProducts.forEach((product) => {
-          html += `
-            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
-              <i class="fas fa-exclamation-circle"></i>
-              <div>
-                <div class="product-name">${product.name}</div>
-                <div class="product-stock" style="color:#e74c3c;font-weight:bold;">OUT OF STOCK</div>
-              </div>
-            </div>
-          `;
-        });
-
-        // Low stock products (YELLOW)
-        lowStockProducts.forEach((product) => {
-          const threshold = parseInt(product.minStock || product.lowStockThreshold) || 10;
-          html += `
-            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
-              <i class="fas fa-exclamation-triangle"></i>
-              <div>
-                <div class="product-name">${product.name}</div>
-                <div class="product-stock">Stock: ${product.stock}/${threshold} units</div>
-              </div>
-            </div>
-          `;
-        });
-
-        productsContainer.innerHTML = html;
-        alertBox.classList.remove('hidden');
-        alertBox.style.display = 'block';
-
+      // Update title and icon dynamically
+      const titleEl = document.getElementById("alert-header-title");
+      const iconEl = document.getElementById("alert-header-icon");
+      if (hasExpiry && hasStock) {
+        if (titleEl) titleEl.textContent = "Stock & Expiry Alert!";
+        if (iconEl) { iconEl.className = "fas fa-exclamation-triangle"; iconEl.style.color = ""; }
+      } else if (hasExpiry) {
+        if (titleEl) titleEl.textContent = "Expiry Date Alert!";
+        if (iconEl) { iconEl.className = "fas fa-calendar-times"; iconEl.style.color = "#e74c3c"; }
       } else {
-        alertBox.classList.add('hidden');
-        alertBox.style.display = 'none';
-        }
+        if (titleEl) titleEl.textContent = "Low Stock Alert!";
+        if (iconEl) { iconEl.className = "fas fa-exclamation-triangle"; iconEl.style.color = ""; }
+      }
+
+      let html = "";
+
+      // ── EXPIRY SECTION ──────────────────────────────
+      if (hasExpiry) {
+        html += `<div class="alert-section-title" style="
+          font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+          color:#92400e; margin:8px 0 6px; padding:4px 8px;
+          background:rgba(239,68,68,0.10); border-radius:4px; display:flex; align-items:center; gap:5px;
+        "><i class='fas fa-calendar-times'></i> Expiry Alerts</div>`;
+
+        expiredProducts.forEach(p => {
+          html += `
+            <div class="low-stock-product expiry-alert expired" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+              <i class="fas fa-calendar-times" style="color:#ef4444;"></i>
+              <div>
+                <div class="product-name">${p.name}</div>
+                <div class="product-stock" style="color:#ef4444;font-weight:700;">⚠ EXPIRED — ${new Date(p.expiryDate).toLocaleDateString('en-IN')}</div>
+              </div>
+            </div>`;
+        });
+
+        soonExpiringProducts.forEach(p => {
+          const daysLeft = Math.ceil((new Date(p.expiryDate) - today) / 86400000);
+          html += `
+            <div class="low-stock-product expiry-alert expiring" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+              <i class="fas fa-clock" style="color:#f59e0b;"></i>
+              <div>
+                <div class="product-name">${p.name}</div>
+                <div class="product-stock" style="color:#d97706;font-weight:600;">Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — ${new Date(p.expiryDate).toLocaleDateString('en-IN')}</div>
+              </div>
+            </div>`;
+        });
+      }
+
+      // ── STOCK SECTION ───────────────────────────────
+      if (hasStock) {
+        html += `<div class="alert-section-title" style="
+          font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+          color:#92400e; margin:${hasExpiry ? '12px' : '8px'} 0 6px; padding:4px 8px;
+          background:rgba(245,158,11,0.12); border-radius:4px; display:flex; align-items:center; gap:5px;
+        "><i class='fas fa-exclamation-triangle'></i> Stock Alerts</div>`;
+
+        outOfStockProducts.forEach(p => {
+          html += `
+            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+              <i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>
+              <div>
+                <div class="product-name">${p.name}</div>
+                <div class="product-stock" style="color:#ef4444;font-weight:700;">OUT OF STOCK</div>
+              </div>
+            </div>`;
+        });
+
+        lowStockProducts.forEach(p => {
+          const threshold = parseInt(p.minStock || p.lowStockThreshold) || 10;
+          html += `
+            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+              <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
+              <div>
+                <div class="product-name">${p.name}</div>
+                <div class="product-stock">Stock: <strong>${p.stock}</strong> / ${threshold} units</div>
+              </div>
+            </div>`;
+        });
+      }
+
+      productsContainer.innerHTML = html;
+      alertBox.classList.remove("hidden");
+      alertBox.style.display = "block";
+
     } catch (error) {
-      console.error("Low stock check error:", error);
+      console.error("checkLowStock error:", error);
     }
   },
 };

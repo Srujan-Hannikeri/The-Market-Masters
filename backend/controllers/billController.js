@@ -370,25 +370,17 @@ exports.customerMakePayment = async (req, res) => {
       notes: `Customer payment by ${req.user.name || req.user.phone}`
     });
 
-    // Update bill balance
-    const newPaid = parseFloat(bill.paidAmount) + payAmt;
-    const newBalance = Math.max(0, parseFloat(bill.totalAmount) - newPaid);
-    bill.paidAmount = newPaid;
-    bill.balanceAmount = newBalance;
-    bill.paymentStatus = newBalance <= 0 ? 'Paid' : 'Partially Paid';
+    // Mark bill as Verification Pending — DO NOT update paidAmount until shopkeeper confirms
+    bill.paymentStatus = 'Verification Pending';
     await bill.save();
 
-    // If this bill was linked to an order (notes contains "Order: ORD-..."),
-    // also update the Order's paymentStatus
+    // Also mark the linked order as Verification Pending
     if (bill.notes && bill.notes.startsWith('Order:')) {
       const { Order } = require('../models');
       const orderNumber = bill.notes.replace('Order:', '').trim();
       const order = await Order.findOne({ orderNumber });
       if (order) {
-        order.paymentStatus = bill.paymentStatus;
-        if (bill.paymentMode && bill.paymentMode !== 'Pending') {
-          order.paymentMode = bill.paymentMode;
-        }
+        order.paymentStatus = 'Verification Pending';
         await order.save();
       }
     }
