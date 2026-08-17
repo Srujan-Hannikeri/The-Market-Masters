@@ -4,6 +4,8 @@ const billing = {
   billItems: [],
   currentBill: null,
   listenersSetup: false,
+  pdfCache: new Map(),
+  pdfRequests: new Map(),
 
   async load() {
     await this.loadProducts();
@@ -601,18 +603,21 @@ const billing = {
     payments.openPaymentModal(billId);
   },
 
-  async printBill(billId) {
-    const format = document.getElementById('print-format-select')?.value || 'a4';
-    const label = {
-      a4: 'A4', a3: 'A3', a5: 'A5', letter: 'Letter',
-      '80mm': '80 mm Thermal', '58mm': '58 mm Thermal'
-    }[format] || format.toUpperCase();
+  async getBillPdf(billId, format) {
+    const cacheKey = `${billId}:${format}`;
+    const cached = this.pdfCache.get(cacheKey);
 
-    try {
-      toast.info(`Generating ${label} PDF…`);
+    // A short cache makes a second print/download instant without risking an
+    // outdated invoice remaining available after a payment is changed.
+    if (cached && Date.now() - cached.createdAt < 60000) {
+      return cached.blob;
+    }
 
-      // Fetch the PDF as a blob through the authenticated api so the
-      // Authorization header is included — avoids "Access denied" in new tab
+    if (this.pdfRequests.has(cacheKey)) {
+      return this.pdfRequests.get(cacheKey);
+    }
+
+    const request = (async () => {
       const token = api.getToken();
       const response = await fetch(`/api/bills/${billId}/pdf?format=${format}`, {
         method: 'GET',
@@ -625,20 +630,55 @@ const billing = {
       }
 
       const blob = await response.blob();
+      this.pdfCache.set(cacheKey, { blob, createdAt: Date.now() });
+      return blob;
+    })();
+
+    this.pdfRequests.set(cacheKey, request);
+    try {
+      return await request;
+    } finally {
+      this.pdfRequests.delete(cacheKey);
+    }
+  },
+
+  async printBill(billId) {
+    const format = document.getElementById('print-format-select')?.value || 'a4';
+    const label = {
+      a4: 'A4', a3: 'A3', a5: 'A5', letter: 'Letter',
+      '80mm': '80 mm Thermal', '58mm': '58 mm Thermal'
+    }[format] || format.toUpperCase();
+
+    // Open the window while the click is still active. This avoids popup
+    // blocking and lets the customer see that printing has started right away.
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`<!doctype html><title>Preparing invoice</title><style>body{margin:0;display:grid;min-height:100vh;place-items:center;font-family:Arial,sans-serif;color:#1d2b3a;background:#f6f8fb}.status{text-align:center}.spinner{width:28px;height:28px;margin:0 auto 14px;border:3px solid #d7e6df;border-top-color:#1d7968;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style><div class="status"><div class="spinner"></div><strong>Preparing your invoice…</strong></div>`);
+      printWindow.document.close();
+    }
+
+    try {
+      toast.info(`Generating ${label} PDF…`);
+      const blob = await this.getBillPdf(billId, format);
       const blobUrl = URL.createObjectURL(blob);
 
-      const printWindow = window.open(blobUrl, '_blank');
       if (printWindow) {
         printWindow.addEventListener('load', () => {
           setTimeout(() => {
+            printWindow.focus();
             printWindow.print();
-            // Revoke blob URL after a delay to free memory
             setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-          }, 800);
-        });
+          }, 250);
+        }, { once: true });
+        printWindow.location.replace(blobUrl);
+      } else {
+        // Fallback for browsers that block the early popup.
+        window.open(blobUrl, '_blank');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
       }
       toast.success(`PDF (${label}) ready!`);
     } catch (error) {
+      if (printWindow && !printWindow.closed) printWindow.close();
       console.error('Print error:', error);
       toast.error('Failed to generate PDF: ' + error.message);
     }
@@ -648,18 +688,7 @@ const billing = {
     const format = document.getElementById('print-format-select')?.value || 'a4';
     try {
       toast.info('Downloading PDF…');
-      const token = api.getToken();
-      const response = await fetch(`/api/bills/${billId}/pdf?format=${format}`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({ message: 'PDF generation failed' }));
-        throw new Error(err.message);
-      }
-
-      const blob = await response.blob();
+      const blob = await this.getBillPdf(billId, format);
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;

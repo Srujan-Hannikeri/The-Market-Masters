@@ -5,7 +5,6 @@ const path = require('path');
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmt = (amount) => 'Rs. ' + parseFloat(amount || 0).toFixed(2);
-const logoPath = path.join(__dirname, '..', '..', 'frontend', 'assets', 'logo.jpg');
 
 /**
  * Get a writable directory that works on both local dev and Vercel serverless.
@@ -52,7 +51,8 @@ const resolveFormat = (format = 'a4', itemCount = 0) => {
   // ── Named page sizes ──────────────────────────────────────────────────────
   const sizeMap = { a4: 'A4', a3: 'A3', a5: 'A5', letter: 'LETTER' };
   const size = sizeMap[f] || 'A4';
-  return { type: 'page', size, margin: 40 };
+  const marginMap = { a3: 58, a4: 40, a5: 26, letter: 40 };
+  return { type: 'page', size, margin: marginMap[f] || 40 };
 };
 
 // ─── Main export ──────────────────────────────────────────────────────────────
@@ -114,14 +114,8 @@ const buildRollLayout = (doc, bill, items, shop, cfg) => {
   let y = margin;
 
   // ── Shop header ──
-  // ── Shop header ──
-  if (fs.existsSync(logoPath)) {
-    const logoSize = cx >= 190 ? 34 : 28;
-    doc.image(logoPath, margin + (cx - logoSize) / 2, y, { fit: [logoSize, logoSize] });
-    y += logoSize + 4;
-  }
   doc.fontSize(12).font('Helvetica-Bold')
-    .text(shop.shopName || 'The Market Masters', margin, y, { align: 'center', width: cx });
+    .text(shop.shopName || 'Shop Name', margin, y, { align: 'center', width: cx });
   y += 16;
 
   doc.fontSize(8).font('Helvetica');
@@ -222,9 +216,6 @@ const buildRollLayout = (doc, bill, items, shop, cfg) => {
 
   doc.fontSize(9).font('Helvetica-Bold')
     .text('Thank You! Visit Again', margin, y, { align: 'center', width: cx });
-  y += 14;
-  doc.fontSize(7).font('Helvetica').fillColor('#555')
-    .text('Powered by The Market Masters', margin, y, { align: 'center', width: cx });
 };
 
 // ─── Page Layout (A4, A3, A5, Letter) ─────────────────────────────────────────
@@ -235,6 +226,10 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   const PH = doc.page.height;
   const CW = PW - margin * 2;    // content width
   const smallPaper = CW < 400;
+  // Each named page has its own usable width. Scale the layout from A4's
+  // content width so A3 fills its page and A5 remains balanced and readable.
+  const pageScale = Math.max(0.72, Math.min(1.42, CW / 515));
+  const px = (value) => Math.round(value * pageScale);
 
   // Brand colours
   const GREEN  = '#2c5f2d';
@@ -248,79 +243,66 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   // ══════════════════════════════════════════
   // HEADER BAND
   // ══════════════════════════════════════════
-  const headerH = smallPaper ? 86 : 108;
+  const headerH = px(smallPaper ? 76 : 92);
   doc.rect(margin, y, CW, headerH).fill(GREEN);
 
-  // Website brand - the logo represents The Market Masters, not the shop.
-  const logoBox = smallPaper ? 38 : 48;
-  const logoX = margin + 12;
-  const logoY = y + 11;
-  doc.roundedRect(logoX, logoY, logoBox, logoBox, 6).fill('#ffffff');
-  if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, logoX + 4, logoY + 4, { fit: [logoBox - 8, logoBox - 8] });
-  }
-
-  const brandX = logoX + logoBox + 10;
-  const invoiceW = smallPaper ? 68 : 112;
-  const brandW = CW - (brandX - margin) - invoiceW - 18;
-  doc.fillColor('#ffffff').fontSize(smallPaper ? 11 : 15).font('Helvetica-Bold')
-    .text('The Market Masters', brandX, y + 15, { width: brandW });
-  doc.fillColor('#dff3e3').fontSize(smallPaper ? 6.5 : 7.5).font('Helvetica')
-    .text("You Manage Your Shop, We'll Manage Your Bills", brandX, y + (smallPaper ? 31 : 35), { width: brandW });
-
-  const shopY = y + (smallPaper ? 51 : 65);
-  doc.fillColor('#ffffff').fontSize(smallPaper ? 10 : 14).font('Helvetica-Bold')
-    .text(shop.shopName || 'Shop Name', logoX, shopY, { width: CW - 24 - invoiceW });
-  doc.fontSize(smallPaper ? 6.5 : 8).font('Helvetica');
-  let subY = shopY + (smallPaper ? 13 : 18);
+  const shopX = margin + px(14);
+  const invoiceW = px(smallPaper ? 72 : 112);
+  const shopW = CW - px(32) - invoiceW;
+  const shopY = y + px(15);
+  doc.fillColor('#ffffff').fontSize(smallPaper ? 10 : px(14)).font('Helvetica-Bold')
+    .text(shop.shopName || 'Shop Name', shopX, shopY, { width: shopW });
+  doc.fontSize(smallPaper ? 7 : px(8)).font('Helvetica');
+  let subY = shopY + px(smallPaper ? 15 : 20);
   if (shop.shopAddress) {
-    doc.text(shop.shopAddress, logoX, subY, { width: CW - 24 - invoiceW });
-    subY += smallPaper ? 9 : 11;
+    doc.text(shop.shopAddress, shopX, subY, { width: shopW });
+    subY += px(smallPaper ? 10 : 12);
   }
   if (shop.phone) {
-    doc.text(`Phone: ${shop.phone}`, logoX, subY, { width: CW - 24 - invoiceW });
+    doc.text(`Phone: ${shop.phone}`, shopX, subY, { width: shopW });
   }
 
   // Invoice marker
-  const invoiceX = margin + CW - invoiceW - 12;
-  doc.roundedRect(invoiceX, y + 18, invoiceW, 32, 5).fill('#dff3e3');
-  doc.fontSize(smallPaper ? 10 : 14).font('Helvetica-Bold').fillColor(GREEN)
-    .text('INVOICE', invoiceX, y + 30, { width: invoiceW, align: 'center' });
+  const invoiceX = margin + CW - invoiceW - px(12);
+  doc.roundedRect(invoiceX, y + px(18), invoiceW, px(32), px(5)).fill('#dff3e3');
+  doc.fontSize(smallPaper ? 10 : px(14)).font('Helvetica-Bold').fillColor(GREEN)
+    .text('INVOICE', invoiceX, y + px(30), { width: invoiceW, align: 'center' });
 
-  y += headerH + 14;
+  y += headerH + px(14);
 
   // ══════════════════════════════════════════
   // META ROW  (Bill info left | Customer right)
   // ══════════════════════════════════════════
-  const colW2 = (CW - 16) / 2;
+  const colW2 = (CW - px(16)) / 2;
+  const metaH = px(80);
 
   // Left box — bill info
-  doc.rect(margin, y, colW2, 80).fill(GRAY).stroke('#dddddd');
-  doc.fillColor(GREEN).fontSize(10).font('Helvetica-Bold').text('Bill Details', margin + 10, y + 8);
-  doc.fillColor(DGRAY).fontSize(9).font('Helvetica');
-  doc.text(`Bill #:`, margin + 10, y + 24);
-  doc.font('Helvetica-Bold').text(bill.billNumber, margin + 55, y + 24);
-  doc.font('Helvetica').text(`Date:`,   margin + 10, y + 38);
-  doc.text(new Date(bill.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }), margin + 55, y + 38);
-  doc.text(`Mode:`,   margin + 10, y + 52);
-  doc.text(bill.paymentMode || 'Cash', margin + 55, y + 52);
+  doc.rect(margin, y, colW2, metaH).fill(GRAY).stroke('#dddddd');
+  doc.fillColor(GREEN).fontSize(smallPaper ? 8 : px(10)).font('Helvetica-Bold').text('Bill Details', margin + px(10), y + px(8));
+  doc.fillColor(DGRAY).fontSize(smallPaper ? 7 : px(9)).font('Helvetica');
+  doc.text(`Bill #:`, margin + px(10), y + px(24));
+  doc.font('Helvetica-Bold').text(bill.billNumber, margin + px(55), y + px(24));
+  doc.font('Helvetica').text(`Date:`, margin + px(10), y + px(38));
+  doc.text(new Date(bill.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }), margin + px(55), y + px(38));
+  doc.text(`Mode:`, margin + px(10), y + px(52));
+  doc.text(bill.paymentMode || 'Cash', margin + px(55), y + px(52));
 
   // Right box — customer info
-  const rx = margin + colW2 + 16;
-  doc.rect(rx, y, colW2, 80).fill(GRAY).stroke('#dddddd');
-  doc.fillColor(GREEN).fontSize(10).font('Helvetica-Bold').text('Bill To', rx + 10, y + 8);
-  doc.fillColor(DGRAY).fontSize(9).font('Helvetica');
-  doc.text(bill.customerName || 'Walk-in Customer', rx + 10, y + 24, { width: colW2 - 20 });
-  if (bill.customerPhone) doc.text(`Ph: ${bill.customerPhone}`, rx + 10, y + 38);
+  const rx = margin + colW2 + px(16);
+  doc.rect(rx, y, colW2, metaH).fill(GRAY).stroke('#dddddd');
+  doc.fillColor(GREEN).fontSize(smallPaper ? 8 : px(10)).font('Helvetica-Bold').text('Bill To', rx + px(10), y + px(8));
+  doc.fillColor(DGRAY).fontSize(smallPaper ? 7 : px(9)).font('Helvetica');
+  doc.text(bill.customerName || 'Walk-in Customer', rx + px(10), y + px(24), { width: colW2 - px(20) });
+  if (bill.customerPhone) doc.text(`Ph: ${bill.customerPhone}`, rx + px(10), y + px(38));
 
   // Payment status badge in right box
   const statusColor = bill.paymentStatus === 'Paid' ? '#28a745'
     : bill.paymentStatus === 'Partially Paid' ? '#fd7e14' : '#dc3545';
-  doc.roundedRect(rx + colW2 - 90, y + 50, 80, 20, 4).fill(statusColor);
-  doc.fillColor('#fff').fontSize(8).font('Helvetica-Bold')
-    .text(bill.paymentStatus, rx + colW2 - 90, y + 57, { width: 80, align: 'center' });
+  doc.roundedRect(rx + colW2 - px(90), y + px(50), px(80), px(20), px(4)).fill(statusColor);
+  doc.fillColor('#fff').fontSize(smallPaper ? 7 : px(8)).font('Helvetica-Bold')
+    .text(bill.paymentStatus, rx + colW2 - px(90), y + px(57), { width: px(80), align: 'center' });
 
-  y += 96;
+  y += metaH + px(16);
 
   // ══════════════════════════════════════════
   // ITEMS TABLE
@@ -356,63 +338,63 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
     total: margin + cols.no + cols.name + cols.qty + cols.mrp + cols.price
   };
 
-  const rowH = 24;
-  const headH = 28;
+  const rowH = px(24);
+  const headH = px(28);
 
   const drawTableHeader = () => {
     doc.rect(margin, y, CW, headH).fill(GREEN);
-    doc.fillColor('#ffffff').fontSize(compactPage ? 8 : 9.5).font('Helvetica-Bold');
-    doc.text('#', colX.no + 3, y + 9, { width: cols.no - 3 });
-    doc.text('Description', colX.name + 3, y + 9, { width: cols.name - 3 });
-    doc.text('Qty', colX.qty, y + 9, { width: cols.qty, align: 'center' });
+    doc.fillColor('#ffffff').fontSize(compactPage ? 8 : px(9.5)).font('Helvetica-Bold');
+    doc.text('#', colX.no + px(3), y + px(9), { width: cols.no - px(3) });
+    doc.text('Description', colX.name + px(3), y + px(9), { width: cols.name - px(3) });
+    doc.text('Qty', colX.qty, y + px(9), { width: cols.qty, align: 'center' });
     if (!compactPage) {
-      doc.text('MRP', colX.mrp, y + 9, { width: cols.mrp, align: 'right' });
-      doc.text('Price', colX.price, y + 9, { width: cols.price, align: 'right' });
+      doc.text('MRP', colX.mrp, y + px(9), { width: cols.mrp, align: 'right' });
+      doc.text('Price', colX.price, y + px(9), { width: cols.price, align: 'right' });
     }
-    doc.text('Amount', colX.total, y + 9, { width: cols.total, align: 'right' });
+    doc.text('Amount', colX.total, y + px(9), { width: cols.total, align: 'right' });
     y += headH;
   };
   drawTableHeader();
 
   // Rows
-  doc.fontSize(9).font('Helvetica');
+  doc.fontSize(compactPage ? 8 : px(9)).font('Helvetica');
   items.forEach((item, idx) => {
     // Keep the summary and footer clear on every page. A new page repeats the
     // table header so multi-page A4/A3 invoices remain easy to read.
-    if (y + rowH > PH - margin - 150) {
+    if (y + rowH > PH - margin - px(150)) {
       doc.addPage();
       y = margin;
       drawTableHeader();
-      doc.fontSize(compactPage ? 8 : 9).font('Helvetica');
+      doc.fontSize(compactPage ? 8 : px(9)).font('Helvetica');
     }
     // Zebra stripe
     if (idx % 2 === 0) doc.rect(margin, y, CW, rowH).fill(LGTEEN);
     else doc.rect(margin, y, CW, rowH).fill('#ffffff');
 
     doc.fillColor(DGRAY);
-    doc.text(String(idx + 1),          colX.no    + 3,  y + 8, { width: cols.no - 3 });
+    doc.text(String(idx + 1),          colX.no    + px(3),  y + px(8), { width: cols.no - px(3) });
 
     let name = item.productName || '';
     if (name.length > 42) name = name.substring(0, 39) + '...';
-    doc.text(name,                     colX.name  + 3,  y + 8, { width: cols.name - 6 });
-    doc.text(String(item.quantity),    colX.qty,         y + 8, { width: cols.qty,   align: 'center' });
+    doc.text(name,                     colX.name  + px(3),  y + px(8), { width: cols.name - px(6) });
+    doc.text(String(item.quantity),    colX.qty,         y + px(8), { width: cols.qty,   align: 'center' });
     if (!compactPage) {
-      doc.text(fmt(item.mrp || item.unitPrice), colX.mrp, y + 8, { width: cols.mrp, align: 'right' });
-      doc.text(fmt(item.unitPrice), colX.price, y + 8, { width: cols.price, align: 'right' });
+      doc.text(fmt(item.mrp || item.unitPrice), colX.mrp, y + px(8), { width: cols.mrp, align: 'right' });
+      doc.text(fmt(item.unitPrice), colX.price, y + px(8), { width: cols.price, align: 'right' });
     }
     doc.fillColor(GREEN).font('Helvetica-Bold')
-      .text(fmt(item.total),           colX.total,       y + 8, { width: cols.total, align: 'right' });
+      .text(fmt(item.total),           colX.total,       y + px(8), { width: cols.total, align: 'right' });
     doc.fillColor(DGRAY).font('Helvetica');
 
     y += rowH;
   });
 
-  y += 10;
+  y += px(10);
 
   // ══════════════════════════════════════════
   // TOTALS + PAYMENT SUMMARY
   // ══════════════════════════════════════════
-  if (y + 130 > PH - margin - 55) {
+  if (y + px(130) > PH - margin - px(55)) {
     doc.addPage();
     y = margin;
   }
@@ -422,42 +404,42 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
   const totalsStartY = y; // Save original Y coordinate before mutating it with tRow
 
   // Totals panel background
-  doc.rect(totX - 8, totalsStartY, totW + 8, 110).fill(GRAY).stroke('#dddddd');
+  doc.rect(totX - px(8), totalsStartY, totW + px(8), px(110)).fill(GRAY).stroke('#dddddd');
 
   const tRow = (label, value, bold = false, color = DGRAY) => {
-    doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(9.5).fillColor(MID)
-      .text(label, totX, y + 6, { width: totW - 90, align: 'left' });
+    doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(compactPage ? 8 : px(9.5)).fillColor(MID)
+      .text(label, totX, y + px(6), { width: totW - px(90), align: 'left' });
     doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fillColor(color)
-      .text(value, totX, y + 6, { width: totW - 8, align: 'right' });
-    y += 20;
+      .text(value, totX, y + px(6), { width: totW - px(8), align: 'right' });
+    y += px(20);
   };
 
-  y += 8;
+  y += px(8);
   tRow('Subtotal:', fmt(bill.subtotal));
   if (parseFloat(bill.discount) > 0) tRow('Discount:', `- ${fmt(bill.discount)}`);
   if (parseFloat(bill.tax) > 0)      tRow('Tax:',       fmt(bill.tax));
 
   // Divider inside totals panel
-  doc.moveTo(totX, y).lineTo(totX + totW, y).lineWidth(1).stroke('#cccccc'); y += 8;
+  doc.moveTo(totX, y).lineTo(totX + totW, y).lineWidth(1).stroke('#cccccc'); y += px(8);
 
   tRow('Total:', fmt(bill.totalAmount), true, GREEN);
 
   // Payment summary (left of totals)
   const payX = margin;
-  const payW = compactPage ? 0 : CW - totW - 30;
+  const payW = compactPage ? 0 : CW - totW - px(30);
   const payStartY = totalsStartY; // Use the saved Y coordinate to correctly align left box
 
   if (!compactPage) {
-    doc.rect(payX, payStartY, payW, 110).fill(GRAY).stroke('#dddddd');
-    doc.fillColor(GREEN).fontSize(10).font('Helvetica-Bold').text('Payment Summary', payX + 10, payStartY + 8);
+    doc.rect(payX, payStartY, payW, px(110)).fill(GRAY).stroke('#dddddd');
+    doc.fillColor(GREEN).fontSize(px(10)).font('Helvetica-Bold').text('Payment Summary', payX + px(10), payStartY + px(8));
 
-    doc.fillColor(DGRAY).fontSize(9).font('Helvetica');
+    doc.fillColor(DGRAY).fontSize(px(9)).font('Helvetica');
     const pRow = (label, value, valueColor = DGRAY) => {
-      doc.text(label, payX + 10, payStartY + (pRow._i = (pRow._i || 28) ));
+      doc.text(label, payX + px(10), payStartY + (pRow._i = (pRow._i || px(28) )));
       doc.fillColor(valueColor).font('Helvetica-Bold')
-        .text(value, payX + 120, payStartY + pRow._i, { width: payW - 130, align: 'right' });
+        .text(value, payX + px(120), payStartY + pRow._i, { width: payW - px(130), align: 'right' });
       doc.fillColor(DGRAY).font('Helvetica');
-      pRow._i += 18;
+      pRow._i += px(18);
     };
     pRow('Amount Paid:', fmt(bill.paidAmount), '#28a745');
     pRow('Balance Due:', fmt(bill.balanceAmount), bill.balanceAmount > 0 ? '#dc3545' : '#28a745');
@@ -465,25 +447,21 @@ const buildPageLayout = (doc, bill, items, shop, cfg) => {
     pRow('Status:', bill.paymentStatus, statusColor);
   }
 
-  y += 16;
+  y += px(16);
 
   // ══════════════════════════════════════════
   // FOOTER
   // ══════════════════════════════════════════
-  const footerY = PH - margin - 55;
+  const footerY = PH - margin - px(55);
 
   doc.moveTo(margin, footerY).lineTo(margin + CW, footerY).lineWidth(1).stroke('#cccccc');
 
-  doc.fillColor(GREEN).fontSize(11).font('Helvetica-Bold')
-    .text('Thank You for Your Business!', margin, footerY + 10, { align: 'center', width: CW });
+  doc.fillColor(GREEN).fontSize(smallPaper ? 9 : px(11)).font('Helvetica-Bold')
+    .text('Thank You for Your Business!', margin, footerY + px(10), { align: 'center', width: CW });
 
-  doc.fillColor(MID).fontSize(8).font('Helvetica')
-    .text('"You Manage Your Shop, We\'ll Manage Your Bills" — The Market Masters',
-      margin, footerY + 28, { align: 'center', width: CW });
-
-  doc.fillColor('#aaaaaa').fontSize(7)
+  doc.fillColor('#aaaaaa').fontSize(smallPaper ? 6 : px(7))
     .text(`Generated on ${new Date().toLocaleString('en-IN')}`,
-      margin, footerY + 42, { align: 'center', width: CW });
+      margin, footerY + px(30), { align: 'center', width: CW });
 };
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
