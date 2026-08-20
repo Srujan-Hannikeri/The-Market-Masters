@@ -624,7 +624,7 @@
 .payment-mode-card.upi i {
   color: var(--primary);
 }
-.payment-mode-card.card i {
+.payment-mode-card.card-payment i {
   color: var(--info);
 }
 .payment-mode-card.net-banking i {

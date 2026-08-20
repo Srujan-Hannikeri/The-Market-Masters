@@ -68,7 +68,7 @@ const payments = {
       {
         key: "Card",
         icon: "fa-credit-card",
-        class: "card",
+        class: "card-payment",
       },
       {
         key: "Net Banking",

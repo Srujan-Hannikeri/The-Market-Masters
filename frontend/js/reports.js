@@ -23,7 +23,7 @@ const reports = {
 
   setupEventListeners() {
     document.getElementById('generate-report-btn')?.addEventListener('click', () => {
-      this.loadReportData();
+      this.loadReportData(true);
     });
   },
 
@@ -36,7 +36,13 @@ const reports = {
     if (endEl)   endEl.value   = todayStr;
   },
 
-  async loadReportData() {
+  async loadReportData(isManual = false) {
+    const btn = document.getElementById('generate-report-btn');
+    if (isManual && btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Generating...';
+    }
+
     // Guard: only send dates if both are valid YYYY-MM-DD strings
     const startRaw = document.getElementById('report-start-date')?.value;
     const endRaw   = document.getElementById('report-end-date')?.value;
@@ -77,6 +83,12 @@ const reports = {
       }
     } catch (error) {
       console.error('Failed to load report data:', error);
+    } finally {
+      const btn = document.getElementById('generate-report-btn');
+      if (isManual && btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync"></i> Generate';
+      }
     }
   },
 
