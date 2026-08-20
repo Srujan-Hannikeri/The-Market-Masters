@@ -317,7 +317,7 @@
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 1.5rem;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .billing-container > div {
@@ -333,13 +333,15 @@
 }
 
 .bills-list-section {
-  height: calc(100vh - 120px);
-  position: sticky;
-  top: 90px;
+  position: relative;
 }
 
 .bills-list-section > .card {
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
 }
