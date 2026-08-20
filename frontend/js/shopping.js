@@ -182,11 +182,42 @@ const shopping = {
         return;
       }
       
-      await ordersAPI.updateCartItem(cartItemId, quantity);
-      await this.loadCart();
-      toast.success('Cart updated');
+      // Optimistic UI update
+      const item = this.cart.find(i => i.id === cartItemId);
+      if (item) {
+        item.quantity = quantity;
+        item.total = item.price * quantity;
+        this.renderCart();
+      }
+      
+      // Debounce or just fire and forget (sync later)
+      if (this.updateTimer) clearTimeout(this.updateTimer);
+      
+      // We still update the server immediately to avoid losing data
+      ordersAPI.updateCartItem(cartItemId, quantity).then(() => {
+        // Sync silently in background after a short delay
+        this.updateTimer = setTimeout(() => {
+          this.loadCartSilently();
+        }, 500);
+      }).catch(err => {
+        toast.error('Failed to update cart');
+        this.loadCart(); // revert
+      });
+      
     } catch (error) {
       toast.error(error.message || 'Failed to update cart');
+    }
+  },
+
+  async loadCartSilently() {
+    try {
+      const response = await ordersAPI.getCart();
+      this.cart = response.items || [];
+      this.currentShopkeeperId = response.shopkeeperId || null;
+      this.renderCart();
+      this.updateCartCount();
+    } catch (error) {
+      console.warn('Silent cart sync failed', error);
     }
   },
 
@@ -450,6 +481,10 @@ const shopping = {
 
       const totalAmount = this.cart.reduce((sum, item) => sum + item.total, 0);
 
+      // Hide checkout modal temporarily
+      const checkoutModal = document.getElementById('checkout-modal');
+      if (checkoutModal) checkoutModal.classList.add('hidden');
+
       // Create UPI payment modal
       const upiModal = document.createElement('div');
       upiModal.id = 'upi-payment-modal';
@@ -457,7 +492,7 @@ const shopping = {
       upiModal.innerHTML = `
         <div class="modal-header">
           <h3><i class="fas fa-mobile-alt"></i> Pay via UPI</h3>
-          <button class="modal-close" onclick="document.getElementById('upi-payment-modal').remove();">&times;</button>
+          <button class="modal-close" onclick="document.getElementById('upi-payment-modal').remove(); const cm = document.getElementById('checkout-modal'); if (cm) cm.classList.remove('hidden');">&times;</button>
         </div>
         <div class="modal-body">
           <div style="padding: 16px;">
@@ -509,7 +544,7 @@ const shopping = {
                     class="btn btn-success" style="width:100%; padding:12px; font-weight:700; font-size:15px; margin-bottom:8px;">
               <i class="fas fa-check-circle"></i> I Have Paid — Place Order
             </button>
-            <button onclick="document.getElementById('upi-payment-modal').remove(); document.getElementById('payment-mode').value = '';"
+            <button onclick="document.getElementById('upi-payment-modal').remove(); const cm = document.getElementById('checkout-modal'); if (cm) cm.classList.remove('hidden'); document.getElementById('payment-mode').value = '';"
                     class="btn btn-secondary" style="width:100%; padding:10px;">
               <i class="fas fa-times"></i> Cancel
             </button>
