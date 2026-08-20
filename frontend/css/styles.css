@@ -155,6 +155,17 @@ cursor: default;
   background: #059669;
 }
 
+.btn-outline-success {
+  background: transparent;
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.btn-outline-success:hover {
+  background: var(--success);
+  color: var(--white);
+}
+
 .btn-danger {
   background: var(--danger);
   color: var(--white);
@@ -162,6 +173,17 @@ cursor: default;
 
 .btn-danger:hover {
   background: #dc2626;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger);
+  color: var(--white);
 }
 
 .btn-warning {

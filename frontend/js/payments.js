@@ -288,7 +288,8 @@ const payments = {
         const paymentState = isPending
           ? `
             <button
-              class="btn btn-sm btn-success"
+              class="btn btn-sm btn-outline-success"
+              style="border-radius:20px; font-weight:600; padding:4px 12px;"
               onclick="payments.confirmPayment('${payment.id}')"
             >
               <i class="fas fa-check"></i>
@@ -437,22 +438,25 @@ const payments = {
             </td>
 
             <td>
-              <button
-                class="btn btn-sm btn-success"
-                onclick="payments.confirmPayment('${payment.id}')"
-              >
-                <i class="fas fa-check-circle"></i>
-                Confirm Payment
-              </button>
+              <div style="display:flex; gap:8px;">
+                <button
+                  class="btn btn-sm btn-outline-success"
+                  style="border-radius:20px; font-weight:600; padding:6px 14px;"
+                  onclick="payments.confirmPayment('${payment.id}')"
+                >
+                  <i class="fas fa-check-circle"></i>
+                  Confirm
+                </button>
 
-              <button
-                class="btn btn-sm btn-danger"
-                style="margin-left:4px;"
-                onclick="payments.rejectPayment('${payment.id}')"
-              >
-                <i class="fas fa-times"></i>
-                Reject
-              </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  style="border-radius:20px; font-weight:600; padding:6px 14px;"
+                  onclick="payments.rejectPayment('${payment.id}')"
+                >
+                  <i class="fas fa-times-circle"></i>
+                  Reject
+                </button>
+              </div>
             </td>
           </tr>
         `;

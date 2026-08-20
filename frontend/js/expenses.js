@@ -477,7 +477,10 @@ const expenses = {
           </div>
           <div>
             <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Agency / Distributor</span>
-            <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 4px;"><i class="fas fa-building" style="color: var(--primary);"></i> ${agencyName}</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 4px;">
+              <i class="fas fa-building" style="color: var(--primary);"></i> ${agencyName}
+              ${agencyPhone ? `<br><i class="fas fa-phone-alt" style="color: var(--primary); font-size: 11px; margin-top: 4px;"></i> ${agencyPhone}` : ''}
+            </div>
           </div>
         </div>
 
@@ -506,6 +509,7 @@ const expenses = {
     const type = document.getElementById('expense-type')?.value;
     const amount = parseFloat(document.getElementById('expense-amount')?.value);
     const agencyName = document.getElementById('expense-agency-name')?.value?.trim();
+    const agencyPhone = document.getElementById('expense-agency-phone')?.value?.trim();
     let description = document.getElementById('expense-description')?.value?.trim() || '';
     const expenseDate = document.getElementById('expense-date')?.value;
 
@@ -570,6 +574,7 @@ const expenses = {
 
       const metaObj = {
         agencyName: agencyName || '',
+        agencyPhone: agencyPhone || '',
         notes: description,
         items: itemsDetailList
       };

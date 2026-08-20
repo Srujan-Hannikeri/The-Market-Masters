@@ -431,6 +431,18 @@ const shopping = {
               </select>
             </div>
             <div class="form-group">
+              <label>Payment Type *</label>
+              <select id="checkout-payment-type" required onchange="const field = document.getElementById('checkout-partial-payment-field'); const input = document.getElementById('checkout-amount-paid'); if(this.value === 'Partial') { field.style.display = 'block'; input.required = true; } else { field.style.display = 'none'; input.required = false; }">
+                <option value="Full">Full Payment</option>
+                <option value="Partial">Partial Payment</option>
+              </select>
+            </div>
+            <div id="checkout-partial-payment-field" class="form-group" style="display: none;">
+              <label>Amount to Pay Now (₹) *</label>
+              <input type="number" id="checkout-amount-paid" step="0.01" min="1" max="${totalAmount.toFixed(2)}" placeholder="Enter amount to pay now">
+              <p class="form-hint" style="font-size:12px; color:#6b7280; margin-top:4px;">Remaining amount will be marked as Due.</p>
+            </div>
+            <div class="form-group">
               <label>Order Notes (Optional)</label>
               <textarea id="order-notes" rows="2" placeholder="Any special instructions..."></textarea>
             </div>
@@ -569,9 +581,35 @@ const shopping = {
     const paymentMode = document.getElementById('payment-mode').value;
     const notes = document.getElementById('order-notes').value.trim();
     
+    const paymentType = document.getElementById('checkout-payment-type')?.value || 'Full';
+    const totalAmount = this.cart.reduce((sum, item) => sum + item.total, 0);
+    
+    let amountPaid = 0;
+    if (paymentType === 'Partial') {
+      amountPaid = parseFloat(document.getElementById('checkout-amount-paid').value);
+      if (!amountPaid || amountPaid <= 0 || amountPaid > totalAmount) {
+        toast.error('Please enter a valid amount to pay now');
+        return;
+      }
+    } else {
+      // For full payment
+      amountPaid = totalAmount;
+    }
+    
+    // If Cash on delivery, typically no upfront payment unless they chose partial? We'll assume Cash means COD (0 upfront) unless they typed a partial amount
+    if (paymentMode === 'Cash' && paymentType === 'Full') {
+      amountPaid = 0; // COD implies pay later
+    }
+
     if (!shippingAddress || !paymentMode) {
       toast.error('Please fill all required fields');
       return;
+    }
+
+    const submitBtn = document.querySelector('#checkout-form button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     }
 
     try {
@@ -581,6 +619,24 @@ const shopping = {
         paymentMode,
         notes
       });
+      const order = response.order;
+
+      // If they are making a payment now
+      if (amountPaid > 0) {
+        try {
+          const billsResp = await billsAPI.getMyBills();
+          const linkedBill = billsResp.bills.find(b => b.notes && b.notes.includes(order.orderNumber));
+          if (linkedBill) {
+            await billsAPI.makePayment(linkedBill.id, {
+              amountPaid,
+              paymentMode,
+              transactionId: ''
+            });
+          }
+        } catch(e) {
+          console.warn('Failed to record upfront payment:', e);
+        }
+      }
 
       modal.closeAll();
       toast.success('Order placed successfully!');
@@ -595,6 +651,11 @@ const shopping = {
     } catch (error) {
       console.error('Place order error:', error);
       toast.error(error.message || 'Failed to place order');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Place Order';
+      }
     }
   },
 
@@ -676,9 +737,15 @@ const shopping = {
           ` : ''}
           <div class="order-actions">
             ${order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Delivered' ? `
-              <button onclick="shopping.showPaymentModal('${order.id}', '${order.paymentMode}', ${order.finalAmount})" class="btn btn-sm btn-success">
-                <i class="fas fa-credit-card"></i> Pay Now
-              </button>
+              ${order.paymentStatus === 'Verification Pending' ? `
+                <span style="color: #f59e0b; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fas fa-hourglass-half"></i> Verification Pending
+                </span>
+              ` : (order.paymentStatus !== 'Paid' ? `
+                <button onclick="shopping.showPaymentModal('${order.id}', '${order.paymentMode}', ${order.finalAmount})" class="btn btn-sm btn-success">
+                  <i class="fas fa-credit-card"></i> Pay Now
+                </button>
+              ` : '')}
               <button onclick="shopping.cancelOrder('${order.id}')" class="btn btn-sm btn-danger">
                 <i class="fas fa-times"></i> Cancel
               </button>

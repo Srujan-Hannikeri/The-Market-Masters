@@ -92,7 +92,9 @@ class MyBills {
         var payButton = '';
         var isFullyPaid = bill.paymentStatus === 'Paid' || parseFloat(bill.balanceAmount) <= 0;
         
-        if (!isFullyPaid) {
+        if (bill.paymentStatus === 'Verification Pending') {
+          payButton = '<span style="color: #f59e0b; font-weight: bold;"><i class="fas fa-hourglass-half"></i> Verification Pending</span>';
+        } else if (!isFullyPaid) {
           payButton = '<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); myBills.makePayment(\'' + bill.id + '\', ' + bill.totalAmount + ', ' + bill.balanceAmount + ')" title="Make Payment"><i class="fas fa-credit-card"></i> Pay Now</button>';
         } else {
           payButton = '<span style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Paid</span>';

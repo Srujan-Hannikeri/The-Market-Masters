@@ -389,22 +389,22 @@ const dashboard = {
 
         expiredProducts.forEach(p => {
           html += `
-            <div class="low-stock-product expiry-alert expired" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+            <div class="low-stock-product expiry-alert expired" onclick="dashboard.openProductExpense('${p.name.replace(/'/g, "\\'")}')" style="cursor:pointer;">
               <i class="fas fa-calendar-times" style="color:#ef4444;"></i>
               <div>
                 <div class="product-name">${p.name}</div>
-                <div class="product-stock" style="color:#ef4444;font-weight:700;">⚠ ${formatExpiryStatus(p.expiryDate, today)} — ${parseExpiryCalendarDate(p.expiryDate).toLocaleDateString('en-IN')}</div>
+                <div class="product-stock" style="color:#ef4444;font-weight:700;">🚨 ${formatExpiryStatus(p.expiryDate, today)} • ${parseExpiryCalendarDate(p.expiryDate).toLocaleDateString('en-IN')}</div>
               </div>
             </div>`;
         });
 
         soonExpiringProducts.forEach(p => {
           html += `
-            <div class="low-stock-product expiry-alert expiring" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+            <div class="low-stock-product expiry-alert expiring" onclick="dashboard.openProductExpense('${p.name.replace(/'/g, "\\'")}')" style="cursor:pointer;">
               <i class="fas fa-clock" style="color:#f59e0b;"></i>
               <div>
                 <div class="product-name">${p.name}</div>
-                <div class="product-stock" style="color:#d97706;font-weight:600;">${formatExpiryStatus(p.expiryDate, today)} — ${parseExpiryCalendarDate(p.expiryDate).toLocaleDateString('en-IN')}</div>
+                <div class="product-stock" style="color:#d97706;font-weight:600;">${formatExpiryStatus(p.expiryDate, today)} • ${parseExpiryCalendarDate(p.expiryDate).toLocaleDateString('en-IN')}</div>
               </div>
             </div>`;
         });
@@ -420,7 +420,7 @@ const dashboard = {
 
         outOfStockProducts.forEach(p => {
           html += `
-            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+            <div class="low-stock-product" onclick="dashboard.openProductExpense('${p.name.replace(/'/g, "\\'")}')" style="cursor:pointer;">
               <i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>
               <div>
                 <div class="product-name">${p.name}</div>
@@ -432,7 +432,7 @@ const dashboard = {
         lowStockProducts.forEach(p => {
           const threshold = parseInt(p.minStock || p.lowStockThreshold) || 10;
           html += `
-            <div class="low-stock-product" onclick="app.navigateTo('inventory')" style="cursor:pointer;">
+            <div class="low-stock-product" onclick="dashboard.openProductExpense('${p.name.replace(/'/g, "\\'")}')" style="cursor:pointer;">
               <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
               <div>
                 <div class="product-name">${p.name}</div>
@@ -450,6 +450,33 @@ const dashboard = {
       console.error("checkLowStock error:", error);
     }
   },
+
+  async openProductExpense(productName) {
+    app.navigateTo('expenses');
+    try {
+      const response = await expensesAPI.getExpenses();
+      const expensesList = response.expenses || [];
+      const expense = expensesList.find(e => {
+        if (e.description && e.description.startsWith('JSONMETA:')) {
+           try {
+             const meta = JSON.parse(e.description.replace('JSONMETA:', ''));
+             return meta.items && meta.items.some(i => i.name === productName);
+           } catch(e) {}
+        }
+        return false;
+      });
+      if (expense) {
+        // We delay slightly to let expenses view load
+        setTimeout(() => {
+          expenses.viewExpenseDetails(expense.id);
+        }, 100);
+      } else {
+        toast.info("No expense bill found for this product.");
+      }
+    } catch (error) {
+      console.error("openProductExpense error:", error);
+    }
+  }
 };
 
 // Global function to close low stock alert
