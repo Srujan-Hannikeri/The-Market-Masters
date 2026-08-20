@@ -240,16 +240,22 @@ const expenses = {
   },
 
   selectAutocompleteItem(element, name, mrp, lowStock) {
-    const container = element.closest('div').parentElement;
-    const inputName = container.querySelector('.exp-item-name');
-    const inputMrp = container.closest('.expense-inventory-item-row').querySelector('.exp-item-mrp');
-    const inputLowStock = container.closest('.expense-inventory-item-row').querySelector('.exp-item-lowstock');
+    const list = element.parentElement;
+    const fieldDiv = list.parentElement;
+    const inputName = fieldDiv.querySelector('.exp-item-name');
+    const row = fieldDiv.closest('.expense-inventory-item-row');
     
-    inputName.value = name;
-    if (mrp && !inputMrp.value) inputMrp.value = mrp;
-    if (lowStock && !inputLowStock.value) inputLowStock.value = lowStock;
+    if (inputName) inputName.value = name;
     
-    element.parentElement.style.display = 'none';
+    if (row) {
+      const inputMrp = row.querySelector('.exp-item-mrp');
+      const inputLowStock = row.querySelector('.exp-item-lowstock');
+      
+      if (mrp && inputMrp && !inputMrp.value) inputMrp.value = mrp;
+      if (lowStock && inputLowStock && !inputLowStock.value) inputLowStock.value = lowStock;
+    }
+    
+    list.style.display = 'none';
   },
 
   calculateInventoryTotal() {

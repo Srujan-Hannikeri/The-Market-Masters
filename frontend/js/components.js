@@ -234,6 +234,9 @@ const customDropdown = {
       
       const span = document.createElement('span');
       span.textContent = select.options[select.selectedIndex]?.text || '';
+      span.style.whiteSpace = 'nowrap';
+      span.style.overflow = 'hidden';
+      span.style.textOverflow = 'ellipsis';
       trigger.appendChild(span);
       
       const icon = document.createElement('i');
