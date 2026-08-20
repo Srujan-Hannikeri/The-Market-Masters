@@ -198,7 +198,7 @@ const getStatusBadge = (status) => {
   };
 
   const s = styleMap[statusStr] || { bg: '#64748b', icon: 'fa-tag' };
-  const baseStyle = `display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:${s.bg};color:#fff;transition:transform 0.15s,box-shadow 0.15s;cursor:default;`;
+  const baseStyle = `display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;background:${s.bg};color:#fff;transition:transform 0.15s,box-shadow 0.15s;cursor:default;`;
   return `<span style="${baseStyle}" onmouseenter="this.style.transform='scale(1.07)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.25)'" onmouseleave="this.style.transform='scale(1)';this.style.boxShadow='none'"><i class="fas ${s.icon}"></i> ${statusStr}</span>`;
 };
 

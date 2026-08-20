@@ -160,7 +160,7 @@ const expenses = {
         <i class="fas fa-times"></i>
       </button>
       <div class="expense-inventory-grid">
-        <div class="expense-item-field expense-item-name-field">
+        <div class="expense-item-field expense-item-name-field" style="position:relative;">
           <label class="expense-item-label">Item Name *</label>
           <input type="text" class="exp-item-name" placeholder="e.g. Rice 10kg" autocomplete="off" required
             style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
@@ -507,11 +507,17 @@ const expenses = {
       return;
     }
 
+    const saveBtn = document.querySelector('#add-expense-form button[type="submit"]');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+
     // Handle Inventory Purchase items auto-addition
     if (type === 'Inventory') {
       const itemRows = document.querySelectorAll('.expense-inventory-item-row');
-      const addedItemsSummary = [];
       const itemsDetailList = [];
+      const inventoryPromises = [];
 
       for (const row of itemRows) {
         const name = row.querySelector('.exp-item-name').value.trim();
@@ -526,12 +532,16 @@ const expenses = {
         // Validate low stock field is filled
         if (name && (!lowStockInput || !lowStockInput.value)) {
           toast.error(`Please enter a Low Stock Threshold for "${name || 'an item'}".`);
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Expense';
+          }
           return;
         }
 
         if (name) {
-          try {
-            await inventoryAPI.createProduct({
+          inventoryPromises.push(
+            inventoryAPI.createProduct({
               name,
               mrp: mrp || costPrice,
               price: mrp || costPrice,
@@ -541,14 +551,15 @@ const expenses = {
               lowStockThreshold: lowStockVal,
               minStock: lowStockVal,
               expiryDate: expiryDate
-            });
-          } catch (err) {
-            // Product may already exist — createProduct handles stock merging server-side
-          }
-          addedItemsSummary.push(`${name} (Qty: ${stock})`);
+            }).catch(err => {
+              // Product may already exist
+            })
+          );
           itemsDetailList.push({ name, mrp: mrp || costPrice, billingPrice: costPrice, qty: stock });
         }
       }
+
+      await Promise.all(inventoryPromises);
 
       const metaObj = {
         agencyName: agencyName || '',
@@ -577,13 +588,19 @@ const expenses = {
       const itemsContainer = document.getElementById('inventory-items-container');
       if (itemsContainer) itemsContainer.innerHTML = '';
       
-      await this.loadExpenses();
-      await this.loadProducts();
+      // Load in background without awaiting, so UI doesn't freeze
+      this.loadExpenses();
+      this.loadProducts();
       if (typeof inventory !== 'undefined' && typeof inventory.load === 'function') {
-        await inventory.load();
+        inventory.load();
       }
     } catch (error) {
       toast.error(error.message || 'Failed to add expense');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Expense';
+      }
     }
   },
 

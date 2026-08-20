@@ -336,6 +336,7 @@
     font-size: 0.72rem;
   }
 
+
   /* Keep Recent Bills heading and filters in one line */
   .recent-bills-header {
     flex-wrap: nowrap;

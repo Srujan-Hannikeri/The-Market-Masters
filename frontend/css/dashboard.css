@@ -317,6 +317,18 @@
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 1.5rem;
+  align-items: stretch;
+}
+
+.billing-container > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.billing-container > div > .card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .bill-items-section {
@@ -430,6 +442,7 @@
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.875rem;
+  white-space: nowrap;
 }
 
 .payment-status-display span.Paid {
@@ -448,8 +461,15 @@
 }
 
 .bills-list {
-  max-height: 600px;
+  flex: 1;
   overflow-y: auto;
+  max-height: none;
+}
+
+.bills-list-section .card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .bill-card {
