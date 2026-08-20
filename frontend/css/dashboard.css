@@ -464,6 +464,8 @@
   flex: 1;
   overflow-y: auto;
   max-height: none;
+  min-height: 0;
+  height: 0;
 }
 
 .bills-list-section .card-body {

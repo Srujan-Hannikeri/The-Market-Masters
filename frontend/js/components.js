@@ -202,6 +202,148 @@ const getStatusBadge = (status) => {
   return `<span style="${baseStyle}" onmouseenter="this.style.transform='scale(1.07)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.25)'" onmouseleave="this.style.transform='scale(1)';this.style.boxShadow='none'"><i class="fas ${s.icon}"></i> ${statusStr}</span>`;
 };
 
+// Custom Dropdown UI for select elements
+const customDropdown = {
+  init(selector) {
+    document.querySelectorAll(selector).forEach(select => {
+      if (select.dataset.customized) return;
+      select.dataset.customized = "true";
+      select.style.display = 'none';
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'custom-select-wrapper';
+      wrapper.style.position = 'relative';
+      wrapper.style.display = 'inline-block';
+      wrapper.style.width = select.style.minWidth || 'auto';
+      if (select.style.minWidth) wrapper.style.minWidth = select.style.minWidth;
+
+      const trigger = document.createElement('div');
+      trigger.className = 'custom-select-trigger';
+      trigger.style.padding = '8px 12px';
+      trigger.style.background = '#fff';
+      trigger.style.border = '1px solid #cbd5e1';
+      trigger.style.borderRadius = '6px';
+      trigger.style.cursor = 'pointer';
+      trigger.style.display = 'flex';
+      trigger.style.justifyContent = 'space-between';
+      trigger.style.alignItems = 'center';
+      trigger.style.fontSize = '13.5px';
+      trigger.style.color = '#334155';
+      trigger.style.fontWeight = '500';
+      trigger.style.userSelect = 'none';
+      
+      const span = document.createElement('span');
+      span.textContent = select.options[select.selectedIndex]?.text || '';
+      trigger.appendChild(span);
+      
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-chevron-down';
+      icon.style.color = '#94a3b8';
+      icon.style.marginLeft = '12px';
+      icon.style.transition = 'transform 0.2s';
+      trigger.appendChild(icon);
+
+      const list = document.createElement('div');
+      list.className = 'custom-select-options';
+      list.style.position = 'absolute';
+      list.style.top = 'calc(100% + 4px)';
+      list.style.left = '0';
+      list.style.minWidth = '100%';
+      list.style.background = '#fff';
+      list.style.border = '1px solid #e2e8f0';
+      list.style.borderRadius = '8px';
+      list.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+      list.style.zIndex = '9999';
+      list.style.display = 'none';
+      list.style.maxHeight = '250px';
+      list.style.overflowY = 'auto';
+      list.style.padding = '6px 0';
+      // Ensure words don't wrap weirdly in dropdowns
+      list.style.whiteSpace = 'nowrap';
+
+      Array.from(select.options).forEach(opt => {
+        const optionEl = document.createElement('div');
+        optionEl.className = 'custom-select-option';
+        optionEl.textContent = opt.text;
+        optionEl.style.padding = '10px 16px';
+        optionEl.style.cursor = 'pointer';
+        optionEl.style.fontSize = '13.5px';
+        optionEl.style.color = '#475569';
+        optionEl.style.transition = 'background 0.2s, color 0.2s';
+        
+        if (opt.selected) {
+          optionEl.style.background = '#f0fdf4';
+          optionEl.style.color = 'var(--primary)';
+          optionEl.style.fontWeight = '600';
+        }
+
+        optionEl.onmouseenter = () => {
+          if (!opt.selected) optionEl.style.background = '#f8fafc';
+        };
+        optionEl.onmouseleave = () => {
+          if (!opt.selected) optionEl.style.background = 'transparent';
+        };
+
+        optionEl.onclick = (e) => {
+          e.stopPropagation();
+          select.value = opt.value;
+          span.textContent = opt.text;
+          
+          Array.from(list.children).forEach((child, idx) => {
+            child.style.background = 'transparent';
+            child.style.color = '#475569';
+            child.style.fontWeight = '400';
+            opt.selected = false;
+            select.options[idx].selected = false;
+          });
+          
+          opt.selected = true;
+          optionEl.style.background = '#f0fdf4';
+          optionEl.style.color = 'var(--primary)';
+          optionEl.style.fontWeight = '600';
+
+          list.style.display = 'none';
+          icon.style.transform = 'rotate(0)';
+          trigger.style.borderColor = '#cbd5e1';
+          trigger.style.boxShadow = 'none';
+          
+          select.dispatchEvent(new Event('change'));
+        };
+        list.appendChild(optionEl);
+      });
+
+      trigger.onclick = (e) => {
+        e.stopPropagation();
+        const isOpen = list.style.display === 'block';
+        document.querySelectorAll('.custom-select-options').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.custom-select-trigger i').forEach(el => el.style.transform = 'rotate(0)');
+        document.querySelectorAll('.custom-select-trigger').forEach(el => {
+          el.style.borderColor = '#cbd5e1';
+          el.style.boxShadow = 'none';
+        });
+        
+        if (!isOpen) {
+          list.style.display = 'block';
+          icon.style.transform = 'rotate(180deg)';
+          trigger.style.borderColor = 'var(--primary)';
+          trigger.style.boxShadow = '0 0 0 3px rgba(30, 95, 91, 0.1)';
+        }
+      };
+
+      document.addEventListener('click', () => {
+        list.style.display = 'none';
+        icon.style.transform = 'rotate(0)';
+        trigger.style.borderColor = '#cbd5e1';
+        trigger.style.boxShadow = 'none';
+      });
+
+      wrapper.appendChild(trigger);
+      wrapper.appendChild(list);
+      select.parentNode.insertBefore(wrapper, select);
+    });
+  }
+};
+
 // Debounce function
 const debounce = (func, wait) => {
   let timeout;

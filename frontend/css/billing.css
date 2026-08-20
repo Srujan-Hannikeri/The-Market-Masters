@@ -106,9 +106,10 @@
   gap: 20px;
 }
 
-.recent-bills-header h2 {
+.recent-bills-header h3 {
   margin: 0;
-  white-space: nowrap;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .filter-group {

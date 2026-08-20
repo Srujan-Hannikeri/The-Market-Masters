@@ -9,8 +9,10 @@ const expenses = {
   listenersSetup: false,
 
   async load() {
-    await this.loadExpenses();
-    await this.loadProducts();
+    await Promise.all([
+      this.loadExpenses(),
+      this.loadProducts()
+    ]);
     if (!this.listenersSetup) {
       this.setupEventListeners();
       this.listenersSetup = true;
@@ -35,8 +37,8 @@ const expenses = {
       this.monthExpenses = response.monthExpenses || [];
       this.yearExpenses = response.yearExpenses || [];
 
-      // If month/year items weren't fetched, fetch all expenses as fallback
-      if (this.monthExpenses.length === 0 || this.yearExpenses.length === 0) {
+      // If month/year items weren't fetched (API didn't support it), fetch all as fallback
+      if (response.monthExpenses === undefined || response.yearExpenses === undefined) {
         try {
           const allRes = await expensesAPI.getExpenses({ limit: 1000 });
           const allList = allRes.expenses || [];
@@ -45,22 +47,18 @@ const expenses = {
           const curYear = now.getFullYear();
           const curMonth = now.getMonth();
 
-          if (this.monthExpenses.length === 0) {
-            this.monthExpenses = allList.filter(e => {
-              const d = new Date(e.date || e.expenseDate);
-              return d.getFullYear() === curYear && d.getMonth() === curMonth;
-            });
-          }
-          if (this.yearExpenses.length === 0) {
-            this.yearExpenses = allList.filter(e => {
-              const d = new Date(e.date || e.expenseDate);
-              return d.getFullYear() === curYear;
-            });
-          }
+          this.monthExpenses = allList.filter(e => {
+            const d = new Date(e.date || e.expenseDate);
+            return d.getFullYear() === curYear && d.getMonth() === curMonth;
+          });
+          this.yearExpenses = allList.filter(e => {
+            const d = new Date(e.date || e.expenseDate);
+            return d.getFullYear() === curYear;
+          });
         } catch (err) {
-
         }
       }
+
 
       // Compute display totals accurately from final arrays
       const todayTotal = this.todayExpenses.reduce((s, e) => s + parseFloat(e.amount), 0);

@@ -23,6 +23,7 @@ const billing = {
     // Add one empty bill item row
     this.addBillItem();
     await this.loadBills();
+    customDropdown.init('.filter-group select');
   },
 
   // Called by app.js when navigating away — stops background polling
