@@ -326,6 +326,11 @@
   min-height: 0;
 }
 
+.bills-list-section {
+  height: 1px;
+  min-height: 100%;
+}
+
 .billing-container > div > .card {
   flex: 1 1 0%;
   display: flex;
