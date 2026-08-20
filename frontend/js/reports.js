@@ -40,7 +40,7 @@ const reports = {
     const btn = document.getElementById('generate-report-btn');
     if (isManual && btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Generating...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     }
 
     // Guard: only send dates if both are valid YYYY-MM-DD strings
@@ -213,10 +213,7 @@ const reports = {
 
   renderCustomerBreakdown(bills) {
     const container = document.getElementById('customer-breakdown-container');
-    if (!container) {
-      console.error('customer-breakdown-container not found');
-      return;
-    }
+    if (!container) return;
 
     if (!bills || bills.length === 0) {
       container.innerHTML = `
