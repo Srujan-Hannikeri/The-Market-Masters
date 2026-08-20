@@ -212,9 +212,6 @@ const app = {
       // partial fetch failed — silent fallback
     }
 
-    // Hide loader after partial is in DOM
-    if (typeof loader !== 'undefined') loader.hide();
-
     // Fallback to existing in-index sections if partial not found
     if (!loaded) {
       const targetPage = document.getElementById(`${page}-page`);
@@ -225,8 +222,11 @@ const app = {
 
     this.currentPage = page;
 
-    // Load page data
-    this.loadPageData(page);
+    // Load page data (await it so the loader stays visible)
+    await this.loadPageData(page);
+
+    // Hide loader after partial AND data is loaded
+    if (typeof loader !== 'undefined') loader.hide();
 
     // Update URL
     if (updateHistory) {
@@ -235,47 +235,47 @@ const app = {
   },
 
   // Load page-specific data
-  loadPageData(page) {
+  async loadPageData(page) {
     // Stop background polling from previously active modules
     const stoppable = [billing, reports, dashboard];
     stoppable.forEach(mod => { if (mod && typeof mod.stop === 'function') mod.stop(); });
 
     switch (page) {
       case 'dashboard':
-        dashboard.load();
+        await dashboard.load();
         break;
       case 'billing':
-        billing.load();
+        await billing.load();
         break;
       case 'payments':
-        payments.load();
+        await payments.load();
         break;
       case 'inventory':
-        inventory.load();
+        await inventory.load();
         break;
       case 'expenses':
-        expenses.load();
+        await expenses.load();
         break;
       case 'reports':
-        reports.load();
+        await reports.load();
         break;
       case 'my-bills':
-        myBills.load();
+        await myBills.load();
         break;
       case 'profile':
-        profile.load();
+        await profile.load();
         break;
       case 'shop':
-        shopping.init();
+        await shopping.init();
         break;
       case 'cart':
-        shopping.loadCart();
+        await shopping.loadCart();
         break;
       case 'my-orders':
-        shopping.loadMyOrders();
+        await shopping.loadMyOrders();
         break;
       case 'shop-orders':
-        shopping.loadShopOrders();
+        await shopping.loadShopOrders();
         break;
     }
   },

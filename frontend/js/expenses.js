@@ -9,10 +9,13 @@ const expenses = {
   listenersSetup: false,
 
   async load() {
-    await Promise.all([
-      this.loadExpenses(),
-      this.loadProducts()
-    ]);
+    try {
+      await Promise.all([
+        this.loadExpenses(),
+        this.loadProducts()
+      ]);
+    } finally {
+    }
     if (!this.listenersSetup) {
       this.setupEventListeners();
       this.listenersSetup = true;

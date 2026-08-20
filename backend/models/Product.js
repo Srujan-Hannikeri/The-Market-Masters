@@ -86,6 +86,8 @@ productSchema.virtual('User', {
   justOne: true
 });
 
+productSchema.index({ userId: 1 });
+
 const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 
 module.exports = Product;
