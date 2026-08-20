@@ -224,6 +224,25 @@ cursor: default;
   border-color: var(--primary);
 }
 
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%231e5f5b" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+  background-repeat: no-repeat;
+  background-position-x: calc(100% - 10px);
+  background-position-y: center;
+  padding-right: 2rem !important;
+  cursor: pointer;
+}
+
+select option {
+  padding: 10px 15px;
+  background: var(--white);
+  color: var(--dark);
+  font-size: 0.95rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -10,9 +10,19 @@ const expenses = {
 
   async load() {
     await this.loadExpenses();
+    await this.loadProducts();
     if (!this.listenersSetup) {
       this.setupEventListeners();
       this.listenersSetup = true;
+    }
+  },
+
+  async loadProducts() {
+    try {
+      const response = await inventoryAPI.getProducts({ limit: 1000 });
+      this.inventoryProducts = response.products || [];
+    } catch (error) {
+      console.error('Failed to load products for autocomplete:', error);
     }
   },
 
@@ -568,7 +578,8 @@ const expenses = {
       if (itemsContainer) itemsContainer.innerHTML = '';
       
       await this.loadExpenses();
-      if (typeof inventory.load === 'function') {
+      await this.loadProducts();
+      if (typeof inventory !== 'undefined' && typeof inventory.load === 'function') {
         await inventory.load();
       }
     } catch (error) {

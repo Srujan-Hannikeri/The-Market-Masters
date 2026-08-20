@@ -663,14 +663,13 @@ const billing = {
       const blobUrl = URL.createObjectURL(blob);
 
       if (printWindow) {
-        printWindow.addEventListener('load', () => {
-          setTimeout(() => {
-            printWindow.focus();
-            printWindow.print();
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-          }, 250);
-        }, { once: true });
         printWindow.location.replace(blobUrl);
+        // Do not wait for the slow load event, trigger print shortly after replacing location
+        setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        }, 500);
       } else {
         // Fallback for browsers that block the early popup.
         window.open(blobUrl, '_blank');
