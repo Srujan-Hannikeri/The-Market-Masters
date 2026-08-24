@@ -178,31 +178,33 @@ const shopping = {
   async updateCartItem(cartItemId, quantity) {
     try {
       if (quantity <= 0) {
-        await this.removeFromCart(cartItemId);
+        // Optimistic remove
+        this.cart = this.cart.filter(i => i.id !== cartItemId);
+        this.renderCart();
+        this.updateCartCount();
+        ordersAPI.removeFromCart(cartItemId).catch(() => {
+          this.loadCart(); // revert on error
+        });
         return;
       }
       
-      // Optimistic UI update
+      // Optimistic UI — update local state instantly using correct price field
       const item = this.cart.find(i => i.id === cartItemId);
       if (item) {
+        const unitPrice = item.unitPrice || item.price || 0;
         item.quantity = quantity;
-        item.total = item.price * quantity;
-        this.renderCart();
+        item.total = unitPrice * quantity;
+        this.renderCart(); // instant re-render, no server wait
       }
       
-      // Debounce or just fire and forget (sync later)
+      // Debounce server sync — only fires once user stops clicking for 400ms
       if (this.updateTimer) clearTimeout(this.updateTimer);
-      
-      // We still update the server immediately to avoid losing data
-      ordersAPI.updateCartItem(cartItemId, quantity).then(() => {
-        // Sync silently in background after a short delay
-        this.updateTimer = setTimeout(() => {
-          this.loadCartSilently();
-        }, 500);
-      }).catch(err => {
-        toast.error('Failed to update cart');
-        this.loadCart(); // revert
-      });
+      this.updateTimer = setTimeout(() => {
+        ordersAPI.updateCartItem(cartItemId, quantity).catch(() => {
+          toast.error('Failed to sync cart');
+          this.loadCart(); // revert on error
+        });
+      }, 400);
       
     } catch (error) {
       toast.error(error.message || 'Failed to update cart');
@@ -736,15 +738,39 @@ const shopping = {
               </p>
             ` : ''}
           </div>
-          ${order.orderStatus === 'Cancelled' && order.refundStatus ? `
-            <div style="background: #d1ecf1; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 13px;">
-              <p style="margin: 0; color: #0c5460;">
-                <i class="fas fa-undo"></i> 
-                Refund: <strong>${order.refundStatus}</strong>
-                ${order.refundAmount ? ` | Rs. ${parseFloat(order.refundAmount).toFixed(2)}` : ''}
-              </p>
-            </div>
-          ` : ''}
+          ${order.orderStatus === 'Cancelled' ? (() => {
+            const rs = order.refundStatus || '';
+            const ra = order.refundAmount ? parseFloat(order.refundAmount).toFixed(2) : null;
+            if (rs === 'Refunded') {
+              return `
+                <div style="background: #dcfce7; border: 1px solid #86efac; padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                  <i class="fas fa-check-circle" style="color: #16a34a; font-size: 18px;"></i>
+                  <div>
+                    <div style="color: #15803d; font-weight: 700; font-size: 13px;">Refund Successful</div>
+                    ${ra ? `<div style="color: #166534; font-size: 12px; margin-top: 2px;">₹${ra} refunded to your account</div>` : ''}
+                  </div>
+                </div>`;
+            } else if (rs) {
+              return `
+                <div style="background: #fef9c3; border: 1px solid #fde047; padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                  <i class="fas fa-clock" style="color: #ca8a04; font-size: 18px;"></i>
+                  <div>
+                    <div style="color: #92400e; font-weight: 700; font-size: 13px;">Refund Under Process</div>
+                    <div style="color: #78350f; font-size: 12px; margin-top: 2px;">Your refund is being processed by the shopkeeper</div>
+                  </div>
+                </div>`;
+            } else if (order.paymentStatus === 'Paid' || order.paymentStatus === 'Partially Paid') {
+              return `
+                <div style="background: #fff7ed; border: 1px solid #fed7aa; padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                  <i class="fas fa-hourglass-half" style="color: #ea580c; font-size: 18px;"></i>
+                  <div>
+                    <div style="color: #9a3412; font-weight: 700; font-size: 13px;">Awaiting Refund</div>
+                    <div style="color: #7c2d12; font-size: 12px; margin-top: 2px;">Order cancelled — refund will be initiated by shopkeeper</div>
+                  </div>
+                </div>`;
+            }
+            return '';
+          })() : ''}
           <div class="order-actions">
             ${order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Delivered' ? `
               ${order.paymentStatus === 'Verification Pending' ? `
@@ -1026,7 +1052,9 @@ const shopping = {
           ` : ''}
           <div class="order-actions">
             <button onclick="shopping.viewShopOrderDetails('${order.id}')" class="btn btn-sm btn-secondary">View</button>
-            <button onclick="shopping.updateOrderStatusModal('${order.id}', '${order.orderStatus}', '${order.paymentStatus}')" class="btn btn-sm btn-primary">Update</button>
+            ${order.orderStatus !== 'Delivered' && order.orderStatus !== 'Cancelled' ? `
+              <button onclick="shopping.updateOrderStatusModal('${order.id}', '${order.orderStatus}', '${order.paymentStatus}')" class="btn btn-sm btn-primary">Update</button>
+            ` : ''}
             ${order.orderStatus === 'Cancelled' && (order.paymentStatus === 'Paid' || order.paymentStatus === 'Partially Paid') && order.refundStatus !== 'Refunded' ? `
               <button onclick="shopping.showRefundModal('${order.id}', ${order.finalAmount})" class="btn btn-sm btn-warning">
                 <i class="fas fa-undo"></i> Process Refund
@@ -1191,97 +1219,105 @@ const shopping = {
 
   // Show payment modal for order
   async showPaymentModal(orderId, currentPaymentMode, amount) {
-    try {
-      // Fetch the shopkeeper's UPI directly from the order
-      let shopkeeperUPI = null;
-      try {
-        const orderResponse = await ordersAPI.getOrderDetails(orderId);
-        const order = orderResponse.order;
-        // shopkeeperId is populated as an object when order is fetched
-        const shopkeeperId = order?.shopkeeperId?._id || order?.shopkeeperId;
-        if (shopkeeperId) {
-          const shopProfile = await api.get(`/auth/shopkeeper/${shopkeeperId}`);
-          if (shopProfile.user) {
-            shopkeeperUPI = {
-              upiId: shopProfile.user.upiId,
-              upiQrCode: shopProfile.user.upiQrCode
-            };
-          }
-        }
-      } catch (err) {
-        // UPI details are optional — payment can proceed without them
-      }
+    // Remove existing modal if any
+    const existing = document.getElementById('order-payment-modal');
+    if (existing) existing.remove();
 
-      // Store globally so the onchange handler can access it
-      window.currentOrderShopkeeperUPI = shopkeeperUPI;
-      
-      const paymentModal = document.createElement('div');
-      paymentModal.id = 'order-payment-modal';
-      paymentModal.className = 'modal';
-      paymentModal.innerHTML = `
-        <div class="modal-header">
-          <h3>Make Payment</h3>
-          <button class="modal-close" onclick="document.getElementById('order-payment-modal').remove();">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div style="padding: 20px;">
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
-              <h4 style="color: #2c5f2d; margin-bottom: 10px;">Order Amount</h4>
-              <p style="font-size: 28px; font-weight: bold; color: #2c5f2d; margin: 10px 0;">Rs. ${parseFloat(amount).toFixed(2)}</p>
+    // Open modal INSTANTLY — no API calls before showing
+    const paymentModal = document.createElement('div');
+    paymentModal.id = 'order-payment-modal';
+    paymentModal.className = 'modal';
+    paymentModal.innerHTML = `
+      <div class="modal-header">
+        <h3>Make Payment</h3>
+        <button class="modal-close" onclick="document.getElementById('order-payment-modal').remove();">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="padding: 20px;">
+          <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; border: 1px solid #bbf7d0;">
+            <h4 style="color: #166534; margin-bottom: 6px;">Order Amount</h4>
+            <p style="font-size: 28px; font-weight: bold; color: #15803d; margin: 0;">₹${parseFloat(amount).toFixed(2)}</p>
+          </div>
+          
+          <form id="order-payment-form" onsubmit="shopping.processOrderPayment(event, '${orderId}', ${amount})">
+            <div class="form-group">
+              <label>Select Payment Mode *</label>
+              <select id="order-payment-mode" required onchange="shopping.onPaymentModeChange(this.value, '${orderId}', ${amount});">
+                <option value="">Choose Payment Method</option>
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Card">Credit/Debit Card</option>
+                <option value="Net Banking">Net Banking</option>
+              </select>
             </div>
             
-            <form id="order-payment-form" onsubmit="shopping.processOrderPayment(event, '${orderId}', ${amount})">
+            <div class="form-group">
+              <label>Payment Type *</label>
+              <select id="payment-type" required onchange="shopping.togglePartialPayment(${amount})">
+                <option value="Full">Full Payment</option>
+                <option value="Partial">Partial Payment</option>
+              </select>
+            </div>
+            
+            <div id="partial-payment-field" style="display: none;">
               <div class="form-group">
-                <label>Select Payment Mode *</label>
-                <select id="order-payment-mode" required onchange="shopping.showPaymentDetails(this.value, ${amount});">
-                  <option value="">Choose Payment Method</option>
-                  <option value="Cash">Cash</option>
-                  <option value="UPI">UPI</option>
-                  <option value="Card">Credit/Debit Card</option>
-                  <option value="Net Banking">Net Banking</option>
-                </select>
+                <label>Amount Paid (₹) *</label>
+                <input type="number" id="amount-paid" step="0.01" min="0.01" max="${amount}" placeholder="Enter amount paid">
+                <small style="color: #666;">Maximum: ₹${parseFloat(amount).toFixed(2)}</small>
               </div>
-              
-              <div class="form-group">
-                <label>Payment Type *</label>
-                <select id="payment-type" required onchange="shopping.togglePartialPayment(${amount})">
-                  <option value="Full">Full Payment</option>
-                  <option value="Partial">Partial Payment</option>
-                </select>
-              </div>
-              
-              <div id="partial-payment-field" style="display: none;">
-                <div class="form-group">
-                  <label>Amount Paid (Rs.) *</label>
-                  <input type="number" id="amount-paid" step="0.01" min="0.01" max="${amount}" placeholder="Enter amount paid">
-                  <small style="color: #666;">Maximum: Rs. ${parseFloat(amount).toFixed(2)}</small>
-                </div>
-              </div>
-              
-              <div id="payment-details-container" style="margin-top: 20px;">
-                <!-- Payment details will be shown here based on selection -->
-              </div>
-              
-              <div class="form-actions" style="margin-top: 20px;">
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-check"></i> Confirm Payment
-                </button>
-                <button type="button" onclick="document.getElementById('order-payment-modal').remove();" class="btn btn-secondary">
-                  <i class="fas fa-times"></i> Close
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            
+            <div id="payment-details-container" style="margin-top: 20px;">
+              <!-- Payment details shown after mode selection -->
+            </div>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i> Confirm Payment
+              </button>
+              <button type="button" onclick="document.getElementById('order-payment-modal').remove();" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Close
+              </button>
+            </div>
+          </form>
         </div>
-      `;
-      
-      document.getElementById('modal-overlay').appendChild(paymentModal);
-      modal.open('order-payment-modal');
-      
-    } catch (error) {
-      console.error('Error showing payment modal:', error);
-      toast.error('Failed to load payment options');
+      </div>
+    `;
+    
+    document.getElementById('modal-overlay').appendChild(paymentModal);
+    modal.open('order-payment-modal');
+
+    // Pre-fetch shopkeeper UPI in the background (doesn't block modal open)
+    this._fetchShopkeeperUPI(orderId);
+  },
+
+  // Fetch shopkeeper UPI details in background and cache them
+  async _fetchShopkeeperUPI(orderId) {
+    try {
+      const orderResponse = await ordersAPI.getOrderDetails(orderId);
+      const order = orderResponse.order;
+      const shopkeeperId = order?.shopkeeperId?._id || order?.shopkeeperId;
+      if (shopkeeperId) {
+        const shopProfile = await api.get(`/auth/shopkeeper/${shopkeeperId}`);
+        window.currentOrderShopkeeperUPI = shopProfile.user ? {
+          upiId: shopProfile.user.upiId,
+          upiQrCode: shopProfile.user.upiQrCode
+        } : null;
+        // If user already selected UPI, refresh the details panel
+        const modeSelect = document.getElementById('order-payment-mode');
+        if (modeSelect && modeSelect.value === 'UPI') {
+          const amount = parseFloat(document.getElementById('amount-paid')?.max || 0);
+          shopping.showPaymentDetails('UPI', amount);
+        }
+      }
+    } catch (e) {
+      window.currentOrderShopkeeperUPI = null;
     }
+  },
+
+  // Handle payment mode change (replaces the inline onchange)
+  onPaymentModeChange(paymentMode, orderId, amount) {
+    this.showPaymentDetails(paymentMode, amount);
   },
 
   // Show payment details based on selected mode
@@ -1503,6 +1539,9 @@ const shopping = {
 
   // Show refund modal for shopkeeper
   showRefundModal(orderId, maxAmount) {
+    const existing = document.getElementById('refund-modal');
+    if (existing) existing.remove();
+
     const refundModal = document.createElement('div');
     refundModal.id = 'refund-modal';
     refundModal.className = 'modal';
@@ -1513,22 +1552,22 @@ const shopping = {
       </div>
       <div class="modal-body">
         <div style="padding: 20px;">
-          <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffc107;">
             <p style="margin: 0; color: #856404;">
-              <i class="fas fa-info-circle"></i> 
-              Enter the refund amount to process for this cancelled order.
+              <i class="fas fa-info-circle"></i>
+              Enter the refund amount for this cancelled order.
             </p>
           </div>
           
-          <form id="refund-form" onsubmit="shopping.processRefundSubmit(event, ${orderId}, ${maxAmount})">
+          <form id="refund-form" onsubmit="shopping.processRefundSubmit(event, '${orderId}', ${maxAmount})">
             <div class="form-group">
-              <label>Refund Amount (Rs.) *</label>
-              <input type="number" id="refund-amount" step="0.01" min="0.01" max="${maxAmount}" value="${maxAmount}" required>
-              <small style="color: #666;">Maximum: Rs. ${parseFloat(maxAmount).toFixed(2)}</small>
+              <label>Refund Amount (₹) *</label>
+              <input type="number" id="refund-amount" step="0.01" min="0.01" max="${maxAmount}" value="${parseFloat(maxAmount).toFixed(2)}" required>
+              <small style="color: #666;">Maximum: ₹${parseFloat(maxAmount).toFixed(2)}</small>
             </div>
             
             <div class="form-actions">
-              <button type="submit" class="btn btn-warning">
+              <button type="submit" class="btn btn-warning" id="refund-submit-btn">
                 <i class="fas fa-check"></i> Process Refund
               </button>
               <button type="button" onclick="document.getElementById('refund-modal').remove();" class="btn btn-secondary">
@@ -1559,17 +1598,27 @@ const shopping = {
       toast.error('Refund amount cannot exceed order total');
       return;
     }
+
+    const submitBtn = document.getElementById('refund-submit-btn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
     
     try {
       await ordersAPI.processRefund(orderId, refundAmount);
-      toast.success('Refund processed successfully!');
+      toast.success('Refund of ₹' + refundAmount.toFixed(2) + ' processed successfully!');
       document.getElementById('refund-modal').remove();
-      
-      // Reload shop orders
+      modal.closeAll();
+      // Reload shop orders to reflect updated refund status
       this.loadShopOrders();
     } catch (error) {
       console.error('Error processing refund:', error);
       toast.error(error.message || 'Failed to process refund');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Process Refund';
+      }
     }
   }
 };

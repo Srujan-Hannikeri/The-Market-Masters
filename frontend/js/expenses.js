@@ -358,6 +358,7 @@ const expenses = {
     if (!modalBody) return;
 
     let agencyName = '-';
+    let agencyPhone = '';
     let notes = '-';
     let items = [];
 
@@ -366,6 +367,7 @@ const expenses = {
       try {
         const meta = JSON.parse(rawDesc.substring(9));
         agencyName = meta.agencyName || '-';
+        agencyPhone = meta.agencyPhone || '';
         notes = meta.notes || '-';
         items = meta.items || [];
       } catch (e) {

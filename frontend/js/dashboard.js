@@ -461,15 +461,18 @@ const dashboard = {
            try {
              const meta = JSON.parse(e.description.replace('JSONMETA:', ''));
              return meta.items && meta.items.some(i => i.name === productName);
-           } catch(e) {}
+           } catch(err) {}
         }
         return false;
       });
       if (expense) {
-        // We delay slightly to let expenses view load
+        const expenseId = expense.id || expense._id;
+        // Give the expenses page time to fully render before opening modal
         setTimeout(() => {
-          expenses.viewExpenseDetails(expense.id);
-        }, 100);
+          if (typeof expenses !== 'undefined' && expenses.viewExpenseDetails) {
+            expenses.viewExpenseDetails(expenseId);
+          }
+        }, 600);
       } else {
         toast.info("No expense bill found for this product.");
       }
