@@ -81,8 +81,17 @@ const expenses = {
   },
 
   setupEventListeners() {
+    // Helper: clone element to strip ALL existing event listeners, then re-attach one
+    const rebind = (id, event, handler) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const fresh = el.cloneNode(true);
+      el.parentNode.replaceChild(fresh, el);
+      fresh.addEventListener(event, handler);
+    };
+
     // Add expense button
-    document.getElementById('add-expense-btn')?.addEventListener('click', () => {
+    rebind('add-expense-btn', 'click', () => {
       const dateEl = document.getElementById('expense-date');
       if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
       const typeSelect = document.getElementById('expense-type');
@@ -93,22 +102,24 @@ const expenses = {
       modal.open('add-expense-modal');
     });
 
-    // Add expense form
-    document.getElementById('add-expense-form')?.addEventListener('submit', (e) => {
+    // Add expense form — only one submit handler ever
+    rebind('add-expense-form', 'submit', (e) => {
       e.preventDefault();
       this.createExpense();
     });
 
-    // Period Tab Buttons
+    // Period Tab Buttons — clone each to clear old handlers
     document.querySelectorAll('.expense-period-tab').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      const fresh = btn.cloneNode(true);
+      btn.parentNode.replaceChild(fresh, btn);
+      fresh.addEventListener('click', (e) => {
         const period = e.currentTarget.getAttribute('data-period');
         this.setPeriod(period);
       });
     });
 
     // Expense Type Filter
-    document.getElementById('expense-type-filter')?.addEventListener('change', (e) => {
+    rebind('expense-type-filter', 'change', (e) => {
       this.currentFilter = e.target.value;
       this.renderExpenses();
     });
@@ -150,6 +161,35 @@ const expenses = {
   onInvPaymentStatusChange(value) {
     const field = document.getElementById('inv-amount-paid-field');
     if (field) field.style.display = (value === 'Partially Paid') ? 'block' : 'none';
+    if (value === 'Partially Paid') {
+      // Reset display
+      const dueDisplay = document.getElementById('inv-partial-due-display');
+      if (dueDisplay) dueDisplay.style.display = 'none';
+      const inp = document.getElementById('inv-amount-paid');
+      if (inp) inp.value = '';
+    }
+  },
+
+  // Live-update the Paying Now / Due cards as user types
+  updatePartialDueDisplay() {
+    const totalEl = document.getElementById('expense-amount');
+    const paidEl = document.getElementById('inv-amount-paid');
+    const dueDisplay = document.getElementById('inv-partial-due-display');
+    const payingNowVal = document.getElementById('inv-paying-now-val');
+    const dueVal = document.getElementById('inv-due-val');
+
+    const total = parseFloat(totalEl?.value) || 0;
+    const paid = parseFloat(paidEl?.value) || 0;
+    const due = Math.max(0, total - paid);
+
+    if (dueDisplay) dueDisplay.style.display = 'flex';
+    if (payingNowVal) payingNowVal.textContent = '₹' + paid.toFixed(2);
+    if (dueVal) dueVal.textContent = '₹' + due.toFixed(2);
+
+    // Highlight border red if paid exceeds total
+    if (paidEl) {
+      paidEl.style.borderColor = paid > total && total > 0 ? '#ef4444' : '#f59e0b';
+    }
   },
 
   addInventoryRow() {
