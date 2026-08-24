@@ -725,6 +725,16 @@ const shopping = {
           <div class="order-total-section">
             <span class="order-label">Total Amount</span>
             <p class="order-total"><strong>₹${parseFloat(order.finalAmount).toFixed(2)}</strong></p>
+            ${(order.paymentStatus === 'Partially Paid' || order.paymentStatus === 'Verification Pending') && order.paidAmount > 0 ? `
+              <p style="color: #16a34a; font-size: 13px; margin: 2px 0;">
+                <i class="fas fa-check-circle"></i> Paid: <strong>₹${parseFloat(order.paidAmount).toFixed(2)}</strong>
+              </p>
+            ` : ''}
+            ${order.paymentStatus === 'Partially Paid' && order.balanceAmount > 0 ? `
+              <p style="color: #ef4444; font-size: 13px; margin: 2px 0; font-weight: 600;">
+                <i class="fas fa-exclamation-circle"></i> Due: ₹${parseFloat(order.balanceAmount).toFixed(2)}
+              </p>
+            ` : ''}
           </div>
           ${order.orderStatus === 'Cancelled' && order.refundStatus ? `
             <div style="background: #d1ecf1; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 13px;">
@@ -995,6 +1005,16 @@ const shopping = {
         </div>
         <div class="order-footer">
           <p class="order-total"><strong style="color: ${colors.text};">Total: ₹${parseFloat(order.finalAmount).toFixed(2)}</strong></p>
+          ${order.paidAmount > 0 && order.paymentStatus !== 'Paid' ? `
+            <p style="color: #16a34a; font-size: 13px; margin: 2px 0;">
+              <i class="fas fa-check-circle"></i> Paid: <strong>₹${parseFloat(order.paidAmount).toFixed(2)}</strong>
+            </p>
+          ` : ''}
+          ${order.paymentStatus === 'Partially Paid' && order.balanceAmount > 0 ? `
+            <p style="color: #ef4444; font-size: 13px; margin: 2px 0; font-weight: 600;">
+              <i class="fas fa-exclamation-circle"></i> Due: ₹${parseFloat(order.balanceAmount).toFixed(2)}
+            </p>
+          ` : ''}
           ${order.orderStatus === 'Cancelled' && (order.paymentStatus === 'Paid' || order.paymentStatus === 'Partially Paid') ? `
             <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 13px;">
               <p style="margin: 0; color: #856404;">

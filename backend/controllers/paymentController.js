@@ -299,6 +299,8 @@ exports.confirmPayment = async (req, res) => {
           const order = await Order.findOne({ orderNumber });
           if (order) {
             order.paymentStatus = bill.paymentStatus;
+            order.paidAmount = bill.paidAmount;
+            order.balanceAmount = bill.balanceAmount;
             await order.save();
           }
         }

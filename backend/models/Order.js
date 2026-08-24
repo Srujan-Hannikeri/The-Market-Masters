@@ -58,6 +58,14 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    paidAmount: {
+      type: Number,
+      default: 0
+    },
+    balanceAmount: {
+      type: Number,
+      default: 0
+    },
     paymentMode: {
       type: String,
       enum: ['COD', 'UPI', 'Card', 'Net Banking', 'Cash'],
