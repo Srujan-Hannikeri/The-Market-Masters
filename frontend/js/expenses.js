@@ -6,7 +6,6 @@ const expenses = {
   yearExpenses: [],
   currentPeriod: 'today',
   currentFilter: 'all',
-  listenersSetup: false,
 
   async load() {
     try {
@@ -16,10 +15,8 @@ const expenses = {
       ]);
     } finally {
     }
-    if (!this.listenersSetup) {
-      this.setupEventListeners();
-      this.listenersSetup = true;
-    }
+    // Always re-attach — SPA navigation recreates the DOM each visit
+    this.setupEventListeners();
   },
 
   async loadProducts() {
@@ -133,17 +130,26 @@ const expenses = {
 
   toggleInventoryFields(type) {
     const fields = document.getElementById('inventory-purchase-fields');
+    const paymentSection = document.getElementById('inventory-payment-status-section');
     if (!fields) return;
 
     if (type === 'Inventory') {
       fields.style.display = 'block';
+      if (paymentSection) paymentSection.style.display = 'block';
       const container = document.getElementById('inventory-items-container');
       if (container && container.children.length === 0) {
         this.addInventoryRow();
       }
     } else {
       fields.style.display = 'none';
+      if (paymentSection) paymentSection.style.display = 'none';
     }
+  },
+
+  // Show/hide the "amount paid" input based on selected payment status
+  onInvPaymentStatusChange(value) {
+    const field = document.getElementById('inv-amount-paid-field');
+    if (field) field.style.display = (value === 'Partially Paid') ? 'block' : 'none';
   },
 
   addInventoryRow() {
@@ -313,6 +319,7 @@ const expenses = {
     tbody.innerHTML = targetList.map(expense => {
       let displayDesc = '-';
       let rawDesc = expense.description || '';
+      let paymentStatusBadge = '';
 
       if (rawDesc.startsWith('JSONMETA:')) {
         try {
@@ -321,6 +328,19 @@ const expenses = {
           if (meta.agencyName) parts.push(`Agency: ${meta.agencyName}`);
           if (meta.notes) parts.push(meta.notes);
           displayDesc = parts.join(' | ') || 'Inventory Purchase';
+
+          // Build payment status badge
+          if (meta.paymentStatus) {
+            const ps = meta.paymentStatus;
+            const badgeStyles = {
+              'Paid':           'background:#dcfce7;color:#15803d;border:1px solid #86efac;',
+              'Partially Paid': 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;',
+              'Unpaid':         'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;'
+            };
+            const style = badgeStyles[ps] || badgeStyles['Unpaid'];
+            const icon = ps === 'Paid' ? '✅' : ps === 'Partially Paid' ? '🟡' : '🔴';
+            paymentStatusBadge = `<span style="${style} padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap;">${icon} ${ps}</span>`;
+          }
         } catch (e) {
           displayDesc = rawDesc;
         }
@@ -333,8 +353,9 @@ const expenses = {
       return `
         <tr onclick="expenses.viewExpenseDetails('${expense.id}')" style="cursor: pointer; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" title="Click to view expense card breakdown">
           <td><span class="badge badge-info">${expense.category || expense.type || '-'}</span></td>
-          <td style="font-weight: 500; color: #334155; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayDesc}</td>
+          <td style="font-weight: 500; color: #334155; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayDesc}</td>
           <td style="font-weight: 700; color: #0f172a;">${formatCurrency(expense.amount)}</td>
+          <td>${paymentStatusBadge}</td>
           <td style="color: #64748b; font-size: 13px; font-weight: 500;">${formatDate(expense.date || expense.expenseDate)}</td>
         </tr>
       `;
@@ -361,6 +382,10 @@ const expenses = {
     let agencyPhone = '';
     let notes = '-';
     let items = [];
+    let paymentStatus = '';
+    let totalAmount = parseFloat(expense.amount) || 0;
+    let amountPaid = 0;
+    let dueAmount = 0;
 
     let rawDesc = expense.description || '';
     if (rawDesc.startsWith('JSONMETA:')) {
@@ -370,6 +395,10 @@ const expenses = {
         agencyPhone = meta.agencyPhone || '';
         notes = meta.notes || '-';
         items = meta.items || [];
+        paymentStatus = meta.paymentStatus || '';
+        totalAmount = parseFloat(meta.totalAmount) || parseFloat(expense.amount) || 0;
+        amountPaid = parseFloat(meta.amountPaid) || 0;
+        dueAmount = parseFloat(meta.dueAmount) || parseFloat((totalAmount - amountPaid).toFixed(2));
       } catch (e) {
         notes = rawDesc;
       }
@@ -479,10 +508,21 @@ const expenses = {
           </div>
           <div>
             <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Agency / Distributor</span>
-            <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 4px;">
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-top: 4px;">
               <i class="fas fa-building" style="color: var(--primary);"></i> ${agencyName}
-              ${agencyPhone ? `<br><i class="fas fa-phone-alt" style="color: var(--primary); font-size: 11px; margin-top: 4px;"></i> ${agencyPhone}` : ''}
             </div>
+            ${agencyPhone ? `
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 8px 12px;">
+                <a href="tel:${agencyPhone}" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: #15803d; font-size: 15px; font-weight: 700; flex: 1;">
+                  <i class="fas fa-phone-alt" style="font-size: 13px;"></i>
+                  ${agencyPhone}
+                </a>
+                <button onclick="navigator.clipboard.writeText('${agencyPhone}').then(() => toast.success('Phone number copied!'))" 
+                  style="background: #16a34a; color: white; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                  <i class="fas fa-copy"></i> Copy
+                </button>
+              </div>
+            ` : ''}
           </div>
         </div>
 
@@ -492,6 +532,51 @@ const expenses = {
             <span style="font-size: 13px; color: #1e293b;">${notes}</span>
           </div>
         ` : ''}
+
+        ${paymentStatus ? (() => {
+          const configs = {
+            'Paid': {
+              bg: '#dcfce7', border: '#86efac', iconColor: '#16a34a',
+              icon: 'fa-check-circle', label: 'Paid in Full', labelColor: '#15803d'
+            },
+            'Partially Paid': {
+              bg: '#fef9c3', border: '#fde047', iconColor: '#ca8a04',
+              icon: 'fa-adjust', label: 'Partially Paid', labelColor: '#854d0e'
+            },
+            'Unpaid': {
+              bg: '#fee2e2', border: '#fca5a5', iconColor: '#dc2626',
+              icon: 'fa-times-circle', label: 'Unpaid', labelColor: '#991b1b'
+            }
+          };
+          const c = configs[paymentStatus] || configs['Unpaid'];
+          return `
+            <div style="background: ${c.bg}; border: 1px solid ${c.border}; border-radius: 10px; padding: 14px 16px; margin-bottom: 15px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: ${paymentStatus !== 'Paid' ? '10px' : '0'};">
+                <i class="fas ${c.icon}" style="color: ${c.iconColor}; font-size: 18px;"></i>
+                <span style="font-weight: 700; font-size: 15px; color: ${c.labelColor};">Payment Status: ${c.label}</span>
+              </div>
+              ${paymentStatus !== 'Paid' ? `
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 8px;">
+                  <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;">Total Bill</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 2px;">₹${totalAmount.toFixed(2)}</div>
+                  </div>
+                  <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 11px; color: #16a34a; font-weight: 600; text-transform: uppercase;">Paid</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #15803d; margin-top: 2px;">₹${amountPaid.toFixed(2)}</div>
+                  </div>
+                  <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 11px; color: #dc2626; font-weight: 600; text-transform: uppercase;">Due</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #b91c1c; margin-top: 2px;">₹${dueAmount.toFixed(2)}</div>
+                  </div>
+                </div>
+              ` : `
+                <div style="font-size: 13px; color: #166534; margin-top: 4px;">
+                  Full amount of ₹${totalAmount.toFixed(2)} paid to the agency.
+                </div>
+              `}
+            </div>`;
+        })() : ''}
 
         ${itemsTableHtml}
       </div>
@@ -574,11 +659,21 @@ const expenses = {
 
       await Promise.all(inventoryPromises);
 
+      // Capture payment status
+      const selectedPayStatus = document.querySelector('input[name="inv-payment-status"]:checked')?.value || 'Unpaid';
+      const amountPaidNow = selectedPayStatus === 'Partially Paid'
+        ? (parseFloat(document.getElementById('inv-amount-paid')?.value) || 0)
+        : selectedPayStatus === 'Paid' ? amount : 0;
+
       const metaObj = {
         agencyName: agencyName || '',
         agencyPhone: agencyPhone || '',
         notes: description,
-        items: itemsDetailList
+        items: itemsDetailList,
+        paymentStatus: selectedPayStatus,
+        totalAmount: amount,
+        amountPaid: amountPaidNow,
+        dueAmount: parseFloat((amount - amountPaidNow).toFixed(2))
       };
 
       description = `JSONMETA:${JSON.stringify(metaObj)}`;
