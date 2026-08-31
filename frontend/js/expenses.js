@@ -65,20 +65,29 @@ const expenses = {
     if (!list) return;
 
     const val = input.value.toLowerCase().trim();
+    let matches = [];
     if (!val) {
-      list.style.display = 'none';
-      return;
+      // If empty, show all known agencies (e.g. on focus)
+      matches = this.agenciesList || [];
+    } else {
+      matches = (this.agenciesList || []).filter(a => a.name.toLowerCase().includes(val));
+    }
+    
+    // Auto-fill phone if exact match is typed
+    const exactMatch = (this.agenciesList || []).find(a => a.name.toLowerCase() === val);
+    const phoneInput = document.getElementById('expense-agency-phone');
+    if (exactMatch && exactMatch.phone && phoneInput && !phoneInput.value) {
+      phoneInput.value = exactMatch.phone;
     }
 
-    const matches = (this.agenciesList || []).filter(a => a.name.toLowerCase().includes(val));
     if (matches.length === 0) {
       list.style.display = 'none';
       return;
     }
 
     list.innerHTML = matches.map(a => {
-      const name = a.name.replace(/'/g, "\\'");
-      const phone = a.phone ? a.phone.replace(/'/g, "\\'") : '';
+      const name = a.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const phone = a.phone ? a.phone.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
       return '<div style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;"' +
         ' onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'"' +
         ' onclick="expenses.selectAgencyAutocompleteItem(\'' + name + '\', \'' + phone + '\')">' +
@@ -827,8 +836,12 @@ const expenses = {
       if (itemsContainer) itemsContainer.innerHTML = '';
       
       // Load in background without awaiting, so UI doesn't freeze
-      this.loadExpenses();
-      this.loadProducts();
+      Promise.all([
+        this.loadExpenses(),
+        this.loadProducts()
+      ]).then(() => {
+        this.loadAgencies();
+      });
       if (typeof inventory !== 'undefined' && typeof inventory.load === 'function') {
         inventory.load();
       }
