@@ -13,11 +13,91 @@ const expenses = {
         this.loadExpenses(),
         this.loadProducts()
       ]);
+      this.loadAgencies();
     } finally {
     }
     // Always re-attach — SPA navigation recreates the DOM each visit
     this.setupEventListeners();
   },
+
+  loadAgencies() {
+    const agenciesMap = new Map();
+
+    // 1. Extract from products
+    if (this.inventoryProducts) {
+      this.inventoryProducts.forEach(p => {
+        if (p.agencyName && p.agencyName.trim()) {
+          const name = p.agencyName.trim();
+          if (!agenciesMap.has(name)) {
+            agenciesMap.set(name, { name: name, phone: '' });
+          }
+        }
+      });
+    }
+
+    // 2. Extract from expenses
+    const allExpenses = [...(this.todayExpenses || []), ...(this.monthExpenses || []), ...(this.yearExpenses || [])];
+    allExpenses.forEach(e => {
+      const desc = e.description || '';
+      if (desc.startsWith('JSONMETA:')) {
+        try {
+          const meta = JSON.parse(desc.substring(9));
+          const name = (meta.agencyName || '').trim();
+          const phone = (meta.agencyPhone || '').trim();
+          if (name) {
+            if (agenciesMap.has(name)) {
+              if (phone && !agenciesMap.get(name).phone) {
+                agenciesMap.get(name).phone = phone;
+              }
+            } else {
+              agenciesMap.set(name, { name, phone });
+            }
+          }
+        } catch (err) {}
+      }
+    });
+
+    this.agenciesList = Array.from(agenciesMap.values());
+  },
+
+  showAgencyAutocomplete(input) {
+    const list = document.getElementById('agency-autocomplete-list');
+    if (!list) return;
+
+    const val = input.value.toLowerCase().trim();
+    if (!val) {
+      list.style.display = 'none';
+      return;
+    }
+
+    const matches = (this.agenciesList || []).filter(a => a.name.toLowerCase().includes(val));
+    if (matches.length === 0) {
+      list.style.display = 'none';
+      return;
+    }
+
+    list.innerHTML = matches.map(a => {
+      const name = a.name.replace(/'/g, "\\'");
+      const phone = a.phone ? a.phone.replace(/'/g, "\\'") : '';
+      return '<div style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;"' +
+        ' onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'"' +
+        ' onclick="expenses.selectAgencyAutocompleteItem(\'' + name + '\', \'' + phone + '\')">' +
+        a.name + (a.phone ? ' <span style="color:#94a3b8;font-size:11px;">(' + a.phone + ')</span>' : '') +
+        '</div>';
+    }).join('');
+    list.style.display = 'block';
+  },
+
+  selectAgencyAutocompleteItem(name, phone) {
+    const nameInput = document.getElementById('expense-agency-name');
+    const phoneInput = document.getElementById('expense-agency-phone');
+    const list = document.getElementById('agency-autocomplete-list');
+    
+    if (nameInput) nameInput.value = name;
+    if (phoneInput && phone && !phoneInput.value) phoneInput.value = phone;
+    if (list) list.style.display = 'none';
+  },
+
 
   async loadProducts() {
     try {
@@ -122,6 +202,15 @@ const expenses = {
     rebind('expense-type-filter', 'change', (e) => {
       this.currentFilter = e.target.value;
       this.renderExpenses();
+    });
+
+    // Hide agency autocomplete when clicked outside
+    document.addEventListener('click', (e) => {
+      const list = document.getElementById('agency-autocomplete-list');
+      const input = document.getElementById('expense-agency-name');
+      if (list && e.target !== input) {
+        list.style.display = 'none';
+      }
     });
   },
 

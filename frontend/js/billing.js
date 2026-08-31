@@ -8,7 +8,6 @@ const billing = {
   pdfRequests: new Map(),
 
   async load() {
-    await this.loadProducts();
     if (!this.listenersSetup) {
       this.setupEventListeners();
       this.listenersSetup = true;
@@ -20,10 +19,17 @@ const billing = {
       container.innerHTML = '';
     }
     
-    // Add one empty bill item row
-    this.addBillItem();
-    await this.loadBills();
     customDropdown.init('.filter-group select');
+
+    // Run data fetching concurrently for faster load
+    const productsPromise = this.loadProducts().then(() => {
+      // Add one empty bill item row once products are available for the dropdown
+      this.addBillItem();
+    });
+    
+    const billsPromise = this.loadBills();
+
+    await Promise.all([productsPromise, billsPromise]);
   },
 
   // Called by app.js when navigating away — stops background polling
